@@ -31,10 +31,10 @@
 }
 
 .sidebar .logo {
-  width: 96px !important;
-  min-width: 92px;
-  max-width: 112px;
-  margin-bottom: 40px;
+  width: 112px !important;
+  min-width: 108px;
+  max-width: 128px;
+  margin-bottom: 54px;
 }
 
 .sidebar .sidebar-btn {
