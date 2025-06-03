@@ -286,15 +286,32 @@ body {
   }
 }
 
-/* Accessibility: visible focus, ARIA, readable text */
-:focus-visible, .btn:focus-visible {
-  outline: 2.3px solid var(--focus-visible-ring);
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(255,184,92,0.11);
+/* Accessibility: Extremely clear and visible focus, ARIA, readable text, with micro-interaction! */
+:focus-visible, .btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+  outline: 2.8px solid var(--focus-visible-ring);
+  outline-offset: var(--focus-outline-offset, 3px);
+  box-shadow: 0 0 0 7px var(--focus-bg);
+  z-index: 999 !important;
+  transition: outline-color 0.15s ease, box-shadow 0.17s cubic-bezier(.36,.7,.23,1.17);
+  border-radius: 10px;
+}
+button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:not(:focus-visible), textarea:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+/* Animations/Micro-interactions */
+.btn, .sidebar-btn, .tab, input, select, textarea {
+  transition:
+    background 0.13s cubic-bezier(.25,.85,.49,1),
+    color 0.12s cubic-bezier(.14,.77,.39,1.11),
+    box-shadow 0.14s cubic-bezier(.17,.69,.41,1.2),
+    border-color 0.11s;
+  will-change: background, color, box-shadow, border-color;
+  accent-color: var(--base-accent,#ffad42);
 }
 
-/* Visually hidden utility */
-.visually-hidden, [aria-hidden="true"]:not(:focus):not(:active) {
+/* Visually hidden utility and ARIA helper */
+.visually-hidden, [aria-hidden="true"]:not(:focus):not(:active), .aria-visually-hidden {
   border: 0 !important;
   clip: rect(1px,1px,1px,1px) !important;
   clip-path: inset(50%) !important;
@@ -304,6 +321,15 @@ body {
   padding: 0 !important;
   position: absolute !important;
   width: 1px !important;
+  white-space: nowrap !important;
+}
+[aria-live] {
+  /* For JAWS/NVDA/voiceover live region accessibility */
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(1px,1px,1px,1px) !important;
   white-space: nowrap !important;
 }
 
