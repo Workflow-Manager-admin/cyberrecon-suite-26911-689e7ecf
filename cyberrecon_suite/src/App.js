@@ -11,6 +11,7 @@ import ReportGenerator from "./modules/ReportGenerator";
 import BugBountyAggregator from "./modules/BugBountyAggregator";
 import SettingsModule from "./modules/SettingsModule";
 import ExploitationToolkit from "./modules/ExploitationToolkit";
+import JSDebugger from "./modules/JSDebugger";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -73,7 +74,7 @@ const MODULE_COMPONENTS = {
   recon: ReconDashboard,
   scanner: VulnerabilityScanner,
   exploitation: ExploitationToolkit,
-  jsdebugger: DummyModule,
+  jsdebugger: JSDebugger,
   wordlist: WordlistGenerator,
   report: ReportGenerator,
   bounty: BugBountyAggregator,
