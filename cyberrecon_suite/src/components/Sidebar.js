@@ -1,12 +1,14 @@
 import React from "react";
 import logo from "../assets/cyberrecon-logo.svg";
 
-/** Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
+/**
+ * Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
  * Accepts new props:
  *   - isOpen: boolean
  *   - onClose: function (optional)
  * Always visually wider (wider than 88px: ~240-260px), with all content spaced accordingly.
  */
+// PUBLIC_INTERFACE
 function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose }) {
   // Responsive width: wider, with close button overlay for compact screens
   const SIDEBAR_WIDTH = 254; // 240-260 for Burp Suite feel
@@ -225,14 +227,13 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
         aria-hidden="true"
         style={{
           marginTop: "auto",
-          width: "77%",
-          height: 2.7,
-          background: "linear-gradient(90deg,#1a1a1a 5%,#ffad4299 55%,#181a1f 100%)",
-          opacity: 0.26,
-          borderRadius: 8,
-          marginBottom: 28
-        }}
-      />
+          width: "92%",
+          height: 3,
+          background: "linear-gradient(87deg,#1a1a1a 7%,#ffbb4e9a 72%,#181a1f 100%)",
+          opacity: 0.36,
+          borderRadius: 9,
+          marginBottom: 29
+        }} />
       {/* Footer: future help/settings */}
     </nav>
   );
