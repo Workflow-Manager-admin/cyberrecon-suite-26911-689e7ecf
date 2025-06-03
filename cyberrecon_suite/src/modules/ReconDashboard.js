@@ -129,20 +129,28 @@ function ReconDashboard() {
     setAriaMsg("");
     setResults([]);
     setResultBuf([]);
+    setCancelScan(null);
+
     const inputDomains = validateDomains(domainsInput);
     if (!inputDomains.length) {
-      setError("Please enter at least one valid domain.");
+      setError("Please enter at least one valid domain. 🤚");
       setAriaMsg("Invalid domain input.");
       return;
     }
     setDomains(inputDomains);
-    setLoading(`${tool} scan in progress...`);
+    setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"} `);
     let isElectron = hasElectronBridge();
     let nFinished = 0;
-    let allResults = [];
     let aborters = [];
     const localResultBuf = [];
+
+    let scanAborted = false;
+
+    // For all domains, run recon in parallel; handle error cancellations
     inputDomains.forEach((domain, idx) => {
+      // Internal state to ensure each domain's results are finalized and error handled
+      let domainResultBuf = [];
+
       const handleData = (data) => {
         let entry;
         if (tool === "Amass") {
@@ -158,44 +166,71 @@ function ReconDashboard() {
           entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
         }
         setResultBuf(rb => [...rb, entry]);
-        localResultBuf.push(entry);
+        domainResultBuf.push(entry);
       };
       const handleError = (err) => {
-        setError(String(err));
+        setError(`❌ ${typeof err === "string" ? err : "Unknown Error"} (${domain})`);
         setLoading("");
         setAriaMsg(`Error: ${err}`);
-        // Save failed run to history!
-        saveScanHistory(localResultBuf.length ? localResultBuf : [{
-          domain, tool, result: "Error: " + String(err), time: new Date().toLocaleTimeString()
-        }], "failed", String(err));
+        // Save failed run to history
+        saveScanHistory(
+          domainResultBuf.length ? domainResultBuf : [{
+            domain, tool, result: "Error: " + String(err), time: new Date().toLocaleTimeString()
+          }],
+          "failed",
+          String(err)
+        );
         nFinished += 1;
+        if (nFinished >= inputDomains.length) {
+          setLoading("");
+          setCancelScan(null);
+        }
       };
       const handleDone = () => {
         nFinished += 1;
+        // Only finish all domains
         if (nFinished >= inputDomains.length) {
           setLoading("");
           finalizeResults();
         }
       };
       async function finalizeResults() {
+        if (scanAborted) return;
         const buf = resultBuf.length ? resultBuf : [];
         setResults([...buf]);
         await saveScanHistory(buf, "completed", "");
         setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
         setResultBuf([]);
+        setCancelScan(null);
       }
-      // CLI or API select
+      // CLI or API select, add try/catch for robust error fallback
       if (isElectron) {
         let args = [];
         if (tool === "Amass") args = ["enum", "-d", domain];
         else if (tool === "Masscan") args = ["-p1-1000", "--rate=2000", domain];
-        const [promise, canceler] = runViaElectron(tool, args, handleData, handleError, handleDone);
-        aborters.push(canceler);
+        try {
+          const [promise, canceler] = runViaElectron(tool, args, handleData, handleError, handleDone);
+          aborters.push(canceler);
+        } catch (electronError) {
+          handleError(`Electron scan failed: ${(electronError && electronError.message) || "Unknown"}`);
+        }
       } else {
-        runViaApi(tool, domain, handleData, handleError, handleDone);
+        try {
+          runViaApi(tool, domain, handleData, handleError, handleDone);
+        } catch (apiError) {
+          handleError(`API scan failed: ${(apiError && apiError.message) || "Unknown"}`);
+        }
       }
     });
-    setCancelScan(() => () => aborters.forEach(a => a && a())); // allow cancel
+    // Enable scan cancel
+    setCancelScan(() => () => {
+      scanAborted = true;
+      aborters.forEach(a => a && a());
+      setLoading("");
+      setCancelScan(null);
+      setAriaMsg("Scan cancelled.");
+      setError("Scan cancelled. 🚫");
+    });
   }
 
   // PUBLIC_INTERFACE
