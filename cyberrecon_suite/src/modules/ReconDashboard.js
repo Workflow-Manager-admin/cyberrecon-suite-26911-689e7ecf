@@ -2,13 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import TableDisplay from "../components/TableDisplay";
 import GraphDisplay from "../components/GraphDisplay";
 import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
-// ReconDashboard now supports premium real-time scan streaming via Electron IPC (runReconCommand, onReconCommandOutput), with robust fallback to browser API if Electron is unavailable.
 
-/**
- * ReconDashboard: Full-featured recon interface connecting Electron IPC (runReconCommand) or browser fallback.
- * Robust states: success, empty, error. Real-time UI update. Premium transitions.
- */
-
+// PUBLIC_INTERFACE
 // Helper: Validate possible domains
 function validateDomains(input) {
   return input
@@ -18,10 +13,7 @@ function validateDomains(input) {
     .filter(d => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d));
 }
 
-/**
- * Check if the Electron IPC bridge is available and functional.
- * Guarantees fallback to browser API if not running in Electron.
- */
+// Check Electron IPC bridge presence for scan API; fallback if not found.
 function hasElectronBridge() {
   return (
     typeof window !== "undefined" &&
@@ -31,62 +23,60 @@ function hasElectronBridge() {
   );
 }
 
+// PUBLIC_INTERFACE
 /**
- * Use the Electron IPC scan API (runReconCommand, onReconCommandOutput) to run a scan for a specific tool/args.
- * Ensures each scan attaches its own demuxed event handler, and provides a cancel function.
- * Returns [promise, cancelFn].
+ * *Run Electron IPC scan for one process; stream results in real time, support robust UI updates and cancellation.
+ *  Returns [promise, cancel].
  */
 function runViaElectron(tool, args, onData, onError, onDone) {
   const processId = Math.random().toString(36).substring(2, 12); // Unique per scan
   let isActive = true;
   let detached = false;
+  let _onData = onData;
+  let _onError = onError;
+  let _onDone = onDone;
 
-  // Local handler: listens for events, correctly demuxed by processId
+  // Local handler
   function handler(_event, payload) {
     if (!payload || payload.processId !== processId || !isActive) return;
     if (payload.type === "data") {
-      onData(payload.data);
+      _onData && _onData(payload.data);
     } else if (payload.type === "error") {
-      onError && onError(payload.data || "Scan error");
       isActive = false;
-      onDone && onDone(payload.data);
+      _onError && _onError(payload.data || "Scan error");
+      _onDone && _onDone(payload.data);
       detach();
     } else if (payload.type === "end") {
       isActive = false;
-      onDone && onDone(payload.data);
+      _onDone && _onDone(payload.data);
       detach();
     }
   }
-
-  // Attach event handler
+  // Attach event
   window.electronAPI.onReconCommandOutput(handler);
 
-  // Trigger scan IPC call
   window.electronAPI.runReconCommand({ tool, args, processId });
 
-  // Detach function (no-op in stub, robust in real)
   function detach() {
     if (detached) return;
     detached = true;
     isActive = false;
-    // Real Electron could removeHandler here; stub is safe (demuxed by processId)
+    // (In a real implementation, would remove this handler)
+    // For now, event demux by processId is safe.
   }
-
-  // Cancel: stops scan and detaches events
   function cancel() {
     isActive = false;
     detach();
     window.electronAPI.cancelReconCommand(processId);
   }
-
   return [
     new Promise((resolve, reject) => {
-      onDone = (data) => {
+      _onDone = (data) => {
         isActive = false;
         detach();
         resolve(data);
       };
-      onError = (err) => {
+      _onError = (err) => {
         isActive = false;
         detach();
         reject(err);
@@ -96,10 +86,7 @@ function runViaElectron(tool, args, onData, onError, onDone) {
   ];
 }
 
-/**
- * Browser-only HTTP fallback: Simulates scan streaming by fetching from a public API.
- * Used only when Electron is not available (guaranteed premium fallback).
- */
+// Browser API fallback: simulate scan streaming with API fetch.
 async function runViaApi(tool, target, onData, onError, onDone) {
   try {
     let apiUrl, label;
@@ -119,7 +106,7 @@ async function runViaApi(tool, target, onData, onError, onDone) {
     const txt = await res.text();
     for (const line of txt.split("\n")) {
       if (line.trim()) onData({ line: line.trim(), label });
-      await new Promise(r => setTimeout(r, 80));
+      await new Promise(r => setTimeout(r, 75));
     }
     onDone && onDone();
   } catch (err) {
@@ -128,23 +115,18 @@ async function runViaApi(tool, target, onData, onError, onDone) {
   }
 }
 
+// PUBLIC_INTERFACE
 /**
- * PUBLIC_INTERFACE
- * ReconDashboard: The premium recon interface. Provides:
- * - Robust, real-time scan streaming via Electron IPC (runReconCommand, onReconCommandOutput) with per-scan demuxing;
- * - Fully premium error and empty state handling with polished visual transitions;
- * - Robust browser API fallback when Electron is not present;
- * - Live streaming result display and table/graph with graceful transitions and accessibility.
+ * ReconDashboard module: Premium UI with Electron/IPC scan, live UI, browser fallback.
  */
 function ReconDashboard() {
-  // State management, including all premium streaming/visual states.
   const [domainsInput, setDomainsInput] = useState("");
   const [domains, setDomains] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState("");
-  const [results, setResults] = useState([]); // All visible scan results after completion
-  const [resultBuf, setResultBuf] = useState([]); // Streaming buffer, updated in real time
-  const [showResults, setShowResults] = useState(false); // Smooth transition state
+  const [results, setResults] = useState([]);
+  const [resultBuf, setResultBuf] = useState([]);
+  const [showResults, setShowResults] = useState(false);
   const [history, setHistory] = useState([]);
   const [exporting, setExporting] = useState(false);
   const [cancelScan, setCancelScan] = useState(null);
@@ -152,12 +134,12 @@ function ReconDashboard() {
   const textareaRef = useRef();
   const [ariaMsg, setAriaMsg] = useState("");
 
-  // Animate in result panel when results are populated
+  // Animate results in
   useEffect(() => {
-    setShowResults(!!(results && results.length));
+    setShowResults(Array.isArray(results) && results.length > 0);
   }, [results]);
 
-  // Load offline recon history on mount
+  // Load history on mount
   useEffect(() => {
     let ignore = false;
     async function fetchHistory() {
@@ -176,18 +158,16 @@ function ReconDashboard() {
     return () => { ignore = true; };
   }, []);
 
-  // Save scan results to history with status
+  // Save results
   async function saveScanHistory(rows, status, errorMsg) {
     if (!rows || !rows.length) return;
     const histRows = rows.map(r => ({
       ...r,
       status: status || "completed",
       error: errorMsg || "",
-      timestamp: Date.now(),
+      timestamp: Date.now()
     }));
-    // Save
     await addReconHistory(histRows);
-    // Update local state for UI
     setHistory(prev => [...histRows, ...(prev || [])].slice(0, 120));
   }
 
@@ -202,7 +182,6 @@ function ReconDashboard() {
 
     const inputDomains = validateDomains(domainsInput);
     if (!inputDomains.length) {
-      // Premium error state: always animate in "no results" on error
       setError("Please enter at least one valid domain. 🤚");
       setAriaMsg("Invalid domain input.");
       setResults([]);
@@ -210,8 +189,7 @@ function ReconDashboard() {
       return;
     }
     setDomains(inputDomains);
-    setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"} `);
-
+    setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"}`);
     const isElectron = hasElectronBridge();
     let finishedCount = 0;
     let aborted = false;
@@ -220,7 +198,6 @@ function ReconDashboard() {
     setResultBuf([]);
     setShowResults(false);
 
-    // Function for robustly finalizing result state with smooth transitions
     async function finalizeAll() {
       if (aborted) {
         setResultBuf([]);
@@ -239,11 +216,9 @@ function ReconDashboard() {
       setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
     }
 
-    // Run scans for each domain in parallel, tracking real-time streaming
     inputDomains.forEach((domain) => {
       let perDomainResults = [];
 
-      // Handler: robust real-time results buffer for smooth UI
       const handleData = (data) => {
         let entry;
         if (tool === "Amass") {
@@ -263,7 +238,6 @@ function ReconDashboard() {
         allResults.push(entry);
       };
 
-      // Error handling with premium UI polish
       const handleError = (err) => {
         setError(`❌ ${typeof err === "string" ? err : "Unknown Error"} (${domain})`);
         setLoading("");
@@ -283,7 +257,6 @@ function ReconDashboard() {
         }
       };
 
-      // Scan done for one domain
       const handleDone = () => {
         finishedCount += 1;
         if (finishedCount >= inputDomains.length) {
@@ -293,7 +266,6 @@ function ReconDashboard() {
         }
       };
 
-      // Actual scan start: try Electron first, fallback to browser
       let scanCancel = null;
       if (isElectron) {
         let args = [];
@@ -317,7 +289,6 @@ function ReconDashboard() {
       cancels.push(scanCancel);
     });
 
-    // Premium cancel: cancels all parallel scans, triggers empty/error state
     setCancelScan(() => () => {
       aborted = true;
       cancels.forEach(fn => fn && fn());
@@ -342,9 +313,7 @@ function ReconDashboard() {
       } else if (res && res.canceled) {
         setAriaMsg(`Export cancelled.`);
       } else {
-        setAriaMsg(
-          `Export failed: ${res && res.error ? res.error : "Unknown error"}`
-        );
+        setAriaMsg(`Export failed: ${res && res.error ? res.error : "Unknown error"}`);
       }
     } catch (e) {
       setExporting(false);
@@ -352,7 +321,6 @@ function ReconDashboard() {
     }
   }
 
-  // Keyboard accessibility: Enter triggers scan, Esc blurs
   // PUBLIC_INTERFACE
   function handleTextareaKey(e) {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -362,7 +330,6 @@ function ReconDashboard() {
     }
   }
 
-  // Accessibility live region
   function AriaLive() {
     return (
       <div className="visually-hidden" aria-live="polite">
