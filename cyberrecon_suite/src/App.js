@@ -15,6 +15,7 @@ import BugBountyAggregator from "./modules/BugBountyAggregator";
 import SettingsModule from "./modules/SettingsModule";
 import ExploitationToolkit from "./modules/ExploitationToolkit";
 import JSDebugger from "./modules/JSDebugger";
+import ScanPage from "./modules/ScanPage";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
