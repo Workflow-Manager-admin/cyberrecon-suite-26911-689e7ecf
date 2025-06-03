@@ -39,32 +39,36 @@
   color: var(--text-secondary);
   outline: none;
   cursor: pointer;
-  margin-bottom: 5px;
+  margin-bottom: 0.35em;
   margin-top: 0;
   box-shadow: 0 3.5px 15px -9px #191c2233;
   transition: 
     background .19s, 
     box-shadow .22s, 
-    border-color .15s, 
-    outline .13s;
+    border-color .13s, 
+    outline .12s, 
+    color .13s;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 72px;
-  height: 70px;
-  border-radius: 18px;
-  font-weight: 758;
-  font-size: 15px;
+  width: 66px;
+  height: 60px;
+  border-radius: 15px;
+  font-weight: 800;
+  font-size: 13.7px;
   letter-spacing: .04em;
+  user-select: none;
+  outline-offset: 2px;
 }
 
 .sidebar-btn:focus-visible,
 .sidebar-btn:focus {
   outline: 3px solid var(--focus-visible-ring,#ffb85c);
-  outline-offset: 0.5px;
+  outline-offset: 2.3px;
   z-index: 5;
-  background: linear-gradient(96deg,#262434 64%,#262034 100%);
+  background: linear-gradient(97deg,#29283a 64%,#262034 100%);
+  box-shadow: 0 2px 13px 0 #ffad42a0;
 }
 .sidebar-btn.active,
 .sidebar-btn[aria-current="page"] {
