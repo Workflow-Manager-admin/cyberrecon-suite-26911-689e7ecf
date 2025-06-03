@@ -2,45 +2,43 @@ import React from "react";
 import logo from "../assets/cyberrecon-logo.svg";
 
 /**
- * Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
- * Accepts new props:
+ * Dashboard/sidebar: Premium, wider, Burp Suite-style,
+ * Now with animated slide/collapse (toggle) via isOpen and onClose props.
+ * Accepts:
  *   - isOpen: boolean
  *   - onClose: function (optional)
- * Always visually wider (wider than 88px: ~240-260px), with all content spaced accordingly.
- */
-/**
- * Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
- * Accepts new props:
- *   - isOpen: boolean
- *   - onClose: function (optional)
- *   - width: number (optional, allows parent to control exact width)
- * Always visually wider (wider than 88px: ~240-320px for Burp Suite feel), with all content spaced accordingly.
- */
-/**
- * Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
- * Accepts new props:
- *   - isOpen: boolean
- *   - onClose: function (optional)
- *   - width: number (optional, allows parent to control exact width)
- * Always visually wider (wider than 88px: ~240-340px for Burp Suite feel), with all content spaced accordingly.
+ *   - width: number (optional, for premium width)
+ *   - modules, activeModule, onModuleSelect: navigation controls
  */
 // PUBLIC_INTERFACE
-function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose, width }) {
-  // Responsive width: wider, support parent-passed width (default now 340 for premium experience)
+function Sidebar({
+  modules,
+  activeModule,
+  onModuleSelect,
+  isOpen = true,
+  onClose,
+  width
+}) {
+  // Responsive width
   const SIDEBAR_WIDTH = width || 340;
 
-  // Premium slide-close: hide from left (use isOpen prop)
+  // Use transform/opacity for smooth collapse
   return (
     <nav
       className="sidebar"
       aria-label="Main module navigation"
-      tabIndex={0}
+      tabIndex={isOpen ? 0 : -1}
       role="navigation"
+      aria-hidden={!isOpen}
       style={{
-        width: isOpen ? SIDEBAR_WIDTH : 0,
-        minWidth: isOpen ? SIDEBAR_WIDTH : 0,
+        width: SIDEBAR_WIDTH,
+        minWidth: SIDEBAR_WIDTH,
         maxWidth: SIDEBAR_WIDTH,
-        transition: "width 0.23s cubic-bezier(.38,.71,.68,1), min-width 0.21s",
+        position: "relative",
+        transform: isOpen ? "translateX(0)" : `translateX(-${SIDEBAR_WIDTH}px)`,
+        opacity: isOpen ? 1 : 0,
+        transition:
+          "transform 0.28s cubic-bezier(.38,.71,.68,1), opacity 0.22s cubic-bezier(.4,1.41,.44,1)",
         overflow: "hidden",
         background: "linear-gradient(90deg,var(--base-black) 85%,#19191c 100%)",
         borderRight: isOpen ? "2.7px solid var(--border-color)" : "none",
@@ -55,10 +53,11 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           ? "0 22px 48px -16px #000b, 2px 0 36px 2.5px #18181c44"
           : "none",
         zIndex: 16,
-        position: "relative",
+        pointerEvents: isOpen ? "auto" : "none",
+        willChange: "transform,opacity"
       }}
     >
-      {/* Slide-close button (scaffold for parent global control) */}
+      {/* Slide-close toggle button */}
       {onClose && isOpen && (
         <button
           aria-label="Hide sidebar"
@@ -67,13 +66,13 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
             position: "absolute",
             top: 18,
             right: 12,
-            background: "rgba(255,152,0,0.10)",
+            background: "rgba(255,152,0,0.13)",
             color: "#ffad42",
             border: "none",
             borderRadius: "8px",
             width: 31,
             height: 31,
-            fontSize: 23,
+            fontSize: 22,
             fontWeight: 800,
             boxShadow: "0 0px 9px #ff980066",
             cursor: "pointer",
@@ -85,12 +84,13 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           }}
           onClick={() => onClose?.()}
           tabIndex={0}
+          title="Collapse sidebar"
         >
-          <span aria-hidden="true">←</span>
+          <span aria-hidden="true" style={{ display: "block" }}>←</span>
         </button>
       )}
 
-      {/* Logo area: bigger width, maintain proportional look */}
+      {/* Logo area: proportional, unchanged */}
       <div
         className="logo"
         aria-label="CyberRecon Suite"
@@ -107,7 +107,9 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           alignItems: "center",
           flexDirection: "column",
           gap: 0,
-          userSelect: "none"
+          userSelect: "none",
+          opacity: isOpen ? 1 : 0,
+          transition: "opacity .18s"
         }}
       >
         <span
@@ -138,7 +140,7 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           />
         </span>
       </div>
-      {/* Nav buttons as crisp, modular sidebar cards */}
+      {/* Nav buttons: unchanged */}
       <div
         style={{
           display: "flex",
@@ -146,10 +148,12 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           gap: 0,
           width: "100%",
           alignItems: "center",
+          opacity: isOpen ? 1 : 0,
+          pointerEvents: isOpen ? "auto" : "none",
+          transition: "opacity .15s"
         }}
       >
         {modules.map((mod, idx) => {
-          // Enhanced: card shadow and strong accent highlight
           const accentGlow =
             activeModule === mod.id
               ? "0px 4px 26px 0 #ff980044,0 0px 22px 2px #ff980077"
@@ -163,23 +167,22 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
               className={`sidebar-btn${activeModule === mod.id ? " active" : ""}`}
               aria-label={mod.label}
               aria-current={activeModule === mod.id ? "page" : undefined}
-              tabIndex={0}
+              tabIndex={isOpen ? 0 : -1}
               style={{
                 display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
                 minWidth: "100%",
-                width: "96%", // Slight margin for shadow
+                width: "96%",
                 background: cardBg,
-                border: "none",
-                borderRight: activeModule === mod.id
+                border: activeModule === mod.id
                   ? "7px solid var(--base-accent)"
                   : "2px solid transparent",
                 color: activeModule === mod.id
                   ? "var(--base-accent)"
                   : "var(--text-secondary)",
                 fontWeight: activeModule === mod.id ? 900 : 570,
-                fontSize: 16, // Bigger font for premium nav
+                fontSize: 16,
                 cursor: "pointer",
                 borderRadius: "0 19px 19px 0",
                 outline: "none",
@@ -193,9 +196,10 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
                 letterSpacing: ".015em",
                 justifyContent: "flex-start"
               }}
-              onClick={() => onModuleSelect(mod.id)}
+              onClick={() => isOpen && onModuleSelect(mod.id)}
               onKeyDown={e => {
-                if (e.key === "Enter" || e.key === " ") onModuleSelect(mod.id);
+                if ((e.key === "Enter" || e.key === " ") && isOpen)
+                  onModuleSelect(mod.id);
               }}
               onFocus={e => {
                 if (e.target) e.target.style.background = "linear-gradient(94deg,#10121a 68%,#282b31 99%)";
@@ -238,7 +242,7 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           );
         })}
       </div>
-      {/* Elegant divider at bottom */}
+      {/* Bottom divider, slides with sidebar */}
       <div
         aria-hidden="true"
         style={{
@@ -246,11 +250,12 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
           width: "92%",
           height: 3,
           background: "linear-gradient(87deg,#1a1a1a 7%,#ffbb4e9a 72%,#181a1f 100%)",
-          opacity: 0.36,
+          opacity: isOpen ? 0.36 : 0,
           borderRadius: 9,
-          marginBottom: 29
+          marginBottom: 29,
+          transition: "opacity .14s"
         }} />
-      {/* Footer: future help/settings */}
+      {/* Footer: reserved for help/settings nav */}
     </nav>
   );
 }
