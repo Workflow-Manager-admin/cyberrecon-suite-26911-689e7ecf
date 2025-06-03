@@ -23,7 +23,7 @@ function Sidebar({
   width
 }) {
   // Increased sidebar width for clarity and premium feel
-  const SIDEBAR_WIDTH = width || 128;
+  const SIDEBAR_WIDTH = width || 196; // This should sync with App.js
 
   const sidebarPalette = {
     background: "linear-gradient(105deg,#191b24 82%,#181b22 100%)",
@@ -39,7 +39,7 @@ function Sidebar({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: isOpen ? "22px 0 0 0" : "0",
+    padding: isOpen ? "28px 0 0 0" : "0", // slightly more top padding for width
     position: "relative",
     minHeight: "100vh",
     pointerEvents: isOpen ? "auto" : "none",
@@ -52,15 +52,15 @@ function Sidebar({
 
   const closeBtnStyle = {
     position: "absolute",
-    top: 16,
-    right: 9,
+    top: 21,
+    right: 14,
     background: "rgba(35,31,25,0.92)",
     color: "#ffb959",
     border: "none",
     borderRadius: 10,
-    width: 34,
-    height: 34,
-    fontSize: 22,
+    width: 38,
+    height: 38,
+    fontSize: 24,
     fontWeight: 900,
     boxShadow: "0 0 7px #ffad4277",
     cursor: "pointer",
@@ -79,13 +79,13 @@ function Sidebar({
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-start",
-      width: "118px",
-      minWidth: "110px",
-      maxWidth: "132px",
-      height: "54px",
+      width: "178px", // increased for label clarity (used to be ~118px)
+      minWidth: "162px",
+      maxWidth: "188px",
+      height: "58px", // slightly taller for premium spacious look
       margin: "0",
-      padding: 0,
-      borderRadius: "13px",
+      padding: "0 10px 0 8px", // add horizontal padding inside button
+      borderRadius: "15px",
       background: selected
         ? "linear-gradient(93deg,#231e31 70%,#30251f 100%)"
         : "rgba(25,25,34,0.81)",
@@ -98,11 +98,11 @@ function Sidebar({
         ? "0 2.5px 12px -2px #ff980045, 0 1.5px 8px #ffad4266"
         : "0 1.5px 10px -5px #191c2240",
       cursor: "pointer",
-      marginBottom: 7,
+      marginBottom: 11,
       fontWeight: selected ? 900 : 700,
-      fontSize: 16.2,
-      letterSpacing: ".045em",
-      gap: 4, // new: allow icon-label space
+      fontSize: 17,
+      letterSpacing: ".041em",
+      gap: 12, // wider icon-label gap
       transition: "background .19s, box-shadow .22s, border-color .15s, outline .13s",
       position: "relative"
     };
