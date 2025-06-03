@@ -12,45 +12,67 @@ import {
   getPrevRunTime
 } from "../utils/scheduler";
 
+/**
+ * Premium Schedule Picker UI + Job Table
+ * Schedules and manages recurring scan jobs including next/previous run details.
+ */
 // PUBLIC_INTERFACE
-function ScheduleForm({ onJobAdded, errorState, editingJob }) {
+function PremiumSchedulePanel({
+  jobs,
+  setJobs,
+  onJobCreated,
+  onJobUpdated,
+  onJobRemoved,
+  errorState,
+  editingJob,
+  setEditingJob,
+  forceRefresh
+}) {
+  // Local state for schedule picker form
   const [jobDomains, setJobDomains] = React.useState(editingJob?.targets?.join(", ") || "");
   const [tool, setTool] = React.useState(editingJob?.tool || "Amass");
   const [schedType, setSchedType] = React.useState(editingJob?.schedule?.type || "interval");
-  const [intervalMins, setIntervalMins] = React.useState(editingJob?.schedule?.intervalMinutes || 60);
-  const [timeHour, setTimeHour] = React.useState(
-    editingJob?.schedule?.hour !== undefined ? editingJob?.schedule?.hour : 1
-  );
-  const [timeMin, setTimeMin] = React.useState(
-    editingJob?.schedule?.minute !== undefined ? editingJob?.schedule?.minute : 0
-  );
-  const [dayOfWeek, setDayOfWeek] = React.useState(
-    editingJob?.schedule?.dow !== undefined ? editingJob?.schedule?.dow : null
-  );
-  const [oneTimeDate, setOneTimeDate] = React.useState(""); // e.g. "2024-06-30T20:00"
-  const [localFormError, setLocalFormError] = React.useState("");
+  const [intervalMins, setIntervalMins] = React.useState(editingJob?.schedule?.intervalMinutes || 30);
+  const [timeHour, setTimeHour] = React.useState(editingJob?.schedule?.hour !== undefined ? editingJob?.schedule?.hour : 2);
+  const [timeMin, setTimeMin] = React.useState(editingJob?.schedule?.minute !== undefined ? editingJob?.schedule?.minute : 0);
+  const [dayOfWeek, setDayOfWeek] = React.useState(editingJob?.schedule?.dow !== undefined ? editingJob?.schedule?.dow : null);
+  const [oneTimeDate, setOneTimeDate] = React.useState(""); // For one-time schedule
+  const [formError, setFormError] = React.useState("");
   const [savingJob, setSavingJob] = React.useState(false);
-  // Always use hooks at top level; select from props only after hook setup
-  const formError = errorState ? errorState[0] : localFormError;
-  const setFormError = errorState ? errorState[1] : setLocalFormError;
+
+  // Reset form when jobs or editingJob changes
+  React.useEffect(() => {
+    setJobDomains(editingJob?.targets?.join(", ") || "");
+    setTool(editingJob?.tool || "Amass");
+    setSchedType(editingJob?.schedule?.type || "interval");
+    setIntervalMins(editingJob?.schedule?.intervalMinutes || 30);
+    setTimeHour(editingJob?.schedule?.hour !== undefined ? editingJob?.schedule?.hour : 2);
+    setTimeMin(editingJob?.schedule?.minute !== undefined ? editingJob?.schedule?.minute : 0);
+    setDayOfWeek(editingJob?.schedule?.dow !== undefined ? editingJob?.schedule?.dow : null);
+    setOneTimeDate(""); // Only set if one-time and editing
+    setFormError("");
+  }, [editingJob, jobs]);
 
   function handleSchedTypeChange(e) {
     setSchedType(e.target.value);
+    setOneTimeDate("");
   }
 
+  // PUBLIC_INTERFACE
   async function handleJobSubmit(e) {
     e.preventDefault();
     setFormError("");
     setSavingJob(true);
     const doms = validateDomains(jobDomains);
+
     if (!doms.length) {
-      setFormError("Enter at least one valid domain for this schedule.");
+      setFormError("Enter at least one valid domain (comma or space separated).");
       setSavingJob(false);
       return;
     }
     let schedule;
     if (schedType === "interval") {
-      const mins = parseInt(intervalMins);
+      const mins = parseInt(intervalMins, 10);
       if (!mins || mins < 1) {
         setFormError("Interval must be at least 1 minute.");
         setSavingJob(false);
@@ -58,13 +80,11 @@ function ScheduleForm({ onJobAdded, errorState, editingJob }) {
       }
       schedule = { type: "interval", intervalMinutes: mins };
     } else if (schedType === "cron") {
-      schedule = { type:"cron", hour: Number(timeHour), minute: Number(timeMin) };
-      if (dayOfWeek !== null && dayOfWeek !== "" && dayOfWeek !== "any") {
-        schedule.dow = Number(dayOfWeek);
-      }
+      schedule = { type: "cron", hour: Number(timeHour), minute: Number(timeMin) };
+      if (dayOfWeek !== null && dayOfWeek !== "" && dayOfWeek !== "any") schedule.dow = Number(dayOfWeek);
     } else if (schedType === "once") {
       if (!oneTimeDate) {
-        setFormError("Set a valid date/time for one-time schedule.");
+        setFormError("Set a valid date/time for a one-time schedule.");
         setSavingJob(false);
         return;
       }
@@ -74,259 +94,385 @@ function ScheduleForm({ onJobAdded, errorState, editingJob }) {
     } else if (schedType === "weekly") {
       schedule = "weekly";
     }
+    // Job object
     const job = {
       tool,
       targets: doms,
       schedule,
       enabled: true
     };
+
     try {
-      await addJob(job);
+      if (editingJob && editingJob.id) {
+        await updateJob(editingJob.id, job);
+        setEditingJob(null);
+        onJobUpdated && onJobUpdated();
+      } else {
+        await addJob(job);
+        onJobCreated && onJobCreated();
+      }
       setFormError("");
       setJobDomains("");
-      onJobAdded && onJobAdded(job);
+      setTool("Amass");
     } catch (ex) {
       setFormError("Failed to save job: " + (ex?.message || "unknown"));
     }
     setSavingJob(false);
+    forceRefresh && forceRefresh();
   }
 
-  // JSX for the form
+  // Schedule form UI
   return (
-    <form
-      aria-label="Schedule scan form"
-      onSubmit={handleJobSubmit}
+    <section
+      aria-label="Schedule Recurring Scans"
       style={{
-        background: "rgba(41,64,41,0.10)",
-        borderRadius: 11,
-        padding: "16px 19px 7px 19px",
-        marginBottom: 18,
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 8,
-        alignItems: "flex-end"
-      }}
-    >
-      <div style={{ flex: "1 0 175px", minWidth: 154 }}>
-        <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-          Domain(s)
-          <input
-            type="text"
-            placeholder="example.com, site.org"
-            value={jobDomains}
-            onChange={e => setJobDomains(e.target.value)}
-            required
-            spellCheck={false}
-            style={{
-              width: "100%",
-              padding: "6px 6px",
-              marginTop: 2,
-              borderRadius: 7,
-              fontSize: 14.3,
-              background: "#222d26",
-              color: "#caf9ed",
-              border: "1px solid #2d4e32",
-              outline: "none",
-              fontFamily: "var(--font-code)"
-            }}
-          />
-        </label>
-      </div>
-      <div>
-        <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-          Tool
-          <select
-            style={{
-              display: "block",
-              background: "#222d26",
-              color: "#caf9ed",
-              marginTop: 2,
-              borderRadius: 7,
-              fontSize: 14.3,
-              border: "1px solid #2d4e32",
-              padding: "6px 7px"
-            }}
-            value={tool}
-            onChange={e => setTool(e.target.value)}
-          >
-            <option value="Amass">Amass</option>
-            <option value="Masscan">Masscan</option>
-          </select>
-        </label>
-      </div>
-      <div>
-        <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-          Schedule Type
-          <select
-            value={schedType}
-            onChange={handleSchedTypeChange}
-            style={{
-              marginTop: 2,
-              padding: "6px 8px",
-              borderRadius: 7,
-              background: "#222d26",
-              color: "#caf9ed",
-              fontSize: 14.3,
-              border: "1px solid #2d4e32"
-            }}
-          >
-            <option value="interval">Every X min</option>
-            <option value="cron">Daily/Weekly</option>
-            <option value="once">One time</option>
-            <option value="daily">Daily (auto)</option>
-            <option value="weekly">Weekly (auto)</option>
-          </select>
-        </label>
-      </div>
-      {/* Interval inputs */}
-      {schedType === "interval" && (
-        <div>
-          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-            Interval (min)
+        background: "var(--secondary)",
+        borderRadius: 13,
+        boxShadow: "0 8px 32px -8px rgba(41,64,41,0.14)",
+        padding: "25px 29px",
+        marginBottom: 36,
+        marginTop: -9,
+      }}>
+      
+      {/* Schedule Picker */}
+      <form
+        aria-label="Schedule scan form"
+        onSubmit={handleJobSubmit}
+        style={{
+          background: "rgba(41,64,41,0.08)",
+          borderRadius: 11,
+          padding: "14px 16px 9px 16px",
+          marginBottom: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "flex-end"
+        }}>
+        <div style={{ flex: "1 0 175px", minWidth: 150 }}>
+          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+            Domain(s)
             <input
-              type="number"
-              min={1}
-              value={intervalMins}
-              onChange={e => setIntervalMins(e.target.value)}
+              type="text"
+              placeholder="example.com, site.org"
+              value={jobDomains}
+              onChange={e => setJobDomains(e.target.value)}
               required
+              spellCheck={false}
               style={{
-                width: 66,
+                width: "100%",
+                padding: "6px 6px",
                 marginTop: 2,
-                padding: "6px 7px",
                 borderRadius: 7,
+                fontSize: 14.2,
                 background: "#222d26",
                 color: "#caf9ed",
                 border: "1px solid #2d4e32",
-                fontSize: 14.2
+                outline: "none",
+                fontFamily: "var(--font-code)"
               }}
             />
           </label>
         </div>
-      )}
-      {/* Cron style input */}
-      {schedType === "cron" && (
-        <>
-          <div>
-            <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-              Time (24h)
-              <input
-                type="number"
-                min={0}
-                max={23}
-                value={timeHour}
-                onChange={e => setTimeHour(Number(e.target.value))}
-                style={{
-                  width: 52,
-                  marginRight: 6,
-                  marginTop: 2,
-                  borderRadius: 7,
-                  background: "#222d26",
-                  color: "#caf9ed",
-                  border: "1px solid #2d4e32",
-                  fontSize: 14.2
-                }}
-              />
-              <span style={{marginRight:2}}>:</span>
-              <input
-                type="number"
-                min={0}
-                max={59}
-                value={timeMin}
-                onChange={e => setTimeMin(Number(e.target.value))}
-                style={{
-                  width: 52,
-                  marginTop: 2,
-                  borderRadius: 7,
-                  background: "#222d26",
-                  color: "#caf9ed",
-                  border: "1px solid #2d4e32",
-                  fontSize: 14.2
-                }}
-              />
-            </label>
-          </div>
-          <div>
-            <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-              Day of Week
-              <select
-                value={dayOfWeek===null?"any":String(dayOfWeek)}
-                onChange={e => setDayOfWeek(e.target.value==="any"?null:Number(e.target.value))}
-                style={{
-                  marginTop: 2,
-                  padding: "6px 8px",
-                  borderRadius: 7,
-                  background: "#222d26",
-                  color: "#caf9ed",
-                  fontSize: 14.2,
-                  border: "1px solid #2d4e32"
-                }}>
-                <option value="any">Any</option>
-                {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d,i)=>
-                  <option value={i} key={d}>{d}</option>
-                )}
-              </select>
-            </label>
-          </div>
-        </>
-      )}
-      {/* Once */}
-      {schedType === "once" && (
         <div>
-          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.5 }}>
-            Run at
-            <input
-              type="datetime-local"
-              value={oneTimeDate}
-              onChange={e => setOneTimeDate(e.target.value)}
+          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+            Tool
+            <select
+              value={tool}
+              onChange={e => setTool(e.target.value)}
+              style={{
+                background: "#222d26",
+                color: "#caf9ed",
+                marginTop: 2,
+                borderRadius: 7,
+                fontSize: 14.2,
+                border: "1px solid #2d4e32",
+                padding: "6px 7px"
+              }}>
+              <option value="Amass">Amass</option>
+              <option value="Masscan">Masscan</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+            Schedule Type
+            <select
+              value={schedType}
+              onChange={handleSchedTypeChange}
               style={{
                 marginTop: 2,
                 padding: "6px 8px",
                 borderRadius: 7,
                 background: "#222d26",
                 color: "#caf9ed",
-                border: "1px solid #2d4e32",
-                fontSize: 14.2
-              }}
-            />
+                fontSize: 14.2,
+                border: "1px solid #2d4e32"
+              }}>
+              <option value="interval">Every X min</option>
+              <option value="cron">Daily/Weekly</option>
+              <option value="once">One time</option>
+              <option value="daily">Daily (auto)</option>
+              <option value="weekly">Weekly (auto)</option>
+            </select>
           </label>
         </div>
-      )}
-      <button
-        type="submit"
-        className="btn"
-        style={{
-          background: "linear-gradient(91deg,#41b572,#90ffa9)",
-          color: "#191b22",
-          fontWeight: 700,
-          fontSize: 15,
-          borderRadius: 7,
-          marginLeft: 8,
-          minWidth: 72
-        }}
-        disabled={savingJob}
-      >
-        {editingJob ? "Update" : "Add"} Job
-      </button>
-      {formError && (
-        <div style={{
-          color: "#ff5964",
-          fontWeight: 700,
-          fontSize: 13.5,
-          marginLeft: 18
-        }}>{formError}</div>
-      )}
-    </form>
+        {schedType === "interval" && (
+          <div>
+            <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+              Interval (min)
+              <input
+                type="number"
+                min={1}
+                value={intervalMins}
+                onChange={e => setIntervalMins(e.target.value)}
+                required
+                style={{
+                  width: 66,
+                  marginTop: 2,
+                  padding: "6px 7px",
+                  borderRadius: 7,
+                  background: "#222d26",
+                  color: "#caf9ed",
+                  border: "1px solid #2d4e32",
+                  fontSize: 14.1
+                }}
+              />
+            </label>
+          </div>
+        )}
+        {schedType === "cron" && (
+          <>
+            <div>
+              <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+                Time (24h)
+                <input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={timeHour}
+                  onChange={e => setTimeHour(Number(e.target.value))}
+                  style={{
+                    width: 52,
+                    marginRight: 6,
+                    marginTop: 2,
+                    borderRadius: 7,
+                    background: "#222d26",
+                    color: "#caf9ed",
+                    border: "1px solid #2d4e32",
+                    fontSize: 14.1
+                  }}
+                />
+                <span style={{ marginRight: 2 }}>:</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={timeMin}
+                  onChange={e => setTimeMin(Number(e.target.value))}
+                  style={{
+                    width: 52,
+                    marginTop: 2,
+                    borderRadius: 7,
+                    background: "#222d26",
+                    color: "#caf9ed",
+                    border: "1px solid #2d4e32",
+                    fontSize: 14.1
+                  }}
+                />
+              </label>
+            </div>
+            <div>
+              <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+                Day of Week
+                <select
+                  value={dayOfWeek === null ? "any" : String(dayOfWeek)}
+                  onChange={e => setDayOfWeek(e.target.value === "any" ? null : Number(e.target.value))}
+                  style={{
+                    marginTop: 2,
+                    padding: "6px 8px",
+                    borderRadius: 7,
+                    background: "#222d26",
+                    color: "#caf9ed",
+                    fontSize: 14.1,
+                    border: "1px solid #2d4e32"
+                  }}>
+                  <option value="any">Any</option>
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) =>
+                    <option value={i} key={d}>{d}</option>
+                  )}
+                </select>
+              </label>
+            </div>
+          </>
+        )}
+        {schedType === "once" && (
+          <div>
+            <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+              Run at
+              <input
+                type="datetime-local"
+                value={oneTimeDate}
+                onChange={e => setOneTimeDate(e.target.value)}
+                style={{
+                  marginTop: 2,
+                  padding: "6px 8px",
+                  borderRadius: 7,
+                  background: "#222d26",
+                  color: "#caf9ed",
+                  border: "1px solid #2d4e32",
+                  fontSize: 14.1
+                }}
+              />
+            </label>
+          </div>
+        )}
+        <button
+          type="submit"
+          className="btn"
+          style={{
+            background: "linear-gradient(91deg,#41b572,#90ffa9)",
+            color: "#191b22",
+            fontWeight: 700,
+            fontSize: 14.5,
+            borderRadius: 7,
+            marginLeft: 8,
+            minWidth: 72
+          }}
+          disabled={savingJob}
+        >
+          {editingJob ? "Update" : "Add"} Job
+        </button>
+        {formError && (
+          <div style={{
+            color: "#ff5964",
+            fontWeight: 700,
+            fontSize: 13,
+            marginLeft: 15
+          }}>{formError}</div>
+        )}
+      </form>
+      {/* Job List Table */}
+      <div style={{ marginTop: 16 }}>
+        <TableDisplay
+          data={
+            (jobs || []).map(j => {
+              // Provide calculated next/last run details if not present
+              let nextRun = j.nextRun || getNextRunTime(j.schedule, Date.now());
+              let lastRun = j.lastRun || null;
+              return { ...j, nextRun, lastRun }
+            })
+          }
+          columns={[
+            {
+              label: "Domain(s)",
+              field: "targets",
+              emoji: "🌐",
+              sortable: true,
+              filter: true,
+              bold: true,
+              render: v => Array.isArray(v) ? v.join(", ") : v
+            },
+            {
+              label: "Tool",
+              field: "tool",
+              emojiMap: { Amass: "🛰️", Masscan: "🖥️" },
+              sortable: true,
+              filter: true,
+              colored: true,
+              colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
+            },
+            {
+              label: "Schedule",
+              field: "schedule",
+              sortable: false,
+              filter: false,
+              render: v => formatScheduleDescription(v)
+            },
+            {
+              label: "Next Run",
+              field: "nextRun",
+              sortable: true,
+              render: (ts, row) =>
+                ts ? new Date(ts).toLocaleString() : (row.nextRun ? new Date(row.nextRun).toLocaleString() : "—")
+            },
+            {
+              label: "Last Run",
+              field: "lastRun",
+              sortable: true,
+              render: (ts, row) =>
+                ts ? new Date(ts).toLocaleString() : (row.lastRun ? new Date(row.lastRun).toLocaleString() : "—")
+            },
+            {
+              label: "Enabled",
+              field: "enabled",
+              filter: true,
+              sortable: true,
+              render: value => value ? "✅" : "❌"
+            }
+          ]}
+          initialSortField="nextRun"
+          filterable={true}
+          size="sm"
+          style={{ marginTop: 7, marginBottom: 9 }}
+        />
+      </div>
+      {/* Schedule Management Actions */}
+      <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="btn"
+          aria-label="Refresh schedule list"
+          style={{ background: "#222c18", color: "#9feaf8", fontWeight: 700 }}
+          onClick={forceRefresh}
+        >🔄 Refresh</button>
+        {jobs && jobs.length > 0 && (
+          <button
+            type="button"
+            className="btn"
+            aria-label="Clear all jobs"
+            style={{ background: "#2c2122", color: "#ff5964", fontWeight: 700 }}
+            onClick={async () => {
+              for (const j of jobs) await removeJob(j.id);
+              forceRefresh && forceRefresh();
+            }}
+          >🗑️ Clear All</button>
+        )}
+      </div>
+    </section>
   );
 }
 
-// PUBLIC_INTERFACE
-// Helper: Validate possible domains
 function validateDomains(input) {
-  return input
+  // Accept comma/space/newline separated
+  return (input || "")
     .split(/[\s,]+/)
     .map(d => d.trim())
     .filter(Boolean)
     .filter(d => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d));
+}
+
+// Format schedule description for Table/UX
+function formatScheduleDescription(schedule) {
+  if (!schedule) return "";
+  if (typeof schedule === "string") {
+    if (schedule === "daily") return "Daily";
+    if (schedule === "weekly") return "Weekly";
+    return schedule;
+  }
+  if (schedule.type === "interval") {
+    return `Every ${schedule.intervalMinutes} minutes`;
+  }
+  if (schedule.type === "cron") {
+    const hh = String(schedule.hour ?? 0).padStart(2, "0");
+    const mm = String(schedule.minute ?? 0).padStart(2, "0");
+    if (schedule.dow !== undefined && schedule.dow !== null)
+      return `Every week on ${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][schedule.dow]} at ${hh}:${mm}`;
+    return `Daily at ${hh}:${mm}`;
+  }
+  if (schedule.type === "once") {
+    return `Once at ${new Date(schedule.runAt).toLocaleString()}`;
+  }
+  return "[custom schedule]";
 }
 
 function hasElectronBridge() {
