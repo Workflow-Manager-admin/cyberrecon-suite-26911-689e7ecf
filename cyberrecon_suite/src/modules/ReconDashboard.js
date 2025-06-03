@@ -4,61 +4,69 @@ import GraphDisplay from "../components/GraphDisplay";
 import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
 
 /**
- * ReconDashboard: Fully functional recon interface for CyberRecon Suite.
- * Feature Patch: Real Amass/Masscan integration, robust streaming, premium UX.
- * 
- * Improvements in this patch:
- * - FIX: Results now always display (when scan completes, not before).
- * - FIX: Streaming buffer clears only after results show. 
- * - FIX: UI always renders at least an empty table and/or skeleton loader after scan.
- * - Enhancement: Add animated transitions for visual polish.
- * - Enhancement: More space-efficient, modern header and result styling.
- * - Enhancement: Loading states are more visually prominent.
- * - Accessibility: All live updates and error messages made ARIA-aware.
- * - Professional luxury feel: Smoother result transitions, higher font-weight, clearer sectioning, subtler gradients/shadows.
+ * ReconDashboard: Full-featured recon interface connecting Electron IPC (runReconCommand) or browser fallback.
+ * Robust states: success, empty, error. Real-time UI update. Premium transitions.
  */
 
-// Helpers
+// Helper: Validate possible domains
 function validateDomains(input) {
-  // Split by comma/space/newline, trim, filter non-empty, simple domain regex
   return input
     .split(/[\s,]+/)
     .map(d => d.trim())
-    .filter(d => !!d)
-    .filter(d =>
-      /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d)
-    );
+    .filter(Boolean)
+    .filter(d => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d));
 }
 
-// Check for exposed Electron CLI bridge in window
+// Check if Electron IPC interface is present and functional
 function hasElectronBridge() {
-  return typeof window !== "undefined" && window.electronAPI && typeof window.electronAPI.runReconCommand === "function";
+  return typeof window !== "undefined"
+    && window.electronAPI
+    && typeof window.electronAPI.runReconCommand === "function"
+    && typeof window.electronAPI.onReconCommandOutput === "function";
 }
 
-// Run command via Electron (returns [Promise, cancelFn])
+// --- Wrapped IPC connection: listen/cancel semantics ---
+// Listen for a single scan's result stream. Returns [promise, cancelFn].
 function runViaElectron(tool, args, onData, onError, onDone) {
-  // For production, window.electronAPI must be injected by preload
-  const processId = Math.random().toString(36).substr(2, 10);
-  let resolve, reject;
-  const resultPromise = new Promise((res, rej) => { resolve = res; reject = rej; });
-  const handler = (evt, payload) => {
-    if (payload && payload.processId === processId) {
-      if (payload.type === "data") onData(payload.data);
-      else if (payload.type === "error") { onError(payload.data); reject(payload.data); }
-      else if (payload.type === "end") { onDone(payload.data); resolve(payload.data); }
-    }
-  };
+  // Each scan instance gets a unique processId for correct demuxing
+  const processId = Math.random().toString(36).substring(2, 12);
+  let isActive = true; // Defensive safety
+
+  // Handler receives every event; only act on processId match
+  function handler(_event, payload) {
+    if (!payload || payload.processId !== processId) return;
+    if (!isActive) return;
+    if (payload.type === "data") onData(payload.data);
+    else if (payload.type === "error") { onError(payload.data); isActive = false; onDone && onDone(payload.data); }
+    else if (payload.type === "end") { isActive = false; onDone && onDone(payload.data); }
+  }
+
+  // Listen
   window.electronAPI.onReconCommandOutput(handler);
-  window.electronAPI.runReconCommand({
-    tool,
-    args,
-    processId,
-  });
-  // Dummy cancel (for expansion)
-  return [resultPromise, () => window.electronAPI.cancelReconCommand(processId)];
+
+  // Run scan via IPC with args
+  window.electronAPI.runReconCommand({ tool, args, processId });
+
+  // Cancel logic (calls IPC; also disables handler)
+  function cancel() {
+    isActive = false;
+    window.electronAPI.cancelReconCommand(processId);
+  }
+
+  // Defensive: detach logic is not provided by stub, usually not needed since processId ensures separation
+  // In a production-quality preload.js: a handler removal mechanism is better for perf
+
+  return [
+    new Promise((resolve, reject) => {
+      // We'll use onDone/onError above to call
+      onDone = (data) => { isActive = false; resolve(data); };
+      onError = (err) => { isActive = false; reject(err); };
+    }),
+    cancel
+  ];
 }
 
-// Fallback to public API (returns Promise, streaming is simulated)
+// Browser HTTP fallback: simulate streaming
 async function runViaApi(tool, target, onData, onError, onDone) {
   try {
     let apiUrl = "", label = tool;
@@ -70,17 +78,17 @@ async function runViaApi(tool, target, onData, onError, onDone) {
       label = "ports";
     }
     let res = await fetch(apiUrl);
-    if (!res.ok) { onError("Public API error."); onDone(); return; }
+    if (!res.ok) { onError("Public API error."); onDone && onDone(); return; }
     const txt = await res.text();
     const lines = txt.split("\n");
     for (const line of lines) {
       if (line.trim()) onData({ line: line.trim(), label });
       await new Promise(r => setTimeout(r, 80));
     }
-    onDone();
+    onDone && onDone();
   } catch (err) {
     onError("API call failed: " + (err?.message || "unknown"));
-    onDone();
+    onDone && onDone();
   }
 }
 
