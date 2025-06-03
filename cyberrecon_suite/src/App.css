@@ -411,23 +411,49 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   cursor: pointer;
   margin-left: 6px;
   margin-bottom: 3px;
-  transition: background 0.14s, color 0.10s, box-shadow 0.13s;
   letter-spacing: 0.01em;
-  box-shadow: 0 2px 13px 0 rgba(0,0,0,0.05);
+  box-shadow: 0 2px 13px 0 rgba(0,0,0,0.06);
   outline: none;
+  transition:
+    background 0.17s cubic-bezier(.23,1.21,.61,1.04),
+    color 0.13s cubic-bezier(.26,.85,.32,1.21),
+    box-shadow 0.15s,
+    border-color 0.13s;
+  position: relative;
 }
+
 .btn:hover,
 .btn:focus-visible {
   background: var(--base-accent);
   color: var(--base-black);
-  outline: 2px solid var(--base-accent);
+  outline: 2.3px solid var(--base-accent);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 9px var(--focus-bg), 0 1.5px 11px 0 #ffba4211;
+  z-index: 11;
+}
+.btn:active {
+  background: linear-gradient(90deg,#ffb85c 55%,#ff9800 100%);
+  color: var(--base-black);
+  box-shadow: 0 2px 14px 0 #ff980029, 0 0 0 5px var(--base-accent);
+  animation: btn-bounce 0.085s cubic-bezier(.32,.79,.61,1.92);
+}
+@keyframes btn-bounce {
+  0% {transform: scale(.99);}
+  57% {transform: scale(1.06);}
+  100% {transform: scale(1.0);}
+}
+.btn:disabled, .btn[aria-disabled="true"] {
+  opacity: 0.44;
+  background: var(--base-black);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+  border: 1.2px solid var(--border-contrast);
 }
 .btn-large {
   padding: 14px 32px;
   font-size: 1.14rem;
-}
-.btn:active {
-  box-shadow: 0 0 0 3px var(--base-accent), 0 1px 8px 1px #181a1340;
 }
 
 /* Miscellaneous styles: logo, spacing, helpers */
