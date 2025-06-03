@@ -96,8 +96,14 @@ function ReconDashboard() {
   // Load offline recon history on mount
   useEffect(() => {
     async function fetchHistory() {
-      const hist = await fetchReconHistory();
-      setHistory(Array.isArray(hist) ? hist : []);
+      try {
+        const hist = await fetchReconHistory();
+        setHistory(Array.isArray(hist) ? hist : []);
+      } catch (e) {
+        setHistory([]);
+        setError("⚠️ Failed to load recon history.");
+        setAriaMsg("History loading failed.");
+      }
     }
     fetchHistory();
   }, []);
