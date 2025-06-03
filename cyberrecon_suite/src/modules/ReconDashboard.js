@@ -427,7 +427,7 @@ function ReconDashboard() {
         </div>
       )}
 
-      {/* Results */}
+      {/* Results Table & Graph */}
       {!!results.length && (
         <section
           aria-label="Scan Results"
@@ -475,40 +475,83 @@ function ReconDashboard() {
               onClick={() => handleExport("JSON")}
             >🗎 Export JSON</button>
           </div>
-          {/* Simple results table */}
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: 15.6,
-                background: "transparent"
+
+          {/* Premium Graph: Visualize count of discoverd results by tool */}
+          <div style={{ marginBottom: 30 }}>
+            <GraphDisplay
+              type="bar"
+              // Build bar chart data from recon results
+              data={(() => {
+                if (!results.length) return {labels: [], datasets: []};
+                // Bar: group by tool, count
+                const toolCounts = {};
+                results.forEach(r => {
+                  toolCounts[r.tool] = (toolCounts[r.tool] || 0) + 1;
+                });
+                return {
+                  labels: Object.keys(toolCounts),
+                  datasets: [{
+                    label: "Findings",
+                    data: Object.values(toolCounts),
+                    backgroundColor: "#ff9800"
+                  }]
+                };
+              })()}
+              options={{
+                title: "Findings by Tool",
+                legend: {display: false},
               }}
-            >
-              <thead>
-                <tr style={{ color: "var(--base-accent)", borderBottom: "1.3px solid var(--border-color)" }}>
-                  <th style={{ padding: "7px 14px", textAlign: "left" }}>Domain</th>
-                  <th style={{ padding: "7px 14px", textAlign: "left" }}>Tool</th>
-                  <th style={{ padding: "7px 14px", textAlign: "left" }}>Result</th>
-                  <th style={{ padding: "7px 14px", textAlign: "left" }}>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((res, idx) => (
-                  <tr key={idx}
-                    style={{
-                      borderBottom: "1px solid var(--border-color)",
-                      background: idx % 2 ? "rgba(33,33,44,0.14)" : "transparent"
-                    }}>
-                    <td style={{ padding: "7px 14px", wordBreak: "break-word" }}>{res.domain}</td>
-                    <td style={{ padding: "7px 14px" }}>{res.tool}</td>
-                    <td style={{ padding: "7px 14px" }}>{res.result}</td>
-                    <td style={{ padding: "7px 14px" }}>{res.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              style={{marginBottom: 10, maxWidth: 550}}
+            />
           </div>
+
+          {/* Premium Table */}
+          <TableDisplay
+            data={results}
+            columns={[
+              {
+                label: "Domain",
+                field: "domain",
+                emoji: "🌐",
+                sortable: true,
+                filter: true,
+                bold: true,
+              },
+              {
+                label: "Tool",
+                field: "tool",
+                emojiMap: {Amass: "🛰️", Masscan: "🖥️"},
+                sortable: true,
+                filter: true,
+                colored: true,
+                colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
+              },
+              {
+                label: "Result",
+                field: "result",
+                emojiMap: {
+                  // Heuristics for types
+                  "open": "🟢",
+                  "closed": "🔴",
+                  "filtered": "🟡",
+                  "host": "🌎",
+                },
+                sortable: false,
+                filter: true,
+              },
+              {
+                label: "Time",
+                field: "time",
+                emoji: "⏰",
+                sortable: true,
+                filter: false,
+              }
+            ]}
+            initialSortField="domain"
+            size="md"
+            filterable={true}
+            style={{margin: "0 0 0 0"}}
+          />
         </section>
       )}
 
