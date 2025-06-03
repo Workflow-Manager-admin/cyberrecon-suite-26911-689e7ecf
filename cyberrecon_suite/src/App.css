@@ -135,11 +135,12 @@ body {
   margin: 0;
   font-family: var(--font-main);
   font-size: 16px;
-  background: var(--base-black);
+  background: var(--base-black); /* TRUE BLACK always */
   color: var(--text-color);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0.012em;
+  min-height: 100vh;
 }
 
 /* App layout */
@@ -285,10 +286,16 @@ body {
   position: fixed !important;
   z-index: 9999;
   inset: 0;
-  background: var(--glass-overlay), rgba(7,7,11,0.97) !important;
+  background: var(--glass-overlay), rgba(0,0,0,0.91) !important;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.22s;
+  animation: modalFadeIn 0.26s;
+}
+@keyframes modalFadeIn {
+  from { background: rgba(0,0,0,0.01); }
+  to { background: var(--glass-overlay), rgba(0,0,0,0.91); }
 }
 .modal-content {
   background: var(--elevated);
@@ -297,15 +304,19 @@ body {
   padding: var(--spacing-xl);
   min-width: 320px;
   max-width: 99vw;
-  box-shadow: var(--box-shadow-elevate);
+  box-shadow: 0 13px 34px 0 #000b, var(--box-shadow-elevate);
   outline: none;
   animation: modalIn 0.22s cubic-bezier(.17,.67,.24,.99);
+  transition: box-shadow 0.14s, background 0.12s;
 }
-
 @keyframes modalIn {
   0% {
     opacity: 0;
     transform: translateY(52px) scale(0.90);
+  }
+  95% {
+    opacity: 0.97;
+    transform: translateY(-10px) scale(1.02);
   }
   100% {
     opacity: 1;
