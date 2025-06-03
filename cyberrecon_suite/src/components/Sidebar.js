@@ -79,9 +79,9 @@ function Sidebar({
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-start",
-      width: "84px",
-      minWidth: "83px",
-      maxWidth: "96px",
+      width: "118px",
+      minWidth: "110px",
+      maxWidth: "132px",
       height: "54px",
       margin: "0",
       padding: 0,
@@ -98,11 +98,11 @@ function Sidebar({
         ? "0 2.5px 12px -2px #ff980045, 0 1.5px 8px #ffad4266"
         : "0 1.5px 10px -5px #191c2240",
       cursor: "pointer",
-      marginBottom: 4,
+      marginBottom: 7,
       fontWeight: selected ? 900 : 700,
-      fontSize: 16,
+      fontSize: 16.2,
       letterSpacing: ".045em",
-      gap: 0,
+      gap: 4, // new: allow icon-label space
       transition: "background .19s, box-shadow .22s, border-color .15s, outline .13s",
       position: "relative"
     };
