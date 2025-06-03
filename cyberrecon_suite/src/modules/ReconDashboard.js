@@ -969,81 +969,89 @@ function ReconDashboard() {
         aria-label="Recon Dashboard"
         tabIndex={0}
         style={{
-          maxWidth: 980,
+          maxWidth: 1000,
           margin: "0 auto",
-          padding: "36px 0",
+          padding: "36px 0 0 0",
           color: "var(--text-color)",
-          background: "transparent"
+          background: "transparent",
+          minHeight: 1100 // Fill available space
         }}
       >
+        {/* === Module Title Bar w/ Emoji (PREMIUM POLISH) === */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 18,
+            padding: "0 22px 0 0",
+            marginBottom: 29,
+            background: "linear-gradient(88deg,#18191d 80%,#191a1c 100%)",
+            borderRadius: "19px",
+            boxShadow: "0 10px 36px -13px #271f0e15, 0 4.5px 15px -5px #ff9c1c15",
+            minHeight: 65,
+            zIndex: 6
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              fontSize: 43,
+              background: "linear-gradient(90deg,#ffad42,#ff9800 60%)",
+              WebkitBackgroundClip: "text",
+              color: "transparent",
+              fontWeight: 900,
+              marginLeft: 20,
+              marginRight: 13,
+              textShadow: "0 3px 34px rgba(255,168,32,0.14), 0 1.5px 10px #181b2b42"
+            }}
+          >🛰️</span>
+          <span
+            style={{
+              fontFamily: "var(--font-main, 'Inter', 'Roboto', Arial, sans-serif)",
+              fontWeight: 900,
+              fontSize: 32,
+              color: "var(--base-light)",
+              letterSpacing: ".014em",
+              paddingRight: 6
+            }}
+            tabIndex={0}
+            aria-label="Recon Dashboard – Module Name"
+          >Recon Dashboard</span>
+          <span
+            aria-label="Premium"
+            style={{
+              fontSize: 14,
+              color: "#fcbf67",
+              background: "linear-gradient(90deg,#2b1f15 9%,#ffad4259 91%)",
+              borderRadius: 15,
+              padding: "4.5px 18px",
+              marginLeft: 19,
+              fontWeight: 800,
+              opacity: 0.92,
+              boxShadow: "0 3.5px 16px -2px #ffbf4251",
+              letterSpacing: ".09em",
+              border: "1.7px solid #ffbe4242"
+            }}
+          >PREMIUM</span>
+          <span style={{ flex: 1 }} />
+          <button
+            type="button"
+            className="btn"
+            aria-label="Open scheduling panel"
+            style={{
+              marginLeft: 12,
+              padding: "9px 20px",
+              fontWeight: 850,
+              fontSize: 16,
+              background: "linear-gradient(91deg, #41b572 70%, #a7ffed 120%)",
+              color: "#111a18",
+              borderRadius: 11,
+              boxShadow: "0 2px 10px 0 #4ec99e12"
+            }}
+            onClick={() => setShowSchedulePanel(v => !v)}
+          >📅 Scheduling</button>
+        </div>
         <AriaLive />
-
-      {/* Header */}
-      <header style={{
-        display: "flex",
-        alignItems: "center",
-        marginBottom: 26,
-        gap: 18,
-        padding: "0 14px",
-        background: "linear-gradient(88deg,#1b1a1f 80%,#191a1c 100%)",
-        borderRadius: "16px",
-        boxShadow: "0 8px 36px -11px #271f0e24, 0 3.5px 14px -4px #ff9c1c16"
-      }}>
-        <span
-          aria-hidden="true"
-          style={{
-            fontSize: 38,
-            background: "linear-gradient(90deg,#ffad42,#ff9800 60%)",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-            fontWeight: 900,
-            marginRight: 12,
-            textShadow: "0 3px 20px rgba(255,168,32,0.21)"
-          }}
-        >🛰️</span>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 31,
-            letterSpacing: ".014em",
-            color: "var(--base-light)",
-            fontWeight: 890
-          }}
-        >Recon Dashboard</h1>
-        <span
-          aria-label="Premium"
-          style={{
-            fontSize: 14,
-            color: "#fcbf67",
-            background: "linear-gradient(90deg,#2b1f15 9%,#ffad4259 91%)",
-            borderRadius: 15,
-            padding: "4.5px 18px",
-            marginLeft: 19,
-            fontWeight: 800,
-            opacity: 0.94,
-            boxShadow: "0 3.5px 16px -2px #ffbf4251",
-            letterSpacing: ".09em",
-            border: "1.9px solid #ffbe4242"
-          }}
-        >PREMIUM</span>
-        <span style={{ flex: 1 }} />
-        <button
-          type="button"
-          className="btn"
-          aria-label="Open scheduling panel"
-          style={{
-            marginLeft: 14,
-            padding: "10px 22px",
-            fontWeight: 850,
-            fontSize: 16,
-            background: "linear-gradient(91deg, #41b572 70%, #a7ffed 120%)",
-            color: "#111a18",
-            borderRadius: 10,
-            boxShadow: "0 2px 10px 0 #4ec99e14"
-          }}
-          onClick={() => setShowSchedulePanel(v => !v)}
-        >📅 Scheduling</button>
-      </header>
 
       {/* Scheduling Panel */}
       {showSchedulePanel && (
