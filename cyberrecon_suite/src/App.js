@@ -6,6 +6,7 @@ import Modal from "./components/Modal";
 import DummyModule from "./modules/DummyModule";
 import ReconDashboard from "./modules/ReconDashboard";
 import VulnerabilityScanner from "./modules/VulnerabilityScanner";
+import WordlistGenerator from "./modules/WordlistGenerator";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -69,7 +70,7 @@ const MODULE_COMPONENTS = {
   scanner: VulnerabilityScanner,
   exploitation: DummyModule,
   jsdebugger: DummyModule,
-  wordlist: DummyModule,
+  wordlist: WordlistGenerator,
   report: DummyModule,
   bounty: DummyModule,
   settings: DummyModule
