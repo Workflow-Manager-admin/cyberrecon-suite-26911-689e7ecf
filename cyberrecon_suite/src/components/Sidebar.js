@@ -14,8 +14,9 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
       tabIndex={0}
       role="navigation"
       style={{
-        width: 82,
-        background: "var(--sidebar-dark)",
+        width: 88,
+        // Deeper black for sidebar, edge-glow left
+        background: "linear-gradient(90deg,var(--base-black) 93%,#19191c 100%)",
         borderRight: "2px solid var(--border-color)",
         color: "var(--text-secondary)",
         flexShrink: 0,
@@ -25,20 +26,24 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
         padding: "38px 0 0 0",
         minHeight: "100vh",
         boxShadow:
-          "0 13px 40px -12px #000b, 1.5px 0 11px 1.5px #10110f1e",
+          "0 20px 42px -16px #000b, 2px 0 21px 1.5px #10110f28",
         zIndex: 16,
         position: "relative",
       }}
     >
-      {/* Logo area: strong brand, larger, with glow */}
+      {/* Logo area: strong brand, larger, crisp card-chip, dark shadow */}
       <div
         className="logo"
         aria-label="CyberRecon Suite"
         tabIndex={-1}
         style={{
-          width: 52,
-          marginBottom: 38,
-          paddingBottom: 6,
+          width: 54,
+          marginBottom: 35,
+          padding: 0,
+          background: "linear-gradient(90deg,#23232e,#18191f 97%)",
+          borderRadius: "16px",
+          border: "1.7px solid var(--border-color)",
+          boxShadow: "0 8px 38px -10px #000a",
           display: "flex",
           alignItems: "center",
           flexDirection: "column",
@@ -50,17 +55,18 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
           className="logo-symbol"
           aria-hidden="true"
           style={{
-            fontSize: 34,
+            fontSize: 38,
             textShadow:
-              "0 2.5px 18px #ffad4247, 0 1.7px 16px #2d5257",
+              "0 2.5px 22px #ffad429a, 0 2px 12px #1b525745",
             color: "var(--base-light)",
-            marginBottom: 4,
+            marginBottom: 3,
+            marginTop: 5
           }}
         >
           🛰️
         </span>
       </div>
-      {/* Nav buttons */}
+      {/* Nav buttons as crisp, modular sidebar cards */}
       <div
         style={{
           display: "flex",
@@ -71,14 +77,14 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
         }}
       >
         {modules.map((mod, idx) => {
-          // Choose extra accent color for active/hover state by position for vibrance
+          // Enhanced: card shadow and stronger accent highlight
           const accentGlow =
             activeModule === mod.id
-              ? (idx % 2
-                ? "0px 0px 18px 3px #ff980040, 0 0 0 3px #39291d22"
-                : "0px 0px 18px 2px #53d0f92a, 0 0 0 3px #39291d22")
+              ? "0px 4px 26px 0 #ff980044,0 0px 22px 2px #ff980077"
               : "";
-
+          const cardBg = activeModule === mod.id
+            ? "linear-gradient(93deg,#111116 85%,#191a1d 100%)"
+            : "linear-gradient(89deg,var(--sidebar-dark) 65%,#181a1f 97%)";
           return (
             <button
               key={mod.id}
@@ -92,61 +98,63 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
                 alignItems: "center",
                 minWidth: "100%",
                 width: "100%",
-                background: activeModule === mod.id
-                  ? "linear-gradient(93deg,#191a1f 75%,#23242c 100%)"
-                  : "none",
+                background: cardBg,
                 border: "none",
-                borderRight: activeModule === mod.id ? "4.5px solid var(--base-light)" : "none",
+                borderRight: activeModule === mod.id
+                  ? "5px solid var(--base-accent)"
+                  : "2px solid transparent",
                 color: activeModule === mod.id
-                  ? "var(--base-light)"
+                  ? "var(--base-accent)"
                   : "var(--text-secondary)",
-                fontWeight: activeModule === mod.id ? 800 : 500,
-                fontSize: 13,
+                fontWeight: activeModule === mod.id ? 900 : 570,
+                fontSize: 14,
                 cursor: "pointer",
-                borderRadius: "0 13px 13px 0",
+                borderRadius: "0 15px 15px 0",
                 outline: "none",
-                margin: "9px 0",
-                padding: "16px 0 8px 0",
+                margin: "13px 0 10px 0",
+                padding: "17px 0 9px 0",
                 position: "relative",
-                boxShadow: accentGlow,
+                boxShadow: accentGlow + ",0 4px 14px -2px #000b",
                 transition:
-                  "background 0.13s, color 0.14s, box-shadow 0.16s, border-color 0.11s",
-                letterSpacing: ".02em"
+                  "background 0.14s, color 0.14s, box-shadow 0.19s, border-color 0.16s",
+                letterSpacing: ".013em"
               }}
               onClick={() => onModuleSelect(mod.id)}
               onKeyDown={e => {
                 if (e.key === "Enter" || e.key === " ") onModuleSelect(mod.id);
               }}
               onFocus={e => {
-                if (e.target) e.target.style.background = "linear-gradient(89deg,#0b0c0f 61%,#272a31 100%)";
+                if (e.target) e.target.style.background = "linear-gradient(95deg,#000002 65%,#292c33 100%)";
               }}
               onBlur={e => {
-                if (e.target && activeModule !== mod.id) e.target.style.background = "none";
+                if (e.target && activeModule !== mod.id) e.target.style.background = cardBg;
               }}
             >
               <span
                 aria-hidden="true"
                 style={{
                   display: "block",
-                  fontSize: 27,
-                  marginBottom: 8,
-                  filter: activeModule === mod.id ? "drop-shadow(0 0 11px #ff980077)" : "none",
+                  fontSize: 30,
+                  marginBottom: 9,
+                  filter: activeModule === mod.id ? "drop-shadow(0 0 17px #ff9800cc)" : "none",
                   textShadow: activeModule === mod.id
-                    ? "0 2px 13px #000a, 0 1px 4px #ffad4292"
-                    : "0 1.2px 7px #10152918"
+                    ? "0 2.5px 20px #000b, 0 2.2px 12px #ffad4244"
+                    : "0 2.5px 13px #10152912",
+                  transition: "all .18s cubic-bezier(.22,.84,.43,1)"
                 }}
               >
                 {mod.icon}
               </span>
               <span
                 style={{
-                  fontSize: 11,
-                  marginTop: -4,
+                  fontSize: 12,
+                  marginTop: -2,
                   color: activeModule === mod.id
-                    ? "var(--base-light)"
+                    ? "var(--base-accent)"
                     : "var(--text-secondary)",
-                  fontWeight: activeModule === mod.id ? 700 : 400,
-                  letterSpacing: ".04em"
+                  fontWeight: activeModule === mod.id ? 800 : 420,
+                  letterSpacing: ".05em",
+                  textShadow: activeModule === mod.id ? "0 1.9px 8px #ffbe4278" : "none"
                 }}
               >
                 {mod.short}
@@ -155,20 +163,20 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
           );
         })}
       </div>
-      {/* Elegant divider at the bottom */}
+      {/* Elegant divider at bottom */}
       <div
         aria-hidden="true"
         style={{
           marginTop: "auto",
-          width: "80%",
-          height: 1.7,
-          background: "linear-gradient(90deg,#1a1a1a 9%,#ffad4235 51%,#181a1f 100%)",
-          opacity: 0.18,
-          borderRadius: 6,
-          marginBottom: 24
+          width: "77%",
+          height: 2.7,
+          background: "linear-gradient(90deg,#1a1a1a 5%,#ffad4299 55%,#181a1f 100%)",
+          opacity: 0.26,
+          borderRadius: 8,
+          marginBottom: 28
         }}
       />
-      {/* Footer control (optional future: settings/help) */}
+      {/* Footer: future help/settings */}
     </nav>
   );
 }
