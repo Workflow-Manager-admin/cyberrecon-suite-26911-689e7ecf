@@ -1,220 +1,209 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 
 /**
- * HelpSidebar (GuideSidebar)
- * A modern, accessible, optionally floating sidebar or panel for module help/guidance.
- * Features:
- * - Toggleable open/closed state with animation
- * - Accepts props for summary, usage, and detailed beginner guide
- * - Premium modern styling (dark theme)
- * - Focus trap, ARIA roles, keyboard-accessible
- * - Can be used on any main page, typically positioned at top right
- *
+ * Premium-styled HelpSidebar overlay component, toggled by floating help button.
+ * Accepts summary/usage/description as props (JSX or string).
  * Props:
- *  - summary: string (brief summary)
- *  - usage: string|JSX (quick usage instructions; may include markup or lists)
- *  - description: string|JSX (beginner-friendly/detailed description)
- *  - defaultOpen: boolean (optional; default false)
- *  - placement: 'fixed' | 'inline' (optional; default 'fixed')
+ *  - summary: page/module summary text
+ *  - usage: typical usage/tips JSX
+ *  - description: detailed help/guide JSX
+ *  - placement: "inline" | "fixed" | "overlay"
+ *  - style: style overrides (applied to the overlay sidebar content)
+ *  - buttonAriaLabel: accessible label for the floating help button
  */
- // PUBLIC_INTERFACE
+// PUBLIC_INTERFACE
 function HelpSidebar({
-  summary,
+  summary = "Page Guide",
   usage,
   description,
-  defaultOpen = false,
   placement = "fixed",
-  style: styleProp,
-  ...rest
+  style = {},
+  buttonAriaLabel = "Open help panel"
 }) {
-  const [open, setOpen] = useState(defaultOpen);
-  const panelRef = useRef();
-  const btnRef = useRef();
+  const [open, setOpen] = React.useState(false);
 
-  // Trap focus inside sidebar if open
-  useEffect(() => {
-    if (!open || !panelRef.current) return;
-    const focusable = panelRef.current.querySelectorAll(
-      "a[href],button:not([disabled]),textarea,input,select,[tabindex]:not([tabindex='-1'])"
+  // Only "inline" mode skips overlay/floating button
+  if (placement === "inline") {
+    return (
+      <aside
+        className="help-sidebar"
+        tabIndex={0}
+        aria-label="Help and Guide"
+        style={{
+          background: "var(--sidebar-dark)",
+          borderRadius: 12,
+          boxShadow: "0 7px 29px -8px #25263a80",
+          padding: "27px 24px",
+          marginBottom: 26,
+          color: "var(--text-color)",
+          ...style
+        }}
+      >
+        <header style={{
+          fontWeight: 830,
+          color: "var(--base-accent)",
+          fontSize: 19,
+          marginBottom: 9
+        }}>
+          <span style={{ marginRight: 8 }}>❓</span>
+          {summary}
+        </header>
+        {usage && (
+          <aside style={{
+            color: "#aafacf",
+            fontSize: 15.2,
+            marginBottom: 8,
+            marginTop: 1,
+            fontWeight: 600
+          }}>
+            <span style={{ marginRight: 7 }}>💡</span>
+            {usage}
+          </aside>
+        )}
+        <div style={{ fontSize: 14.3, color: "var(--text-secondary)", lineHeight: 1.61 }}>
+          {description}
+        </div>
+      </aside>
     );
-    const first = focusable[0], last = focusable[focusable.length - 1];
-    function handleKey(e) {
-      if (e.key === "Escape") {
-        setOpen(false);
-        btnRef.current && btnRef.current.focus();
-      }
-      if (e.key === "Tab") {
-        if (!first || !last) return;
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-    panelRef.current.addEventListener("keydown", handleKey, true);
-    return () => panelRef.current && panelRef.current.removeEventListener("keydown", handleKey, true);
-  }, [open]);
+  }
 
-  // Animate sidebar in/out
-  const sideStyles = {
-    position: placement === "fixed" ? "fixed" : "absolute",
-    top: 28,
-    right: 36,
-    zIndex: 1040,
-    minWidth: 320,
-    maxWidth: 410,
-    background: "var(--secondary, #22242c)",
-    color: "var(--text-color, #fafbfc)",
-    borderRadius: 15,
-    boxShadow: "0 6px 32px 0 rgba(0,0,0,0.35)",
-    padding: "28px 26px 20px 28px",
-    border: "1.7px solid var(--border-color, #3d3c36)",
-    fontFamily: "var(--font-main)",
-    fontSize: "15.2px",
-    lineHeight: 1.68,
-    transition: "transform 0.27s cubic-bezier(.26,1.14,.66,1.01), opacity 0.21s",
-    transform: open ? "translateY(0px) scale(1)" : "translateY(-14px) scale(0.99)",
-    opacity: open ? 1 : 0,
-    pointerEvents: open ? "auto" : "none",
-    outline: "none",
-    ...styleProp
-  };
-
-  const floatingBtnStyles = {
-    position: placement === "fixed" ? "fixed" : "absolute",
-    top: 38,
-    right: 34,
-    zIndex: 1041,
-    background: "linear-gradient(88deg,#ffad42,#ff9800 80%)",
-    color: "#181824",
-    border: "none",
-    borderRadius: "0 13px 13px 0",
-    boxShadow: "0 3.5px 14px 1.5px rgba(41,41,48,0.09)",
-    padding: "7px 17px 9px 12px",
-    fontWeight: 800,
-    fontSize: "16.8px",
-    cursor: "pointer",
-    display: open ? "none" : "flex",
-    alignItems: "center",
-    transition: "opacity 0.18s, background 0.18s",
-    outline: "none"
-  };
-
-  // Accessible region label
-  const regionLabel = "Page Guide / Help Panel";
+  // Floating help button (always present in overlay/fixed)
+  // Uses ARIA label and a premium modern UI, floats at top-right
   return (
     <>
       <button
-        ref={btnRef}
-        tabIndex={0}
-        aria-label={open ? "Hide Help Panel" : "Show Help Panel"}
+        type="button"
+        className="help-fab"
+        aria-label={buttonAriaLabel || "Open help panel"}
+        aria-haspopup="dialog"
         aria-expanded={open}
-        style={floatingBtnStyles}
-        onClick={() => setOpen(true)}
-        className="help-sidebar-toggle-btn"
+        onClick={() => setOpen(v => !v)}
+        style={{
+          position: "fixed",
+          top: 28,
+          right: 34,
+          zIndex: 1065,
+          width: 46,
+          height: 46,
+          borderRadius: "50%",
+          background:
+            "radial-gradient(circle at 63% 23%, #22272e 56%, #000 104%)",
+          border: "2.5px solid var(--base-accent, #ff9800)",
+          color: "var(--base-accent, #ff9800)",
+          fontSize: 23,
+          fontWeight: 800,
+          boxShadow: "0 3.3px 29px -5px #381f0e1f, 0 1.4px 7px #1612154a",
+          outline: open
+            ? "2.5px solid var(--base-light, #ffad42)"
+            : "none",
+          cursor: "pointer",
+          transition: "box-shadow 0.19s, background 0.13s",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          ...style,
+        }}
+        tabIndex={0}
       >
-        <span aria-hidden="true" style={{ fontSize: 22, marginRight: 7 }}>❓</span>
-        Help
+        <span aria-hidden="true">❓</span>
       </button>
-      <aside
-        ref={panelRef}
-        className="help-sidebar-main"
-        style={sideStyles}
-        role="complementary"
-        aria-label={regionLabel}
-        tabIndex={open ? 0 : -1}
-        aria-hidden={!open}
-        {...rest}
-      >
-        {/* Close Button */}
-        <button
-          aria-label="Close Help Panel"
-          onClick={() => setOpen(false)}
+
+      {open && (
+        <aside
+          className="help-sidebar-overlay"
+          role="dialog"
+          tabIndex={-1}
+          aria-modal="true"
+          aria-label="Page Help and Guide"
           style={{
-            position: "absolute",
-            top: 11,
-            right: 11,
-            fontSize: "21px",
-            background: "none",
-            border: "none",
-            color: "#ffad42",
-            fontWeight: 800,
-            cursor: "pointer"
+            position: "fixed",
+            inset: 0,
+            zIndex: 2001,
+            background: "rgba(0,0,0,0.66)",
+            display: "flex",
+            alignItems: "flex-start",
+            justifyContent: "flex-end",
+            pointerEvents: "auto"
           }}
-        >×</button>
-        {/* Icon/Title */}
-        <header style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <span aria-hidden="true" style={{ fontSize: 27, color: "#ffad42", marginRight: 13 }}>👋</span>
-          <span style={{
-            fontSize: 18.7,
-            fontWeight: 800,
-            color: "var(--base-light,#ff9800)",
-            letterSpacing: ".03em"
-          }}>
-            Guide & Help
-          </span>
-        </header>
-        {/* Summary */}
-        {summary && (
-          <div style={{
-            fontSize: 16,
-            marginBottom: 13,
-            color: "#ffad42",
-            fontWeight: 650,
-            letterSpacing: ".02em"
-          }}>
-            {summary}
-          </div>
-        )}
-
-        {/* Usage/Instructions */}
-        {usage && (
-          <section style={{ marginBottom: 12 }}>
-            <div style={{
-              fontWeight: 700,
-              color: "#fbe278",
-              marginBottom: 2,
-              fontSize: 14.2,
-              textShadow: "0 1.5px 8px #23242c7a"
+          onClick={e => {
+            // Click on backdrop closes
+            if (e.target === e.currentTarget) setOpen(false);
+          }}
+        >
+          <section
+            tabIndex={0}
+            style={{
+              marginTop: 44,
+              marginRight: 32,
+              background: "#000", // OLED true black
+              color: "var(--text-color)",
+              borderRadius: 21,
+              width: 352,
+              maxWidth: "94vw",
+              minHeight: 180,
+              boxShadow: "0 18px 93px -4px #000e, 0 6px 26px 0 #ff980022",
+              border: "2.9px solid var(--base-light, #ffad42)",
+              transition: "opacity 0.18s cubic-bezier(.22,.7,.43,1), box-shadow 0.12s",
+              padding: "38px 34px 32px 36px",
+              position: "relative",
+              outline: "none",
+              fontFamily: "var(--font-main, 'Inter', sans-serif)",
+              ...style
+            }}
+            aria-labelledby="help-sidebar-title"
+          >
+            <button
+              type="button"
+              className="close-help-btn"
+              onClick={() => setOpen(false)}
+              aria-label="Close help panel"
+              style={{
+                position: "absolute",
+                top: 10,
+                right: 12,
+                background: "none",
+                border: "none",
+                color: "#babbbe",
+                fontSize: 28,
+                fontWeight: 500,
+                cursor: "pointer",
+                opacity: 0.92
+              }}
+            >×</button>
+            <header id="help-sidebar-title" style={{
+              fontWeight: 990,
+              color: "var(--base-accent)",
+              fontSize: 22,
+              marginBottom: 11,
+              letterSpacing: ".018em",
+              display: "flex",
+              alignItems: "center"
             }}>
-              How to use this page:
-            </div>
-            <div style={{ color: "#fbf6e0", fontSize: 14.7, lineHeight: 1.61, fontWeight: 500 }}>
-              {typeof usage === "string"
-                ? <div style={{ whiteSpace: "pre-line" }}>{usage}</div>
-                : usage}
+              <span aria-hidden="true" style={{
+                fontSize: 27,
+                marginRight: 9,
+                color: "#ffad42"
+              }}>❓</span>
+              {summary}
+            </header>
+            {usage && (
+              <aside style={{
+                color: "#aafacf",
+                fontSize: 15.6,
+                marginBottom: 7,
+                marginTop: 1,
+                fontWeight: 700
+              }}>
+                <span style={{ marginRight: 8 }}>💡</span>
+                {usage}
+              </aside>
+            )}
+            <div style={{ fontSize: 15.1, color: "var(--text-secondary)", lineHeight: 1.7 }}>
+              {description}
             </div>
           </section>
-        )}
-
-        {/* Description/Beginner Guide */}
-        {description && (
-          <section>
-            <div style={{
-              fontWeight: 700,
-              color: "#fae6cc",
-              marginBottom: 4,
-              fontSize: 14.1,
-              letterSpacing: ".01em"
-            }}>
-              Beginner's Overview:
-            </div>
-            <div style={{ color: "#ffe5b1", fontSize: 14.4, lineHeight: 1.7, fontWeight: 480 }}>
-              {typeof description === "string"
-                ? <div style={{ whiteSpace: "pre-line" }}>{description}</div>
-                : description}
-            </div>
-          </section>
-        )}
-
-        {/* Visual affordance (drag handle, if desired) */}
-        <div aria-hidden="true" style={{
-          marginTop: 19, marginBottom: -6, textAlign: "center", fontSize: 12, color: "#86640094"
-        }}>UK-style sidebar. Press <b>Esc</b> to close.</div>
-      </aside>
+        </aside>
+      )}
     </>
   );
 }
