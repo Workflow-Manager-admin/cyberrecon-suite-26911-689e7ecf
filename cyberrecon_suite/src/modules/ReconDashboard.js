@@ -155,7 +155,7 @@ function ReconDashboard() {
     setShowResults(Array.isArray(results) && results.length > 0);
   }, [results]);
 
-  // Load history on mount
+  // Load recon history on mount
   useEffect(() => {
     let ignore = false;
     async function fetchHistory() {
@@ -173,6 +173,46 @@ function ReconDashboard() {
     fetchHistory();
     return () => { ignore = true; };
   }, []);
+
+  // Load scheduled jobs on mount and on demand
+  useEffect(() => {
+    let ignore = false;
+    async function fetchJobs() {
+      try {
+        const arr = await getJobs();
+        if (!ignore) setJobs(Array.isArray(arr) ? arr : []);
+      } catch (e) {
+        if (!ignore) setJobs([]);
+      }
+    }
+    fetchJobs();
+    // Don't need dependency on jobs itself; only reloads if schedule panel is toggled
+    return () => { ignore = true; };
+  }, [showSchedulePanel, jobPending]);
+
+  // Helper: Format schedule info for UI.
+  function formatScheduleDescription(schedule) {
+    if (!schedule) return "";
+    if (typeof schedule === "string") {
+      if (schedule === "daily") return "Daily";
+      if (schedule === "weekly") return "Weekly";
+      return schedule;
+    }
+    if (schedule.type === "interval") {
+      return `Every ${schedule.intervalMinutes} minutes`;
+    }
+    if (schedule.type === "cron") {
+      const hh = schedule.hour?.toString().padStart(2,"0");
+      const mm = schedule.minute?.toString().padStart(2,"0");
+      if (schedule.dow !== undefined && schedule.dow !== null)
+        return `Every week on ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][schedule.dow]} at ${hh}:${mm}`;
+      return `Daily at ${hh}:${mm}`;
+    }
+    if (schedule.type === "once") {
+      return `Once at ${new Date(schedule.runAt).toLocaleString()}`;
+    }
+    return "[custom schedule]";
+  }
 
   // Save results
   async function saveScanHistory(rows, status, errorMsg) {
