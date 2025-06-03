@@ -479,21 +479,61 @@ function ReconDashboard() {
       {loading && (
         <div
           style={{
-            background: "rgba(255,152,0,0.065)",
+            background: "linear-gradient(92deg,rgba(255,168,64,0.09),rgba(255,186,64,0.10))",
             color: "var(--base-accent)",
-            borderRadius: 7,
-            padding: "12px 22px",
-            fontWeight: 500,
-            marginBottom: 20,
-            fontSize: 17,
+            borderRadius: 8,
+            padding: "19px 26px",
+            fontWeight: 600,
+            marginBottom: 22,
+            fontSize: 18,
             display: "flex",
             alignItems: "center",
-            gap: 11,
-            boxShadow: "0 2.5px 7px -5px rgba(255,152,0,0.09)"
+            gap: 15,
+            boxShadow: "0 4px 32px -6px #292b2e44",
+            border: "1.2px solid var(--border-color)",
+            position: "relative"
           }}
           aria-live="assertive"
         >
-          <span style={{ fontSize: 22 }} aria-hidden="true">⏳</span> {loading}
+          <span
+            className="premium-loader"
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginRight: 9,
+              fontSize: 24,
+              animation: "spin-emoji 1.4s linear infinite"
+            }}
+          >✨
+            <span role="img" aria-label="loading" style={{
+              marginLeft: 2
+            }}>⏳</span>
+          </span>
+          {loading}
+          {cancelScan &&
+            <button
+              type="button"
+              className="btn"
+              aria-label="Cancel scan"
+              style={{
+                marginLeft: 17,
+                fontSize: 15.5,
+                background: "linear-gradient(90deg,#ff5964,#ffa237)",
+                color: "#191b22",
+                borderRadius: 7,
+                fontWeight: 700,
+                boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.05)",
+              }}
+              onClick={() => cancelScan && cancelScan()}
+            >Cancel 🚫</button>
+          }
+          {/* Loader keyframes */}
+          <style>{`
+            @keyframes spin-emoji {
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
         </div>
       )}
 
@@ -735,19 +775,32 @@ function ReconDashboard() {
       {exporting && (
         <div
           style={{
-            background: "rgba(137,183,255,0.08)",
-            color: "#7cc6f6",
-            borderRadius: 7,
-            padding: "8px 20px",
-            fontWeight: 500,
-            fontSize: 15.2,
-            marginBottom: 24,
+            background: "linear-gradient(94deg,#232b4a2a,#161b2f2F)",
+            color: "#4fbaff",
+            borderRadius: 10,
+            padding: "13px 32px",
+            fontWeight: 600,
+            fontSize: 17.2,
+            marginBottom: 28,
             display: "flex",
             alignItems: "center",
-            gap: 10
+            gap: 13,
+            border: "1.1px solid #405f89a5",
+            boxShadow: "0 1.5px 8px 0 rgba(0,28,88,0.08)"
           }}
         >
-          <span aria-hidden="true" style={{ fontSize: 19 }}>💾</span> Preparing export...
+          <span
+            aria-hidden="true"
+            style={{
+              fontSize: 21,
+              animation: "spin-emoji 1.5s linear infinite"
+            }}>💾</span>
+          Export in progress... Please wait
+          <style>{`
+            @keyframes spin-emoji {
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
         </div>
       )}
 
