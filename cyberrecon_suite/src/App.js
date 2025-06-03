@@ -160,6 +160,8 @@ function App() {
           This is a UI scaffold. Expand modules to begin developing features.
         </p>
       </Modal>
+      {/* Overlay smart footer always at viewport bottom */}
+      <SmartFooter />
     </div>
   );
 }
