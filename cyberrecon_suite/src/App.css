@@ -7,10 +7,12 @@
   --base-accent: #ff9800;
   --focus-visible-ring: #ffb85c;
   --text-color: #fafbfc;
-  --text-secondary: rgba(255, 255, 255, 0.73);
-  --text-tertiary: rgba(255,255,255,0.47);
-  --border-color: rgba(255, 255, 255, 0.13);
-  --glass-overlay: rgba(27,28,34,0.65);
+  --text-secondary: rgba(255,255,255,0.78);
+  --text-tertiary: rgba(255,255,255,0.42);
+  --border-color: rgba(255,255,255,0.09);
+  --glass-overlay: linear-gradient(90deg,rgba(17,19,22,0.91) 41%,rgba(18,20,24,0.81) 100%);
+  --font-main: 'Inter','Roboto','Segoe UI',Arial,sans-serif;
+  --font-code: 'Menlo','Monaco','Consolas',monospace;
 }
 
 /* Sidebar – Compact Premium */
