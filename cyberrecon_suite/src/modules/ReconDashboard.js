@@ -168,26 +168,26 @@ function ReconDashboard() {
     if (!inputDomains.length) {
       setError("Please enter at least one valid domain. 🤚");
       setAriaMsg("Invalid domain input.");
-      setResults([]); // Always trigger result UI to show empty
+      setResults([]); // Guarantee: always render results panel, even if empty
       setShowResults(true);
       return;
     }
+
     setDomains(inputDomains);
     setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"} `);
 
-    let isElectron = hasElectronBridge();
-    let nFinished = 0;
-    let aborters = [];
-    let scanAborted = false;
-
-    // STREAM buffer for all results
-    let allScanResults = [];
+    const isElectron = hasElectronBridge();
+    let finishedCount = 0, aborted = false;
+    let cancels = []; // for all parallel scans
+    let allResults = [];
     setResultBuf([]);
     setShowResults(false);
 
-    // For all domains, run recon in parallel; handle error cancellations
-    inputDomains.forEach((domain, idx) => {
-      let domainResultBuf = [];
+    // Scan for each domain in parallel, updating UI in real time
+    inputDomains.forEach((domain) => {
+      let perDomainResults = [];
+
+      // Live data handler: update buf and append to allResults for premium real-time effect
       const handleData = (data) => {
         let entry;
         if (tool === "Amass") {
@@ -202,86 +202,92 @@ function ReconDashboard() {
         } else if (tool === "Masscan") {
           entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
         }
-        setResultBuf(rb => {
-          const newRb = [...rb, entry];
-          return newRb;
-        });
-        domainResultBuf.push(entry);
-        allScanResults.push(entry);
+        setResultBuf((prev) => [...prev, entry]);
+        perDomainResults.push(entry);
+        allResults.push(entry);
       };
+
+      // Error state: update message, finish progress, trigger state transitions
       const handleError = (err) => {
         setError(`❌ ${typeof err === "string" ? err : "Unknown Error"} (${domain})`);
         setLoading("");
         setAriaMsg(`Error: ${err}`);
-        // Save failed run to history
         saveScanHistory(
-          domainResultBuf.length ? domainResultBuf : [{
+          perDomainResults.length ? perDomainResults : [{
             domain, tool, result: "Error: " + String(err), time: new Date().toLocaleTimeString()
           }],
           "failed",
           String(err)
         );
-        nFinished += 1;
-        if (nFinished >= inputDomains.length) {
+        finishedCount += 1;
+        if (finishedCount >= inputDomains.length) {
           setLoading("");
           setShowResults(true);
           finalizeResults();
         }
       };
+
       const handleDone = () => {
-        nFinished += 1;
-        if (nFinished >= inputDomains.length) {
+        finishedCount += 1;
+        if (finishedCount >= inputDomains.length) {
           setLoading("");
           setShowResults(true);
           finalizeResults();
         }
       };
+
+      // When all domains have finished (successfully or error/abort/cancel), finalize results for display/history
       async function finalizeResults() {
-        if (scanAborted) {
+        if (aborted) {
           setResultBuf([]);
-          setResults([]); // Show empty or cancelled state
+          setResults([]);
           setShowResults(true);
           setCancelScan(null);
+          setAriaMsg("Scan cancelled.");
           return;
         }
-        const buf = resultBuf.length ? resultBuf : [];
-        setResults((b => [...b, ...buf].filter(Boolean))(allScanResults.length ? [] : [])); // Defensive: flush buf
+        const buf = [...resultBuf]; // Current stream buffer
+        setResults(allResults.length ? [...allResults] : (buf.length ? buf : []));
         setShowResults(true);
-        await saveScanHistory(buf.length ? buf : allScanResults, "completed", "");
+        await saveScanHistory(allResults.length ? allResults : buf, "completed", "");
         setResultBuf([]);
         setCancelScan(null);
         setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
       }
-      // CLI or API select, add try/catch for robust error fallback
+
+      // Actual scan startup: Wire to Electron or HTTP API fallback
+      let scanCancel;
       if (isElectron) {
         let args = [];
         if (tool === "Amass") args = ["enum", "-d", domain];
         else if (tool === "Masscan") args = ["-p1-1000", "--rate=2000", domain];
         try {
-          const [promise, canceler] = runViaElectron(
+          const [/*promise*/, cancelFn] = runViaElectron(
             tool, args, handleData, handleError, handleDone
           );
-          aborters.push(canceler);
-        } catch (electronError) {
-          handleError(`Electron scan failed: ${(electronError && electronError.message) || "Unknown"}`);
+          scanCancel = cancelFn;
+        } catch (err) {
+          handleError(`Electron scan failed: ${(err && err.message) || "Unknown"}`);
         }
       } else {
         try {
           runViaApi(tool, domain, handleData, handleError, handleDone);
-        } catch (apiError) {
-          handleError(`API scan failed: ${(apiError && apiError.message) || "Unknown"}`);
+        } catch (err) {
+          handleError(`API scan failed: ${(err && err.message) || "Unknown"}`);
         }
       }
+      cancels.push(scanCancel);
     });
-    // Enable scan cancel
+
+    // Premium cancel: cancels all parallel scans, triggers state, and premium empty result view
     setCancelScan(() => () => {
-      scanAborted = true;
-      aborters.forEach(a => a && a());
+      aborted = true;
+      cancels.forEach(fn => fn && fn());
       setLoading("");
       setCancelScan(null);
       setAriaMsg("Scan cancelled.");
       setError("Scan cancelled. 🚫");
-      setResults([]); // Always show a result region
+      setResults([]);
       setShowResults(true);
     });
   }
