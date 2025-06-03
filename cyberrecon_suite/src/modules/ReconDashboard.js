@@ -962,16 +962,17 @@ function ReconDashboard() {
           </>
         }
         placement="fixed"
-        style={{ top: 24, right: 24, boxShadow: "0 4px 24px 2px #181a1f81" }}
+        style={{ top: 24, right: 24, boxShadow: "0 6px 39px 2px #070b0f90", borderRadius: 17 }}
       />
       <section
         aria-label="Recon Dashboard"
         tabIndex={0}
         style={{
-          maxWidth: 880,
+          maxWidth: 980,
           margin: "0 auto",
-          padding: "32px 0",
-          color: "var(--text-color)"
+          padding: "36px 0",
+          color: "var(--text-color)",
+          background: "transparent"
         }}
       >
         <AriaLive />
@@ -980,43 +981,48 @@ function ReconDashboard() {
       <header style={{
         display: "flex",
         alignItems: "center",
-        marginBottom: 24,
-        gap: 16
+        marginBottom: 26,
+        gap: 18,
+        padding: "0 14px",
+        background: "linear-gradient(88deg,#1b1a1f 80%,#191a1c 100%)",
+        borderRadius: "16px",
+        boxShadow: "0 8px 36px -11px #271f0e24, 0 3.5px 14px -4px #ff9c1c16"
       }}>
         <span
           aria-hidden="true"
           style={{
-            fontSize: 33,
-            background: "linear-gradient(88deg,#ffad42,#ff9800 80%)",
+            fontSize: 38,
+            background: "linear-gradient(90deg,#ffad42,#ff9800 60%)",
             WebkitBackgroundClip: "text",
             color: "transparent",
             fontWeight: 900,
-            marginRight: 9,
-            textShadow: "0 2.8px 18px rgba(255,168,32,0.18)"
+            marginRight: 12,
+            textShadow: "0 3px 20px rgba(255,168,32,0.21)"
           }}
         >🛰️</span>
         <h1
           style={{
             margin: 0,
-            fontSize: 29,
-            letterSpacing: ".012em",
+            fontSize: 31,
+            letterSpacing: ".014em",
             color: "var(--base-light)",
-            fontWeight: 800
+            fontWeight: 890
           }}
         >Recon Dashboard</h1>
         <span
-          aria-label="Beta"
+          aria-label="Premium"
           style={{
             fontSize: 14,
-            color: "#daa84b",
-            background: "rgba(255,168,64,0.09)",
-            borderRadius: 13,
-            padding: "3.5px 14px",
-            marginLeft: 15,
-            fontWeight: 700,
-            boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.04)",
-            letterSpacing: ".08em",
-            border: "1.4px solid rgba(255,184,72,0.1)"
+            color: "#fcbf67",
+            background: "linear-gradient(90deg,#2b1f15 9%,#ffad4259 91%)",
+            borderRadius: 15,
+            padding: "4.5px 18px",
+            marginLeft: 19,
+            fontWeight: 800,
+            opacity: 0.94,
+            boxShadow: "0 3.5px 16px -2px #ffbf4251",
+            letterSpacing: ".09em",
+            border: "1.9px solid #ffbe4242"
           }}
         >PREMIUM</span>
         <span style={{ flex: 1 }} />
@@ -1025,13 +1031,14 @@ function ReconDashboard() {
           className="btn"
           aria-label="Open scheduling panel"
           style={{
-            marginLeft: 12,
-            padding: "8px 17px",
-            fontWeight: 700,
-            fontSize: 15,
-            background: "linear-gradient(93deg, #41b572 60%, #a7ffed)",
+            marginLeft: 14,
+            padding: "10px 22px",
+            fontWeight: 850,
+            fontSize: 16,
+            background: "linear-gradient(91deg, #41b572 70%, #a7ffed 120%)",
             color: "#111a18",
-            borderRadius: 7
+            borderRadius: 10,
+            boxShadow: "0 2px 10px 0 #4ec99e14"
           }}
           onClick={() => setShowSchedulePanel(v => !v)}
         >📅 Scheduling</button>
@@ -1039,7 +1046,13 @@ function ReconDashboard() {
 
       {/* Scheduling Panel */}
       {showSchedulePanel && (
-        <>
+        <div style={{
+          padding: 0,
+          marginBottom: 32,
+          marginTop: 0,
+          borderRadius: 18,
+          boxShadow: "0 13px 36px -10px #26db8641,0 4px 14px -5px #116c41c2"
+        }}>
           {notif.show &&
             <PremiumStatusNotice
               msg={<span dangerouslySetInnerHTML={{ __html: notif.msg }} />}
@@ -1088,145 +1101,155 @@ function ReconDashboard() {
             setEditingJob={setEditingJob}
             forceRefresh={() => setJobForceRefresh(f => !f)}
           />
-        </>
+        </div>
       )}
 
       {/* Input Panel */}
-      <form
-        aria-label="Domain input form"
-        style={{
-          background: "var(--secondary)",
-          borderRadius: 13,
-          padding: "30px 34px",
-          maxWidth: 700,
-          marginBottom: 34,
-          boxShadow: "0 6px 32px -8px rgba(0,0,0,0.16)"
-        }}
-        onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}>
-        <label htmlFor="domain-input"
-          style={{
-            fontWeight: 700,
-            color: "var(--base-accent)",
-            letterSpacing: ".01em",
-            fontSize: 17.5,
-            display: "block",
-            marginBottom: 8
-          }}>
-          Domains or Targets <span aria-hidden="true" style={{ fontSize: 20, marginLeft: 8 }}>🔍</span>
-        </label>
-        <textarea
-          ref={textareaRef}
-          id="domain-input"
-          name="domains"
-          value={domainsInput}
-          spellCheck={false}
-          required
-          aria-required="true"
-          aria-describedby="domain-desc"
-          rows={3}
-          onChange={e => setDomainsInput(e.target.value)}
-          onKeyDown={handleTextareaKey}
-          tabIndex={0}
-          style={{
-            width: "100%",
-            padding: "14px 12px",
-            borderRadius: 9,
-            fontSize: 15.7,
-            fontFamily: "var(--font-code)",
-            color: "var(--text-color)",
-            border: "1.4px solid var(--border-color)",
-            background: "var(--base-dark)",
-            marginBottom: 6,
-            boxShadow: "0 2.5px 9px -6px rgba(0,0,0,0.13)",
-            fontWeight: 500,
-            letterSpacing: ".01em"
-          }}
-          placeholder="e.g. example.com\nor: domain1.com, domain2.com"
-        />
-        <small
-          id="domain-desc"
-          style={{
-            color: "var(--text-tertiary)",
-            fontSize: 13,
-            display: "block",
-            marginBottom: 8,
-            letterSpacing: ".01em"
-          }}
-        >
-          Enter one or more domains separated by comma, space, or new lines.
-        </small>
-        {error && (
-          <PremiumStatusNotice
-            msg={error}
-            type="error"
-            ariaId="error-feedback"
-            style={{ marginBottom: 13, marginTop: 6 }}
-            onClose={() => setError("")}
-          />
-        )}
-        {/* Action Buttons */}
-        <div style={{
-          marginTop: 7,
-          display: "flex",
-          gap: 14,
-          flexWrap: "wrap",
-          alignItems: "center"
-        }}>
-          <button
-            type="submit"
-            className="btn btn-large"
+      <div style={{
+        background: "linear-gradient(90deg,#121212 85%,#1a1a1e 100%)",
+        borderRadius: 19,
+        padding: "34px 38px 32px 38px",
+        maxWidth: 755,
+        marginBottom: 40,
+        boxShadow: "0 8px 34px -6px #ffad420d, 0 3.5px 14px -6px #151c4a29",
+        border: "2.2px solid var(--border-color)",
+        marginLeft: "auto", marginRight: "auto"
+      }}>
+        <form
+          aria-label="Domain input form"
+          style={{ marginBottom: 0 }}
+          onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}>
+          <label htmlFor="domain-input"
             style={{
-              display: "flex",
-              alignItems: "center",
+              fontWeight: 700,
+              color: "var(--base-accent)",
+              letterSpacing: ".01em",
               fontSize: 17.5,
-              fontWeight: 700,
-              background: "var(--base-light)",
-              color: "#272a31",
-              gap: 9,
-              border: "none"
-            }}
-            aria-label="Run Amass Recon"
-            disabled={!!loading}
-          >🚀 Start Amass</button>
-          <button
-            type="button"
-            className="btn btn-large"
+              display: "block",
+              marginBottom: 10
+            }}>
+            Domains or Targets <span aria-hidden="true" style={{ fontSize: 20, marginLeft: 8 }}>🔍</span>
+          </label>
+          <textarea
+            ref={textareaRef}
+            id="domain-input"
+            name="domains"
+            value={domainsInput}
+            spellCheck={false}
+            required
+            aria-required="true"
+            aria-describedby="domain-desc"
+            rows={3}
+            onChange={e => setDomainsInput(e.target.value)}
+            onKeyDown={handleTextareaKey}
+            tabIndex={0}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "linear-gradient(90deg,#51b57f,#90ffa9)",
-              color: "#181b1e",
-              fontWeight: 700,
-              fontSize: 17.5
-            }}
-            aria-label="Run Masscan Network Scan"
-            disabled={!!loading}
-            onClick={() => handleSubmitScan("Masscan")}
-          >🖥️ Run Masscan</button>
-          <button
-            type="button"
-            className="btn"
-            style={{
-              marginLeft: 14,
+              width: "100%",
+              padding: "15px 13px",
+              borderRadius: 10,
               fontSize: 16,
-              fontWeight: 600
+              fontFamily: "var(--font-code)",
+              color: "var(--text-color)",
+              border: "2px solid var(--border-color)",
+              background: "#16171a",
+              marginBottom: 7,
+              boxShadow: "0 3px 15px -6px #191e36b0",
+              fontWeight: 510,
+              letterSpacing: ".012em"
             }}
-            aria-label="Clear domains input"
-            disabled={!!loading}
-            onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setShowResults(false); setError(""); }}
-          >🧹 Clear</button>
-        </div>
-        <div
-          style={{
+            placeholder="e.g. example.com&#10;or: domain1.com, domain2.com"
+          />
+          <small
+            id="domain-desc"
+            style={{
+              color: "var(--text-tertiary)",
+              fontSize: 13,
+              display: "block",
+              marginBottom: 8,
+              letterSpacing: ".01em",
+              marginTop: -2,
+            }}
+          >
+            Enter one or more domains separated by comma, space, or new lines.
+          </small>
+          {error && (
+            <PremiumStatusNotice
+              msg={error}
+              type="error"
+              ariaId="error-feedback"
+              style={{ marginBottom: 13, marginTop: 6 }}
+              onClose={() => setError("")}
+            />
+          )}
+          {/* Action Buttons */}
+          <div style={{
             marginTop: 7,
-            fontSize: 13.1,
-            color: "var(--text-secondary)"
-          }}
-        >
-          Ctrl+Enter (or Cmd+Enter) to trigger Amass scan.
-        </div>
-      </form>
+            display: "flex",
+            gap: 18,
+            flexWrap: "wrap",
+            alignItems: "center"
+          }}>
+            <button
+              type="submit"
+              className="btn btn-large"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                fontSize: 17.7,
+                fontWeight: 800,
+                background: "var(--base-light)",
+                color: "#191a24",
+                gap: 9,
+                border: "none",
+                borderRadius: "7px",
+                boxShadow: "0 1.5px 11px 0 #ffba420c"
+              }}
+              aria-label="Run Amass Recon"
+              disabled={!!loading}
+            >🚀 Start Amass</button>
+            <button
+              type="button"
+              className="btn btn-large"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                background: "linear-gradient(90deg,#51b57f,#aefbaa 80%)",
+                color: "#181b1e",
+                fontWeight: 700,
+                fontSize: 17.6,
+                borderRadius: "7px",
+                boxShadow: "0 1.5px 9px 0 #2cfbc219"
+              }}
+              aria-label="Run Masscan Network Scan"
+              disabled={!!loading}
+              onClick={() => handleSubmitScan("Masscan")}
+            >🖥️ Run Masscan</button>
+            <button
+              type="button"
+              className="btn"
+              style={{
+                marginLeft: 16,
+                fontSize: 16,
+                fontWeight: 640,
+                borderRadius: "9px"
+              }}
+              aria-label="Clear domains input"
+              disabled={!!loading}
+              onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setShowResults(false); setError(""); }}
+            >🧹 Clear</button>
+          </div>
+          <div
+            style={{
+              marginTop: 7,
+              fontSize: 13.2,
+              color: "var(--text-secondary)"
+            }}
+          >
+            Ctrl+Enter (or Cmd+Enter) to trigger Amass scan.
+          </div>
+        </form>
+      </div>
 
       {/* Loading Panel */}
       {loading && (
