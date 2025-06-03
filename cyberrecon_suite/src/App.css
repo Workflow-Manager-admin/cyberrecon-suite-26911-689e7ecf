@@ -371,3 +371,59 @@ textarea:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 100px var(--elevated) inset !important;
   -webkit-text-fill-color: var(--text-color) !important;
 }
+
+/* SmartFooter (auto-hiding, always-accessible) */
+.smart-footer {
+  pointer-events: all;
+  outline: none !important;
+  min-height: 18px;
+  font-family: var(--font-main, 'Inter', 'Roboto', 'Segoe UI', Arial, sans-serif);
+  font-weight: 600;
+  letter-spacing: .024em;
+  border-top: 1.5px solid var(--border-color, #fff2);
+  background: linear-gradient(90deg, rgba(30,32,40,0.85) 70%, rgba(0,0,0,0.89) 100%);
+  color: var(--base-accent, #ff9800);
+  box-shadow: 0 -9px 34px -12px #1a1a1a90, 0 -1.3px 11px -2px #ff980033, 0 -1px 7px 0 #25253a40;
+  /* Smooth slide-down show/hide */
+  transition: transform 0.18s cubic-bezier(.23,1.36,.62,1), opacity 0.2s, min-height .17s;
+  will-change: transform, opacity;
+  cursor: pointer;
+  z-index: 60;
+}
+
+.smart-footer .cyberhash-icon {
+  vertical-align: middle;
+  margin-right: 8px;
+  filter: drop-shadow(0 2px 11px #ff980066);
+}
+
+.smart-footer--visible {
+  opacity: 1 !important;
+  min-height: 38px !important;
+  outline: 2.5px solid var(--focus-visible-ring,#ffb85c);
+}
+
+.smart-footer:focus-visible,
+.smart-footer:focus {
+  outline: 2.4px solid var(--focus-visible-ring,#ffb85c);
+  outline-offset: 0;
+}
+
+.smart-footer--visible span {
+  opacity: 1 !important;
+  font-size: 15px !important;
+}
+
+.smart-footer:not(.smart-footer--visible) {
+  opacity: 0.85;
+  min-height: 16px;
+}
+
+@media (max-width: 640px) {
+  .smart-footer {
+    font-size: 13px !important;
+    min-height: 14px;
+    padding-top: 4px;
+    padding-bottom: 2px;
+  }
+}
