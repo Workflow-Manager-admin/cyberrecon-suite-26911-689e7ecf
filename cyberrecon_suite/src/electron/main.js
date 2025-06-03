@@ -55,6 +55,191 @@ ensureDbSchema();
  * -----------------------------------------
  * Persistent job storage, schedule, trigger background scans, and IPC
  */
+
+// --- Nuclei: CLI IPC integration for VulnerabilityScanner ---
+// (1) Handler: 'vulnscan:runScanCommand'
+// (2) Handler: 'vulnscan:cancelScanCommand'
+// (3) Scan event emitter: scan stream via scanEmitter (scan-nuclei-data, scan-nuclei-end, scan-nuclei-error)
+const { spawn } = require('child_process');
+let activeNucleiScans = Object.create(null); // processId -> {proc/timeout/active}
+
+// PUBLIC_INTERFACE
+/**
+ * IPC handler for running Nuclei CLI or simulating scan as fallback.
+ * Args: { targets, templates, processId, extraArgs }
+ * Streams events: scan-nuclei-data, scan-nuclei-end, scan-nuclei-error
+ */
+ipcMain.handle('vulnscan:runScanCommand', async (event, opts) => {
+  const scanEmitter = module.exports.scanEmitter;
+  let { targets, templates, processId, extraArgs } = opts || {};
+  processId = processId || ('nuclei_' + Math.random().toString(36).substring(2, 12));
+  if (!Array.isArray(targets)) {
+    // Accept comma/newline-separated string fallback
+    targets = typeof targets === 'string'
+      ? targets.split(/[\s,]+/).map(t => t.trim()).filter(Boolean)
+      : [];
+  }
+  if (!processId || !targets.length) {
+    if (scanEmitter) scanEmitter.emit('scan-nuclei-error', { processId, type: "error", error: "Missing targets/ID" });
+    return { ok: false, error: "Missing targets/ID" };
+  }
+  let cliAvailable = false;
+  let cliPath = 'nuclei';
+  // Simple check: Is Nuclei CLI present on path?
+  try {
+    const isWin = process.platform.startsWith('win');
+    const checkCmd = isWin ? 'where nuclei' : 'which nuclei';
+    const res = require('child_process').spawnSync(checkCmd, { shell: true });
+    if (res.status === 0 && res.stdout && res.stdout.toString().trim().length) cliAvailable = true;
+  } catch { cliAvailable = false; }
+
+  // Args assembly (basic: nuclei -u <target> -t <template> --json)
+  const runArgs = [];
+  (targets || []).forEach(t => runArgs.push('-u', t));
+  // Apply template filter if given
+  if (typeof templates === 'string' && templates.trim()) {
+    runArgs.push('-t', templates.trim());
+  } else if (Array.isArray(templates)) {
+    templates.forEach(tmp => { if(tmp && tmp.trim()) runArgs.push('-t', tmp.trim()); });
+  }
+  runArgs.push('--json');
+  if (Array.isArray(extraArgs)) {
+    runArgs.push(...extraArgs.filter(a => typeof a === 'string'));
+  }
+
+  if (cliAvailable) {
+    // Run real Nuclei CLI
+    try {
+      const proc = spawn(cliPath, runArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
+      activeNucleiScans[processId] = { proc, active: true };
+      proc.stdout.setEncoding('utf-8');
+      proc.stderr.setEncoding('utf-8');
+
+      proc.stdout.on('data', chunk => {
+        if (!activeNucleiScans[processId] || !activeNucleiScans[processId].active) return;
+        // Nuclei outputs JSONL per finding
+        const lines = chunk.split(/\r?\n/).filter(Boolean);
+        lines.forEach(line =>
+          scanEmitter.emit('scan-nuclei-data', { processId, type: "data", data: line })
+        );
+      });
+      proc.stderr.on('data', chunk => {
+        if (!activeNucleiScans[processId] || !activeNucleiScans[processId].active) return;
+        scanEmitter.emit('scan-nuclei-error', {
+          processId, type: "error", error: String(chunk)
+        });
+      });
+      proc.on('close', code => {
+        if (activeNucleiScans[processId]) activeNucleiScans[processId].active = false;
+        scanEmitter.emit('scan-nuclei-end', {
+          processId, type: "end", code, message: "Scan complete."
+        });
+        delete activeNucleiScans[processId];
+      });
+      proc.on('error', err => {
+        if (activeNucleiScans[processId]) activeNucleiScans[processId].active = false;
+        scanEmitter.emit('scan-nuclei-error', {
+          processId, type: "error", error: err.message || "Failed to spawn Nuclei"
+        });
+        scanEmitter.emit('scan-nuclei-end', {
+          processId, type: "end", code: -1, message: "Scan error."
+        });
+        delete activeNucleiScans[processId];
+      });
+      return { ok: true, processId, streaming: true };
+    } catch (err) {
+      scanEmitter.emit('scan-nuclei-error', {
+        processId, type: "error", error: err.message || "Failed to run Nuclei"
+      });
+      scanEmitter.emit('scan-nuclei-end', {
+        processId, type: "end", code: -2, message: "Scan error."
+      });
+      return { ok: false, error: err.message || "Failed to run Nuclei" };
+    }
+  } else {
+    // Fallback: Simulate scan results for demo/testing
+    let cancelled = false;
+    let scanStep = 0;
+    const fakeFindings = [
+      // One finding per type, plausible Nuclei JSONL
+      JSON.stringify({
+        templateID: "cves/2021/CVE-2021-1234",
+        info: { name: "Test CVE Vulnerability", severity: "critical", tags: "cve,test" },
+        host: (targets[0] || "testhost"),
+        matched: (targets[0] || "testhost") + "/admin",
+        type: "http",
+        timestamp: new Date().toISOString()
+      }),
+      JSON.stringify({
+        templateID: "misconfig/web-xss",
+        info: { name: "Reflected XSS", severity: "high", tags: "xss,web" },
+        host: (targets[0] || "testhost"),
+        matched: (targets[0] || "testhost") + "/search?q=test",
+        type: "http",
+        timestamp: new Date().toISOString()
+      })
+    ];
+    activeNucleiScans[processId] = { fake: true, active: true };
+
+    function nextFake() {
+      if (!activeNucleiScans[processId] || cancelled) {
+        scanEmitter.emit('scan-nuclei-end', {
+          processId, type: "end", code: 0, message: "Scan cancelled."
+        });
+        activeNucleiScans[processId].active = false;
+        delete activeNucleiScans[processId];
+        return;
+      }
+      if (scanStep < fakeFindings.length) {
+        scanEmitter.emit('scan-nuclei-data', {
+          processId, type: "data", data: fakeFindings[scanStep]
+        });
+        scanStep++;
+        setTimeout(nextFake, 777);
+      } else {
+        scanEmitter.emit('scan-nuclei-end', {
+          processId, type: "end", code: 0, message: "Scan complete (simulated)"
+        });
+        activeNucleiScans[processId].active = false;
+        delete activeNucleiScans[processId];
+      }
+    }
+    setTimeout(nextFake, 777);
+    return { ok: true, processId, streaming: false, simulated: true };
+  }
+});
+
+/**
+ * IPC handler to cancel a running Nuclei scan.
+ * Args: processId (string)
+ */
+ipcMain.handle('vulnscan:cancelScanCommand', (event, processId) => {
+  const scanEmitter = module.exports.scanEmitter;
+  const rec = activeNucleiScans[processId];
+  if (!rec || !rec.active) {
+    scanEmitter && scanEmitter.emit('scan-nuclei-end', {
+      processId, type: "end", code: 0, message: "Scan not active/cancelled."
+    });
+    delete activeNucleiScans[processId];
+    return { ok: false, error: "Not found or inactive" };
+  }
+  if (rec.proc && typeof rec.proc.kill === 'function') {
+    rec.proc.kill('SIGTERM');
+  }
+  rec.active = false;
+  if (rec.fake) {
+    // Simulated scan, mark as cancelled; handled in nextFake
+    // (scan-nuclei-end will be called automatically by nextFake)
+    // no-op here
+  } else {
+    scanEmitter && scanEmitter.emit('scan-nuclei-end', {
+      processId, type: "end", code: 0, message: "Scan cancelled."
+    });
+  }
+  delete activeNucleiScans[processId];
+  return { ok: true, cancelled: true };
+});
+
 const JOBS_PATH = path.join(app.getPath('userData'), 'scheduler_jobs.json');
 let jobsState = [];
 let jobTimers = {};
