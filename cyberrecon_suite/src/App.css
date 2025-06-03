@@ -185,14 +185,26 @@ body {
 .sidebar-btn.active,
 .sidebar-btn:focus-visible {
   background: var(--base-black);
-  color: var(--base-light);
-  border-right: 3px solid var(--base-light);
-  outline: 2.3px solid var(--focus-visible-ring);
-  outline-offset: -2px;
-}
-.sidebar-btn:hover {
   color: var(--base-accent);
-  background: rgba(255, 168, 66, 0.11);
+  border-right: 3px solid var(--base-accent);
+  outline: 2.4px solid var(--focus-visible-ring);
+  outline-offset: 1.5px;
+  box-shadow: 0 0 0 5px var(--focus-bg);
+  z-index: 10;
+}
+.sidebar-btn:hover, .sidebar-btn:active {
+  color: var(--base-light);
+  background: rgba(255, 168, 66, 0.14);
+  box-shadow: 0 2px 24px 0 #ffb85c33;
+  transition: background 0.14s, color 0.12s, box-shadow 0.14s;
+}
+.sidebar-btn:disabled,
+.sidebar-btn[aria-disabled="true"] {
+  opacity: 0.52;
+  pointer-events: none;
+  background: var(--sidebar-dark);
+  color: var(--text-tertiary);
+  border-right: 2px solid var(--border-contrast);
 }
 
 /* Tabbed Workspace */
