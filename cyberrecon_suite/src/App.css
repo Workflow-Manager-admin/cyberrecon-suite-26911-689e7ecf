@@ -1,13 +1,13 @@
 :root {
-  /* OLED-true Black Theme Palette */
+  /* OLED-true Black Theme Palette REFRESHED for extreme contrast and accessibility */
   --base-black: #000000;
   --base-dark: #101114;
   --base-darker: #0b0c0f;
   --base-deep: #16171a;
-  --sidebar-dark: #111215;
-  --secondary: #16171b;
+  --sidebar-dark: #0a0a0a;
+  --secondary: #18191c;
   --elevated: #22242a;
-  --contrast: #23242c;
+  --contrast: #35363f;
   --base-light: #ff9800;
   --base-accent: #ffad42;
   --accent-blue: #53d0f9;
@@ -16,19 +16,22 @@
   --accent-red: #ff6c7c;
   --accent-yellow: #ffe88c;
 
-  /* Typography */
-  --font-main: 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif;
+  /* --- Typography --- */
+  --font-main: 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
   --font-code: 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
 
   /* Text colors */
-  --text-color: #fafbfc;
-  --text-secondary: #bbbbd3;
-  --text-tertiary: #60606b;
+  --text-color: #ffffff;
+  --text-secondary: #ccccdd;
+  --text-tertiary: #848489;
   --text-on-accent: #191a1f;
 
-  /* Border & Shadow */
-  --border-color: rgba(255,255,255,0.07);
-  --focus-visible-ring: #ffb85c;
+  /* Border & Shadow (vivid) */
+  --border-color: #23242c;
+  --border-contrast: #35363f;
+  --focus-visible-ring: #ffd589;
+  --focus-bg: rgba(255,184,92,0.08);
+  --focus-outline-offset: 3px;
   --box-shadow-elevate: 0 7px 32px -13px rgba(0,0,0,0.82);
   --box-shadow-card: 0 2px 18px -7px rgba(0,0,0,0.24);
   --shadow-overlay: 0 4px 36px -12px #000d;
@@ -46,8 +49,11 @@
   --radius-base: 10px;
   --radius-card: 14px;
   --radius-modal: 18px;
-  --radius-btn: 7px;
+  --radius-btn: 8px;
+
 }
+
+/* Always prefer true black for critical containers and highest contrast borders */
 
 /* --- HeaderBar Styles (Premium Modern) --- */
 .headerbar {
