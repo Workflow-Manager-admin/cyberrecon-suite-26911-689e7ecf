@@ -1,6 +1,7 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import TableDisplay from "../components/TableDisplay";
 import GraphDisplay from "../components/GraphDisplay";
+import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
 
 /**
  * ReconDashboard: Fully functional recon interface for CyberRecon Suite.
