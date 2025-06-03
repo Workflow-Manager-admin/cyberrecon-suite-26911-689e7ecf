@@ -49,6 +49,82 @@
   --radius-btn: 7px;
 }
 
+/* --- HeaderBar Styles (Premium Modern) --- */
+.headerbar {
+  width: 100%;
+  min-height: 48px;
+  background: var(--glass-overlay, linear-gradient(90deg,rgba(13,14,18,0.92) 44%,rgba(21,22,29,0.82) 100%));
+  border-bottom: 2.3px solid var(--border-color);
+  box-shadow: 0 9px 39px -19px #000d, 0 2px 16px -2px #ff980032, 0 1.5px 9px 0 #26263e30;
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 max(18px,2vw);
+  margin: 0;
+}
+
+.headerbar-logo {
+  display: flex;
+  align-items: center;
+  font-weight: 900;
+  font-family: var(--font-main);
+  font-size: 26px;
+  letter-spacing: .03em;
+  color: var(--base-light);
+  text-shadow: 0 2.5px 22px #ffad429f, 0 1.2px 8px #1b2557;
+  line-height: 1;
+}
+.headerbar-title {
+  font-size: 21px;
+  color: var(--base-light);
+  font-weight: 900;
+  letter-spacing: .028em;
+  margin-right: 8px;
+}
+
+.headerbar-about-btn {
+  background: rgba(255,152,0,0.15);
+  color: var(--base-accent);
+  font-weight: 800;
+  font-size: 17px;
+  border-radius: 7.5px;
+  border: none;
+  padding: 8px 25px;
+  margin-left: 9px;
+  box-shadow: 0 2px 11px -2px #361c0251;
+  cursor: pointer;
+  outline: none;
+  letter-spacing: .01em;
+  transition: background .13s, color .12s;
+}
+.headerbar-about-btn:hover,
+.headerbar-about-btn:focus-visible {
+  background: var(--base-accent);
+  color: #15151a;
+}
+
+@media (max-width: 700px) {
+  .headerbar {
+    height: 54px;
+    min-height: 44px;
+    font-size: 16px;
+    padding: 0 7vw;
+  }
+  .headerbar-logo {
+    font-size: 18px;
+  }
+  .headerbar-about-btn {
+    font-size: 15px;
+    padding: 7px 15px;
+  }
+}
+
 body {
   margin: 0;
   font-family: var(--font-main);
