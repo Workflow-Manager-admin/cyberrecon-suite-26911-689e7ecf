@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import TableDisplay from "../components/TableDisplay";
 import GraphDisplay from "../components/GraphDisplay";
+import HelpSidebar from "../components/HelpSidebar";
 import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
 import {
   getJobs,
@@ -932,17 +933,48 @@ function ReconDashboard() {
 
   // UI COMPONENT
   return (
-    <section
-      aria-label="Recon Dashboard"
-      tabIndex={0}
-      style={{
-        maxWidth: 880,
-        margin: "0 auto",
-        padding: "32px 0",
-        color: "var(--text-color)"
-      }}
-    >
-      <AriaLive />
+    <div style={{ position: "relative", minHeight: 900 }}>
+      {/* HelpSidebar - togglable guide for current page, premium style */}
+      <HelpSidebar
+        summary="Recon Dashboard – Multi-Tool Discovery"
+        usage={
+          <ul style={{ paddingLeft: 18, margin: 0 }}>
+            <li><b>Enter target domains</b> in the box to scan for subdomains and open ports.</li>
+            <li>Select <b>Amass</b> for subdomain recon, <b>Masscan</b> for rapid port scanning.</li>
+            <li>Click <b>Scheduling</b> to create recurring, automated scans (offline supported).</li>
+            <li>Review results &amp; history in the tables and export data as CSV/JSON anytime.</li>
+          </ul>
+        }
+        description={
+          <>
+            <p>
+              The <b>Recon Dashboard</b> lets you quickly enumerate subdomains and open ports for your targets, providing a crucial first step in any penetration test or bug bounty workflow.
+            </p>
+            <p>
+              <b>Instructions:</b> Enter one or more domains in the input area. Choose your scan type and press "<i>Start Amass</i>" or "<i>Run Masscan</i>". Results appear below in sortable tables and interactive graphs.
+            </p>
+            <p>
+              <b>Automate:</b> Use scheduled jobs to run scans on intervals—no advanced config needed.
+            </p>
+            <p>
+              <b>Tips for Beginners:</b> This tool never sends your scan data to outside servers. You can rerun, explore history, and export results. Try scanning famous domains to practice.
+            </p>
+          </>
+        }
+        placement="fixed"
+        style={{ top: 24, right: 24, boxShadow: "0 4px 24px 2px #181a1f81" }}
+      />
+      <section
+        aria-label="Recon Dashboard"
+        tabIndex={0}
+        style={{
+          maxWidth: 880,
+          margin: "0 auto",
+          padding: "32px 0",
+          color: "var(--text-color)"
+        }}
+      >
+        <AriaLive />
 
       {/* Header */}
       <header style={{
