@@ -1,17 +1,22 @@
-/* Global CSS reset and base styles for premium dark mode */
+/* Global CSS reset, full OLED-black support, premium contrast and ARIA focus signals*/
+
+/* Reset and box-sizing */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
+/* Maximal black: Always push BG to true black, and text to white, for deepest possible contrast */
 html, body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
+  margin: 0; padding: 0;
+  width: 100vw; min-height: 100vh;
   font: inherit;
-  background: var(--base-dark, #191b22);
-  color: var(--text-color, #fafbfc);
+  background-color: #000 !important;
+  background: var(--base-black, #000) !important;
+  color: var(--text-color, #fff) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -20,6 +25,8 @@ body {
   font-family: var(--font-main, 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif);
   font-size: 16px;
   letter-spacing: 0.01em;
+  background: var(--base-black, #000) !important;
+  color: var(--text-color, #fff) !important;
 }
 
 #root {
@@ -28,21 +35,64 @@ body {
   flex-direction: column;
 }
 
-code, pre {
-  font-family: var(--font-code, 'Menlo', 'Monaco', 'Consolas', monospace);
-  background: #22242c;
-  color: var(--base-light, #ff9800);
-  padding: 0.15em 0.5em;
-  border-radius: 5px;
-  font-size: 95%;
+/* Ultra-accessible, stylish focus rings for anything interactive */
+:focus-visible, .btn:focus-visible, button:focus-visible {
+  outline: 2.6px solid var(--focus-visible-ring,#ffd589);
+  box-shadow: 0 0 0 6px rgba(255, 216, 137, 0.11);
+  outline-offset: 3px;
+  background: var(--focus-bg,rgba(255,216,137,0.08));
+  z-index: 5000;
+  border-radius: 9px;
+  transition: outline-color 0.13s, box-shadow 0.15s;
 }
 
-a {
+/* Visually hidden for ARIA - copy from App.css for global guarantee */
+.visually-hidden, .aria-visually-hidden, [aria-hidden="true"]:not(:focus):not(:active) {
+  border: 0 !important;
+  clip: rect(1px,1px,1px,1px) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+  white-space: nowrap !important;
+}
+[aria-live] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(1px,1px,1px,1px) !important;
+  white-space: nowrap !important;
+}
+
+/* Readable code/console block tweaks */
+code, pre {
+  font-family: var(--font-code, 'Menlo', 'Monaco', 'Consolas', monospace);
+  background: #17191e;
+  color: var(--base-accent, #ffad42);
+  padding: 0.15em 0.5em;
+  border-radius: 5px;
+  font-size: 97%;
+  overflow-x: auto;
+}
+
+/* Premium, responsible links and hover/focus for accessibility */
+a, .focus-link {
   color: var(--base-accent, #ffad42);
   text-decoration: none;
-  transition: color 0.12s;
+  outline: none;
+  box-shadow: none;
+  transition: color 0.14s, text-shadow 0.13s;
 }
-a:hover, a:focus-visible {
+a:hover, a:focus-visible, .focus-link:focus-visible {
   color: var(--base-light, #ff9800);
   text-decoration: underline;
+  text-shadow: 0 1px 8px #ffad4226;
+  outline: 2.2px solid var(--focus-visible-ring,#ffd589);
+  outline-offset: 3px;
+  background: var(--focus-bg,rgba(255,184,92,0.12));
 }
+
