@@ -10,6 +10,7 @@ import WordlistGenerator from "./modules/WordlistGenerator";
 import ReportGenerator from "./modules/ReportGenerator";
 import BugBountyAggregator from "./modules/BugBountyAggregator";
 import SettingsModule from "./modules/SettingsModule";
+import ExploitationToolkit from "./modules/ExploitationToolkit";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -71,7 +72,7 @@ const MODULES = [
 const MODULE_COMPONENTS = {
   recon: ReconDashboard,
   scanner: VulnerabilityScanner,
-  exploitation: DummyModule,
+  exploitation: ExploitationToolkit,
   jsdebugger: DummyModule,
   wordlist: WordlistGenerator,
   report: ReportGenerator,
