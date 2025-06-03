@@ -1556,35 +1556,18 @@ function ReconDashboard() {
 
       {/* Exporting/Feedback */}
       {exporting && (
-        <div
+        <PremiumStatusNotice
+          msg="Export in progress... Please wait"
+          type="info"
+          ariaId="export-status"
           style={{
-            background: "linear-gradient(92deg,#222b4d22,#191b2425)",
             color: "#4fbaff",
-            borderRadius: 11,
-            padding: "13px 32px",
-            fontWeight: 700,
+            border: "1.4px solid #405f8982",
+            background: "linear-gradient(92deg,#222b4d22,#191b2425)",
             fontSize: 17.5,
-            marginBottom: 28,
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            border: "1.1px solid #405f89a5",
-            boxShadow: "0 1.5px 8px 0 rgba(0,28,88,0.09)"
+            marginBottom: 24
           }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              fontSize: 21,
-              animation: "spin-emoji 1.25s linear infinite"
-            }}>💾</span>
-          Export in progress... Please wait
-          <style>{`
-            @keyframes spin-emoji {
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
+        />
       )}
 
       {/* Accessible footer */}
