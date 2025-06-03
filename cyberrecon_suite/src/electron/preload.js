@@ -11,7 +11,10 @@ const { scanEmitter } = (() => {
 })();
 
 const scanListeners = new Set();
-
+/**
+ * PUBLIC_INTERFACE
+ * Exposes premium Electron APIs for renderer – recon history, scan, scheduler, and Nuclei CLI integration.
+ */
 contextBridge.exposeInMainWorld('electronAPI', {
   // Recon history
   getReconHistory: () => ipcRenderer.invoke('recon:getHistory'),
@@ -20,63 +23,66 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Export (CSV/JSON)
   exportReconResults: (format = 'csv') => ipcRenderer.invoke('recon:export', { format }),
 
-  // Recon scan IPCs (added)
+  // Recon scan IPCs
   runReconCommand: ({ tool, args, processId }) =>
     ipcRenderer.invoke('recon:runCommand', { tool, args, processId }),
 
   cancelReconCommand: (processId) => ipcRenderer.invoke('recon:cancelCommand', processId),
 
-  // Listen for scan output via scanEmitter or ipcRenderer events
+  /**
+   * PUBLIC_INTERFACE
+   * Listen for recon scan output events (data, end). Handler receives (event, payload).
+   */
   onReconCommandOutput: (handler) => {
-    // Use EventEmitter from main if possible (preferred)
     if (scanEmitter && scanEmitter.on) {
       const localHandler = (evt) => handler(null, evt);
       scanEmitter.on('scan-data', localHandler);
       scanEmitter.on('scan-end', localHandler);
       scanListeners.add(localHandler);
-      // No-op for unsubscribe in this stub
+      // Unsub handler not implemented in stub
     } else {
-      // Fallback: listen via ipcRenderer (future setup)
-      // Not implemented: for a real backend, you'd use ipcRenderer.on here.
+      // Fallback: add ipcRenderer.on here if main process emits events
     }
   },
 
+  // ======= VULNERABILITY SCANNER: NUCLEI CLI/IPC INTEGRATION =======
 
-  // === VULNERABILITY SCANNER: Nuclei CLI scan IPC API ===
-
-  /** 
-   * Triggers a Nuclei scan via IPC. 
-   * @param {{targets: string|array, templates?: string|array, processId?: string, extraArgs?: array}} opts 
-   * @returns {Promise<{ok:boolean, processId:string, streaming?:boolean, simulated?:boolean}>}
+  /**
+   * PUBLIC_INTERFACE
+   * Triggers a Nuclei scan via IPC.
+   * @param {{targets: string|array, templates?: string|array, processId?: string, extraArgs?: array}} opts
+   * @returns {Promise<{ok: boolean, processId: string, streaming?: boolean, simulated?: boolean}>}
    */
   runScanCommand: (opts) => ipcRenderer.invoke('vulnscan:runScanCommand', opts),
 
   /**
-   * Cancels an active Nuclei scan by processId.
+   * PUBLIC_INTERFACE
+   * Cancels an active Nuclei scan.
    * @param {string} processId
+   * @returns {Promise<{ok: boolean, cancelled: boolean}>}
    */
   cancelScanCommand: (processId) => ipcRenderer.invoke('vulnscan:cancelScanCommand', processId),
 
   /**
-   * Stream scan output/events (data/end/error) for running scan(s).
-   * Handler signature: (event, {processId, type, data|error|code}) => void
+   * PUBLIC_INTERFACE
+   * Subscribes to scan output/events for the running Nuclei scan.
+   * Handler signature: (event, {processId, type, data, error, code}) => void
+   * Supported event types: "scan-nuclei-data", "scan-nuclei-end", "scan-nuclei-error"
    */
   onScanCommandOutput: (handler) => {
-    // Use main process emitter if available – more efficient, lower latency
     if (scanEmitter && scanEmitter.on) {
       const localHandler = (evt) => handler(null, evt);
       scanEmitter.on('scan-nuclei-data', localHandler);
       scanEmitter.on('scan-nuclei-end', localHandler);
       scanEmitter.on('scan-nuclei-error', localHandler);
       scanListeners.add(localHandler);
-      // No-op for unsubscribe for now
+      // Unsubscribe not implemented in stub
     } else {
-      // Fallback: listen via ipcRenderer (if main process broadcasts events there)
-      // For a full implementation, add: ipcRenderer.on('scan-nuclei-data') etc.
+      // Fallback: listen via ipcRenderer (to be implemented for non-native/cross-window)
     }
   },
 
-  // SCHEDULED JOBS: JOB CRUD AND SCHEDULING IPC API
+  // Scheduled jobs IPCs
   listScheduledJobs: () => ipcRenderer.invoke('scheduler:listJobs'),
   addScheduledJob: (job) => ipcRenderer.invoke('scheduler:addJob', job),
   updateScheduledJob: (id, fields) => ipcRenderer.invoke('scheduler:updateJob', id, fields),
@@ -84,6 +90,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getNextRunTime: (schedule) => ipcRenderer.invoke('scheduler:getNextRun', schedule),
   getPrevRunTime: (job) => ipcRenderer.invoke('scheduler:getPrevRun', job),
 
-  // For compatibility
+  // For renderer detection
   isElectron: true
 });
