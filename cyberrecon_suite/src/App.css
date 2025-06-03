@@ -349,7 +349,10 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 }
 
 /* Visually hidden utility and ARIA helper */
-.visually-hidden, [aria-hidden="true"]:not(:focus):not(:active), .aria-visually-hidden {
+/* Visually Hidden/ARIA utility: Use for screen-reader-only messages or hidden text cues everywhere */
+.visually-hidden,
+[aria-hidden="true"]:not(:focus):not(:active),
+.aria-visually-hidden {
   border: 0 !important;
   clip: rect(1px,1px,1px,1px) !important;
   clip-path: inset(50%) !important;
@@ -360,15 +363,18 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   position: absolute !important;
   width: 1px !important;
   white-space: nowrap !important;
+  pointer-events: none !important;
 }
+
 [aria-live] {
-  /* For JAWS/NVDA/voiceover live region accessibility */
+  /* For live region accessibility/announcements only - always hidden visually */
   position: absolute !important;
   width: 1px !important;
   height: 1px !important;
   overflow: hidden !important;
   clip: rect(1px,1px,1px,1px) !important;
   white-space: nowrap !important;
+  pointer-events: none !important;
 }
 
 /* === HelpSidebar Overlay/FAB Styling === */
