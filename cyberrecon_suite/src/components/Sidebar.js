@@ -23,7 +23,8 @@ function Sidebar({
   width
 }) {
   // Increased sidebar width for clarity and premium feel
-  const SIDEBAR_WIDTH = width || 196; // This should sync with App.js
+  // Update width from ~130px → 200px+ (from 196px if present, to 210px here for clarity and padding)
+  const SIDEBAR_WIDTH = width || 210; // Up from 196; more room for icons & labels
 
   const sidebarPalette = {
     background: "linear-gradient(105deg,#191b24 82%,#181b22 100%)",
@@ -33,18 +34,18 @@ function Sidebar({
     minWidth: SIDEBAR_WIDTH,
     maxWidth: SIDEBAR_WIDTH,
     boxShadow: isOpen
-      ? "4px 0 39px -12px #000c, 0 0 16px 0 #1e180333, 2px 0 14px #ff98001a"
+      ? "6px 0 45px -13px #000b, 0 0 17px 0 #1e180338, 2px 0 19px #ff98001c"
       : "none",
     zIndex: 30,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: isOpen ? "28px 0 0 0" : "0", // slightly more top padding for width
+    padding: isOpen ? "36px 0 0 0" : "0", // increased top padding for more vertical breathing room
     position: "relative",
     minHeight: "100vh",
     pointerEvents: isOpen ? "auto" : "none",
     willChange: "transform,opacity",
-    transform: isOpen ? `translateX(0)` : `translateX(-${SIDEBAR_WIDTH + 38}px)`,
+    transform: isOpen ? `translateX(0)` : `translateX(-${SIDEBAR_WIDTH + 40}px)`,
     opacity: isOpen ? 1 : 0,
     transition:
       "transform .35s cubic-bezier(.62,1.52,.33,1), opacity 0.23s cubic-bezier(.64,1.18,.52,1)"
@@ -52,17 +53,17 @@ function Sidebar({
 
   const closeBtnStyle = {
     position: "absolute",
-    top: 21,
-    right: 14,
-    background: "rgba(35,31,25,0.92)",
+    top: 25,
+    right: 19,
+    background: "rgba(35,31,25,0.96)",
     color: "#ffb959",
     border: "none",
-    borderRadius: 10,
-    width: 38,
-    height: 38,
-    fontSize: 24,
+    borderRadius: 12,
+    width: 40,
+    height: 40,
+    fontSize: 27,
     fontWeight: 900,
-    boxShadow: "0 0 7px #ffad4277",
+    boxShadow: "0 0 11px #ffad4279",
     cursor: "pointer",
     zIndex: 38,
     display: "flex",
@@ -79,31 +80,31 @@ function Sidebar({
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-start",
-      width: "178px", // increased for label clarity (used to be ~118px)
-      minWidth: "162px",
-      maxWidth: "188px",
-      height: "58px", // slightly taller for premium spacious look
+      width: "194px", // expanded from 178px to 194px
+      minWidth: "170px",
+      maxWidth: "208px",
+      height: "62px", // taller for a more premium, comfortable button
       margin: "0",
-      padding: "0 10px 0 8px", // add horizontal padding inside button
-      borderRadius: "15px",
+      padding: "0 18px 0 14px", // more interior left/right padding
+      borderRadius: "17px",
       background: selected
-        ? "linear-gradient(93deg,#231e31 70%,#30251f 100%)"
+        ? "linear-gradient(93deg,#231e31 68%,#30251f 100%)"
         : "rgba(25,25,34,0.81)",
       border: selected
-        ? "2.2px solid var(--base-accent,#ff9800)"
+        ? "2.4px solid var(--base-accent,#ff9800)"
         : "2px solid transparent",
-      outline: selected ? "2.9px solid #ffb959b2" : "none",
+      outline: selected ? "3.2px solid #ffb959cf" : "none",
       color: selected ? "var(--base-accent,#ff9800)" : "var(--text-secondary)",
       boxShadow: selected
-        ? "0 2.5px 12px -2px #ff980045, 0 1.5px 8px #ffad4266"
+        ? "0 2.5px 16px -2px #ff98004b, 0 2.5px 10px #ffad42a7"
         : "0 1.5px 10px -5px #191c2240",
       cursor: "pointer",
-      marginBottom: 11,
-      fontWeight: selected ? 900 : 700,
-      fontSize: 17,
-      letterSpacing: ".041em",
-      gap: 12, // wider icon-label gap
-      transition: "background .19s, box-shadow .22s, border-color .15s, outline .13s",
+      marginBottom: 16, // more space between buttons
+      fontWeight: selected ? 950 : 700,
+      fontSize: 18,
+      letterSpacing: ".045em",
+      gap: 20, // much wider icon-label gap for comfort
+      transition: "background .21s, box-shadow .22s, border-color .17s, outline .16s",
       position: "relative"
     };
   }
