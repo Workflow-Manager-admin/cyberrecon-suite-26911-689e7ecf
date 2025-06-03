@@ -108,9 +108,22 @@
 @media (max-width: 770px) {
   .sidebar {
     min-height: 100vh;
-    width: 70px !important;
-    min-width: 70px !important;
-    max-width: 70px !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    box-shadow: 2px 0 19px -12px #000c;
+  }
+  .sidebar-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+  .sidebar-logo {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    margin-bottom: 13px;
   }
 }
 
