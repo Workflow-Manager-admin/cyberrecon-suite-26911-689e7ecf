@@ -412,10 +412,10 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 
 /* Button styles */
 .btn {
-  background: var(--base-light);
-  color: var(--text-on-accent);
+  background: var(--base-light, #ff9800);
+  color: var(--text-on-accent, #191a1f);
   border: none;
-  border-radius: var(--radius-btn);
+  border-radius: var(--radius-btn, 8px);
   padding: 11px 26px;
   font-size: 1rem;
   font-weight: 700;
@@ -423,7 +423,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   margin-left: 6px;
   margin-bottom: 3px;
   letter-spacing: 0.01em;
-  box-shadow: 0 2px 13px 0 rgba(0,0,0,0.06);
+  box-shadow: 0 2px 13px 0 rgba(0,0,0,0.08);
   outline: none;
   transition:
     background 0.17s cubic-bezier(.23,1.21,.61,1.04),
@@ -435,33 +435,32 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 
 .btn:hover,
 .btn:focus-visible {
-  background: var(--base-accent);
-  color: var(--base-black);
-  outline: 2.3px solid var(--base-accent);
+  background: var(--base-accent, #ffad42) !important;
+  color: #000 !important;
+  outline: 2.3px solid var(--base-accent,#ffad42) !important;
   outline-offset: 3px;
-  box-shadow: 0 0 0 9px var(--focus-bg), 0 1.5px 11px 0 #ffba4211;
-  z-index: 11;
+  box-shadow: 0 0 0 10px var(--focus-bg,#ffe76617), 0 1.5px 11px 0 #ffba4211;
+  z-index: 12 !important;
 }
+
 .btn:active {
-  background: linear-gradient(90deg,#ffb85c 55%,#ff9800 100%);
-  color: var(--base-black);
-  box-shadow: 0 2px 14px 0 #ff980029, 0 0 0 5px var(--base-accent);
+  background: linear-gradient(90deg,#ffc268 55%,#ff9800 100%);
+  color: #000 !important;
+  box-shadow: 0 2px 14px 0 #ff980029, 0 0 0 7px var(--base-accent,#ffad42);
   animation: btn-bounce 0.085s cubic-bezier(.32,.79,.61,1.92);
 }
-@keyframes btn-bounce {
-  0% {transform: scale(.99);}
-  57% {transform: scale(1.06);}
-  100% {transform: scale(1.0);}
-}
+
 .btn:disabled, .btn[aria-disabled="true"] {
   opacity: 0.44;
-  background: var(--base-black);
-  color: var(--text-tertiary);
+  background: var(--base-black, #000) !important;
+  color: var(--text-tertiary, #8d8e99) !important;
   cursor: not-allowed;
   pointer-events: none;
-  box-shadow: none;
-  border: 1.2px solid var(--border-contrast);
+  box-shadow: none !important;
+  border: 1.2px solid var(--border-contrast,#444551);
+  filter: grayscale(0.22) brightness(0.75);
 }
+
 .btn-large {
   padding: 14px 32px;
   font-size: 1.14rem;
