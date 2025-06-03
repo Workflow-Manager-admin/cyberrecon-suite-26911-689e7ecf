@@ -128,33 +128,33 @@ async function runViaApi(tool, target, onData, onError, onDone) {
   }
 }
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * ReconDashboard: The premium recon interface. Provides:
+ * - Robust, real-time scan streaming via Electron IPC (runReconCommand, onReconCommandOutput) with per-scan demuxing;
+ * - Fully premium error and empty state handling with polished visual transitions;
+ * - Robust browser API fallback when Electron is not present;
+ * - Live streaming result display and table/graph with graceful transitions and accessibility.
+ */
 function ReconDashboard() {
-  // State management
+  // State management, including all premium streaming/visual states.
   const [domainsInput, setDomainsInput] = useState("");
   const [domains, setDomains] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState("");
-  const [results, setResults] = useState([]); // Results to display in table
-  const [resultBuf, setResultBuf] = useState([]); // For streaming lines (current scan)
-  const [showResults, setShowResults] = useState(false); // For controlling "fade in" animation on result display
+  const [results, setResults] = useState([]); // All visible scan results after completion
+  const [resultBuf, setResultBuf] = useState([]); // Streaming buffer, updated in real time
+  const [showResults, setShowResults] = useState(false); // Smooth transition state
   const [history, setHistory] = useState([]);
   const [exporting, setExporting] = useState(false);
-
   const [cancelScan, setCancelScan] = useState(null);
 
   const textareaRef = useRef();
-
-  // Accessibility: announcements
   const [ariaMsg, setAriaMsg] = useState("");
 
-  // Animation: used to make result area fade in on new result display
+  // Animate in result panel when results are populated
   useEffect(() => {
-    if (results && results.length) {
-      setShowResults(true);
-    } else {
-      setShowResults(false);
-    }
+    setShowResults(!!(results && results.length));
   }, [results]);
 
   // Load offline recon history on mount
