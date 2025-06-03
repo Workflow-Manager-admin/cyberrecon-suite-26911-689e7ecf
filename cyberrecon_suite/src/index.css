@@ -1,16 +1,3 @@
-<<<<<<< HEAD
-/* Base resets and coding styles */
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-=======
 /* Global CSS reset, OLED-true-black, premium accessibility focus states, and ARIA utilities */
 
 /* Reset and box-sizing */
@@ -27,17 +14,10 @@ html, body {
   background-color: #000 !important;
   background: var(--base-black, #000) !important;
   color: var(--text-color, #fff) !important;
->>>>>>> 464537c5d72036da33c9a3d043329fdb46e1242b
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-<<<<<<< HEAD
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-=======
 body {
   width: 100vw;
   min-height: 100vh;
@@ -116,5 +96,3 @@ a:hover, a:focus-visible, .focus-link:focus-visible {
   outline-offset: 3px;
   background: var(--focus-bg,rgba(255,231,102,0.12)) !important;
 }
-
->>>>>>> 464537c5d72036da33c9a3d043329fdb46e1242b
