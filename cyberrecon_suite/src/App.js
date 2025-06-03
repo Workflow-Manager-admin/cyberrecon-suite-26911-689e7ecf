@@ -135,8 +135,8 @@ function App() {
   const ActiveComp = MODULE_COMPONENTS[activeModule];
 
   // Sidebar width must match sidebar component
-  // Increase width by at least 50%: 128 * 1.5 = 192 (rounded to 196 for even design)
-  const SIDEBAR_WIDTH = 196; // Expanded for premium, readable, non-congested nav
+  // Increase width by at least 50%: 128 * 1.5 = 192 (rounded to 210 for even design)
+  const SIDEBAR_WIDTH = 210; // Expanded for premium, readable, non-congested nav (sync with Sidebar)
 
   return (
     <div

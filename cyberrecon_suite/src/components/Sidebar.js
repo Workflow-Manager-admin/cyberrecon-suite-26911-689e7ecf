@@ -263,13 +263,13 @@ function Sidebar({
         aria-hidden="true"
         style={{
           marginTop: "auto",
-          width: "94%",
-          height: 2.5,
+          width: "97%",
+          height: 3,
           background: "linear-gradient(86deg,#1a1a1a 7%,#ffbb4e8a 62%,#181a1f 100%)",
-          opacity: isOpen ? 0.36 : 0,
-          borderRadius: 8,
-          marginBottom: 19,
-          marginTop: 20,
+          opacity: isOpen ? 0.45 : 0,
+          borderRadius: 11,
+          marginBottom: 27,
+          marginTop: 26,
           transition: "opacity .22s"
         }} />
     </nav>
