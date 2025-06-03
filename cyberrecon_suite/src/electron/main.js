@@ -129,4 +129,74 @@ ipcMain.handle('recon:export', async (e, { format, onlyHistory }) => {
   }
 });
 
-module.exports = {}; // For safety in Electron require chain
+/**
+ * [KAVIA PATCH] Simulated IPC+event scan streaming for recon commands
+ * Enables the renderer to trigger a scan and stream fake recon results for Electron/IPC integration validation.
+ */
+const { ipcMain: _ipcMain } = require('electron');
+const { EventEmitter } = require('events');
+const scanEmitter = new EventEmitter();
+const activeScans = Object.create(null);
+
+// Helper: Simulate streaming results for Amass or Masscan (stub/fake for now)
+function simulateScan(tool, domain, processId) {
+  // Very basic example
+  let step = 0;
+  let results;
+  if (tool === "Amass") {
+    results = [
+      `${domain},1.2.3.4`,
+      `dev.${domain},1.2.3.5`,
+      `test.${domain},1.2.3.6`
+    ];
+  } else if (tool === "Masscan") {
+    results = [
+      `Host: ${domain} ()  Ports: 80/open/tcp//http///, 443/open/tcp//https///`,
+      `Host: ${domain} ()  Ports: 21/closed/tcp//ftp///, 8080/open/tcp//http-alt///`
+    ];
+  } else {
+    results = ["Sample result"];
+  }
+
+  function emitNext() {
+    if (!activeScans[processId]) return;
+    if (step < results.length) {
+      scanEmitter.emit('scan-data', {
+        processId,
+        type: "data",
+        data: results[step]
+      });
+      step += 1;
+      setTimeout(emitNext, 600);
+    } else {
+      scanEmitter.emit('scan-end', { processId, type: "end", data: "Scan complete." });
+      activeScans[processId] = false;
+    }
+  }
+  emitNext();
+}
+
+_ipcMain.handle("recon:runCommand", (event, { tool, args = [], processId }) => {
+  // Accept tool, args, and processId. Start fake streaming.
+  if (!tool || !processId) return { ok: false, error: "Missing tool or processId" };
+  activeScans[processId] = true;
+  // Args may include domain last, or just test domain
+  const domain = (args && args.length) ? args[args.length - 1] : "example.com";
+  simulateScan(tool, domain, processId);
+  return { ok: true, processId };
+});
+
+// Cancel scan (dummy, just mark stop)
+_ipcMain.handle("recon:cancelCommand", (event, processId) => {
+  if (processId && activeScans[processId]) {
+    activeScans[processId] = false;
+    scanEmitter.emit('scan-end', { processId, type: "end", data: "Scan cancelled" });
+  }
+  return { ok: true };
+});
+
+/**
+ * Event bridge for scan output: preload layer should subscribe to scanEmitter events and forward to the renderer.
+ * We do NOT set up a global subscription here; this is handled in preload.js via contextBridge/events.
+ */
+module.exports = { scanEmitter };
