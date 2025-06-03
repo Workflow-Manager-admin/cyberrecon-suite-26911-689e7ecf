@@ -523,9 +523,63 @@ function JSDebugger() {
           quickFields={quickFields}
           style={{ marginTop: 7, marginBottom: 14 }}
           onRowClick={row => openFindingDetail(row)}
+          onExportCSV={() => {
+            // Export current findings as CSV
+            if (!findings.length) return;
+            const colsToExport = columns.map((c) => c.label);
+            const rows = [colsToExport.join(",")].concat(
+              findings.map((f) =>
+                columns
+                  .map((c) => `"${(f[c.field] ?? "").toString().replace(/"/g, '""')}"`)
+                  .join(",")
+              )
+            );
+            const blob = new Blob([rows.join("\r\n")], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "jsdebugger_results.csv";
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 300);
+          }}
+          onExportJSON={() => {
+            if (!findings.length) return;
+            const blob = new Blob([JSON.stringify(findings, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "jsdebugger_results.json";
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 300);
+          }}
         />
-        <div style={{ fontSize: 12.3, color: "var(--text-tertiary)" }}>
-          Click a row for more context and one-click copy.
+        <div style={{ display: "flex", alignItems: "center", fontSize: 12.3, color: "var(--text-tertiary)", gap: 10 }}>
+          <span>Click a row for more context and one-click copy.</span>
+          {findings.length > 0 && (
+            <button
+              className="btn"
+              aria-label="Clear all filters"
+              type="button"
+              style={{
+                fontSize: 13.5,
+                marginLeft: 8,
+                background: "linear-gradient(90deg,#6ce9ff,#8d76ff)",
+                color: "#191b22"
+              }}
+              onClick={() => {
+                // Clear filters by triggering clear in TableDisplay via re-mount (minimal way)
+                setInput(input); // resets tablestate due to remount
+              }}
+            >🧹 Clear Filters</button>
+          )}
         </div>
       </div>
 
