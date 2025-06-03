@@ -2,13 +2,16 @@ import React from "react";
 import logo from "../assets/cyberrecon-logo.svg";
 
 /**
- * Sidebar: COMPACT, icon-focused, dark, premium navigation for CyberRecon Suite.
- * Visually tight, ~92px wide, sharp icons, subtle glass, animated, accessible focus/active nav.
+ * Sidebar: MODERN, polished, accessible navigation for CyberRecon Suite.
+ * Each module/page appears as a clearly-labeled button with icon + name.
+ * Wide click targets, strong focus/active, readable, visually distinct.
  * Props:
- *   - isOpen: boolean (open/close state)
- *   - onClose: function (sidebar collapse)
- *   - width: number (optional, default 92)
- *   - modules, activeModule, onModuleSelect
+ *   - modules: [{id,label,icon,...}]
+ *   - activeModule: current module id
+ *   - onModuleSelect: function(id)
+ *   - isOpen: sidebar expanded/collapsed
+ *   - onClose: function()
+ *   - width: sidebar width (default 92px)
  */
 // PUBLIC_INTERFACE
 function Sidebar({
@@ -19,12 +22,10 @@ function Sidebar({
   onClose,
   width
 }) {
-  // Compact premium sidebar width: 92px (sync with App.js)
   const SIDEBAR_WIDTH = width || 92;
 
-  // PALLETTE: Improved dark glass overlay with accent for focus/active
   const sidebarPalette = {
-    background: "linear-gradient(102deg,#181a21 92%,#181b22 100%)",
+    background: "linear-gradient(105deg,#181a21 92%,#181b22 100%)",
     borderRight: isOpen ? "2.5px solid var(--border-color,#29262a)" : "none",
     color: "var(--text-secondary)",
     width: SIDEBAR_WIDTH,
@@ -37,7 +38,7 @@ function Sidebar({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: isOpen ? "20px 0 0 0" : "0",
+    padding: isOpen ? "18px 0 0 0" : "0",
     position: "relative",
     minHeight: "100vh",
     pointerEvents: isOpen ? "auto" : "none",
@@ -48,7 +49,6 @@ function Sidebar({
       "transform .35s cubic-bezier(.62,1.52,.33,1), opacity 0.23s cubic-bezier(.64,1.18,.52,1)"
   };
 
-  // CLOSE BUTTON: enlarged, crisp for a compact sidebar, strong focus outline
   const closeBtnStyle = {
     position: "absolute",
     top: 16,
@@ -71,39 +71,42 @@ function Sidebar({
     transition: "background .16s,color .16s"
   };
 
-  // NAV BUTTON: compact, accessible, high contrast, sleek active/focus animation
+  // Modern label+icon nav, clear, accessible, premium look
   function navBtnStyle(selected) {
     return {
       display: "flex",
-      flexDirection: "column",
+      flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      width: "72px",
-      height: "70px",
-      margin: "0 0 0 0",
+      justifyContent: "flex-start",
+      width: "84px",
+      minWidth: "83px",
+      maxWidth: "96px",
+      height: "54px",
+      margin: "0",
       padding: 0,
-      borderRadius: "18px",
+      borderRadius: "13px",
       background: selected
-        ? "linear-gradient(98deg,#262532 55%,#1c1c27 99%)"
-        : "rgba(25,25,34,0.83)",
+        ? "linear-gradient(93deg,#231e31 70%,#30251f 100%)"
+        : "rgba(25,25,34,0.81)",
       border: selected
-        ? "2.9px solid var(--base-accent,#ff9800)"
+        ? "2.2px solid var(--base-accent,#ff9800)"
         : "2px solid transparent",
-      outline: selected ? "2.5px solid #ffb959b0" : "none",
+      outline: selected ? "2.9px solid #ffb959b2" : "none",
       color: selected ? "var(--base-accent,#ff9800)" : "var(--text-secondary)",
       boxShadow: selected
         ? "0 2.5px 12px -2px #ff980045, 0 1.5px 8px #ffad4266"
-        : "0 3.5px 15px -9px #191c2233",
+        : "0 1.5px 10px -5px #191c2240",
       cursor: "pointer",
-      marginBottom: 5,
-      fontWeight: 758,
-      fontSize: 15,
-      letterSpacing: ".04em",
-      transition: "background .19s, box-shadow .22s, border-color .15s, outline .13s"
+      marginBottom: 4,
+      fontWeight: selected ? 900 : 700,
+      fontSize: 16,
+      letterSpacing: ".045em",
+      gap: 0,
+      transition: "background .19s, box-shadow .22s, border-color .15s, outline .13s",
+      position: "relative"
     };
   }
 
-  // Visually compact logo at the top
   return (
     <nav
       className="sidebar"
@@ -113,7 +116,7 @@ function Sidebar({
       aria-hidden={!isOpen}
       style={sidebarPalette}
     >
-      {/* Slide-close toggle */}
+      {/* Slide-close toggle, always accessible */}
       {onClose && isOpen && (
         <button
           aria-label="Hide sidebar"
@@ -124,14 +127,14 @@ function Sidebar({
           onKeyDown={e => {
             if (e.key === "Enter" || e.key === " ") onClose();
           }}
-          onFocus={e => (e.target.style.boxShadow = "0 0 0 3.5px #ff980077")}
+          onFocus={e => (e.target.style.boxShadow = "0 0 0 3.5px #ff980088")}
           onBlur={e => (e.target.style.boxShadow = closeBtnStyle.boxShadow)}
         >
           <span aria-hidden="true" style={{ fontSize: 22, marginBottom: -2 }}>×</span>
         </button>
       )}
 
-      {/* PREMIUM COMPACT LOGO */}
+      {/* Brand Logo */}
       <div
         className="sidebar-logo"
         aria-label="CyberRecon Suite"
@@ -139,7 +142,7 @@ function Sidebar({
         style={{
           width: 53,
           height: 53,
-          marginBottom: 31,
+          marginBottom: 22,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -165,7 +168,8 @@ function Sidebar({
           draggable={false}
         />
       </div>
-      {/* ICON NAVIGATION */}
+
+      {/* Navigation buttons */}
       <div
         style={{
           display: "flex",
@@ -176,8 +180,9 @@ function Sidebar({
           pointerEvents: isOpen ? "auto" : "none",
           transition: "opacity .13s"
         }}
+        role="menubar"
       >
-        {modules.map((mod, idx) => {
+        {modules.map((mod) => {
           const selected = activeModule === mod.id;
           return (
             <button
@@ -194,14 +199,14 @@ function Sidebar({
               }}
               title={mod.label}
               onFocus={e => {
-                e.target.style.background = "linear-gradient(96deg,#262434 64%,#262034 100%)";
+                e.target.style.background = "linear-gradient(96deg,#262434 68%,#1d1c29 100%)";
                 e.target.style.outline = "3px solid #ffb959";
               }}
               onBlur={e => {
                 e.target.style.background = selected
-                  ? "linear-gradient(98deg,#262532 55%,#1c1c27 99%)"
-                  : "rgba(25,25,34,0.83)";
-                e.target.style.outline = selected ? "2.5px solid #ffb959b0" : "none";
+                  ? "linear-gradient(93deg,#231e31 70%,#30251f 100%)"
+                  : "rgba(25,25,34,0.81)";
+                e.target.style.outline = selected ? "2.9px solid #ffb959b2" : "none";
               }}
               role="menuitem"
               aria-pressed={selected}
@@ -209,32 +214,39 @@ function Sidebar({
               <span
                 aria-hidden="true"
                 style={{
-                  fontSize: 30,
-                  marginBottom: 2,
-                  filter: selected ? "drop-shadow(0 0 12px #ff9800b0)" : "none",
+                  fontSize: 28,
+                  marginLeft: 8,
+                  marginRight: 10,
+                  filter: selected ? "drop-shadow(0 0 13px #ff9800bd)" : "none",
                   textShadow: selected
-                    ? "0 2px 14px #ff980042, 0 1.5px 7px #ffad426c"
-                    : "0 1px 8px #11142822",
-                  transition: "all .22s cubic-bezier(.22,.8,.43,1)"
+                    ? "0 2px 16px #ff980055, 0 1.8px 7px #ffad4280"
+                    : "0 1px 7px #1c1c2629",
+                  transition: "all .22s cubic-bezier(.22,.8,.43,1)",
+                  flexShrink: 0
                 }}
               >
                 {mod.icon}
               </span>
               <span
                 style={{
-                  fontSize: 12.5,
-                  marginTop: 5,
-                  letterSpacing: ".11em",
-                  color: selected ? "var(--base-accent)" : "var(--text-tertiary)",
-                  fontWeight: selected ? 850 : 510,
-                  opacity: 0.94,
+                  fontSize: 15.5,
+                  marginLeft: 0,
+                  color: selected ? "var(--base-accent,#ff9800)" : "var(--text-color,#fdfeff)",
+                  fontWeight: selected ? 900 : 700,
+                  letterSpacing: ".009em",
+                  flex: 1,
+                  textAlign: "left",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
+                  opacity: selected ? 1 : 0.93,
                   textShadow: selected
-                    ? "0 1.5px 9px #ffad4247"
+                    ? "0 1.5px 11px #ffad4240"
                     : undefined,
                 }}
-                aria-hidden="true"
+                aria-hidden="false"
               >
-                {mod.short}
+                {mod.label}
               </span>
             </button>
           );
@@ -245,16 +257,15 @@ function Sidebar({
         aria-hidden="true"
         style={{
           marginTop: "auto",
-          width: "83%",
+          width: "82%",
           height: 2,
           background: "linear-gradient(86deg,#1a1a1a 7%,#ffbb4e8a 62%,#181a1f 100%)",
-          opacity: isOpen ? 0.44 : 0,
+          opacity: isOpen ? 0.36 : 0,
           borderRadius: 8,
           marginBottom: 19,
           marginTop: 18,
           transition: "opacity .22s"
         }} />
-      {/* Additional UX: future footer/help reserved here */}
     </nav>
   );
 }
