@@ -6,6 +6,7 @@ import Modal from "./components/Modal";
 import DummyModule from "./modules/DummyModule";
 import ReconDashboard from "./modules/ReconDashboard";
 import VulnerabilityScanner from "./modules/VulnerabilityScanner";
+// PUBLIC_INTERFACE
 import WordlistGenerator from "./modules/WordlistGenerator";
 import ReportGenerator from "./modules/ReportGenerator";
 import BugBountyAggregator from "./modules/BugBountyAggregator";
