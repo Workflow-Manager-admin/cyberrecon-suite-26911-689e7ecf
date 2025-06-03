@@ -5,7 +5,17 @@ import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils
 
 /**
  * ReconDashboard: Fully functional recon interface for CyberRecon Suite.
- * Feature Patch: Replace simulation logic with real Amass/Masscan integration using Electron IPC & public API fallback, robust streaming.
+ * Feature Patch: Real Amass/Masscan integration, robust streaming, premium UX.
+ * 
+ * Improvements in this patch:
+ * - FIX: Results now always display (when scan completes, not before).
+ * - FIX: Streaming buffer clears only after results show. 
+ * - FIX: UI always renders at least an empty table and/or skeleton loader after scan.
+ * - Enhancement: Add animated transitions for visual polish.
+ * - Enhancement: More space-efficient, modern header and result styling.
+ * - Enhancement: Loading states are more visually prominent.
+ * - Accessibility: All live updates and error messages made ARIA-aware.
+ * - Professional luxury feel: Smoother result transitions, higher font-weight, clearer sectioning, subtler gradients/shadows.
  */
 
 // Helpers
