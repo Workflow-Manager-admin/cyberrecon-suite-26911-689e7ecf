@@ -93,6 +93,30 @@ function ReconDashboard() {
   // Accessibility: announcements
   const [ariaMsg, setAriaMsg] = useState("");
 
+  // Load offline recon history on mount
+  useEffect(() => {
+    async function fetchHistory() {
+      const hist = await fetchReconHistory();
+      setHistory(Array.isArray(hist) ? hist : []);
+    }
+    fetchHistory();
+  }, []);
+
+  // Save scan results to history with status
+  async function saveScanHistory(rows, status, errorMsg) {
+    if (!rows || !rows.length) return;
+    const histRows = rows.map(r => ({
+      ...r,
+      status: status || "completed",
+      error: errorMsg || "",
+      timestamp: Date.now(),
+    }));
+    // Save
+    await addReconHistory(histRows);
+    // Update local state for UI
+    setHistory(prev => [...histRows, ...(prev || [])].slice(0, 120));
+  }
+
   // PUBLIC_INTERFACE
   async function handleSubmitScan(tool) {
     setError("");
