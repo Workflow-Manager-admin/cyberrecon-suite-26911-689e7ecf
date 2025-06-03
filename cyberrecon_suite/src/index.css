@@ -11,21 +11,25 @@ html, body {
   margin: 0; padding: 0;
   width: 100vw; min-height: 100vh;
   font: inherit;
-  background-color: #000 !important;
-  background: var(--base-black, #000) !important;
-  color: var(--text-color, #fff) !important;
+  box-sizing: border-box;
+  background-color: #101114 !important;
+  background: var(--base-dark, #101114) !important;
+  color: var(--text-color, #fafbfc) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-size: 16.1px;
+  font-family: var(--font-main, 'Inter', 'Roboto', 'Segoe UI', Arial, sans-serif);
+  letter-spacing: .012em;
 }
 
 body {
   width: 100vw;
   min-height: 100vh;
   font-family: var(--font-main, 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif);
-  font-size: 16px;
-  letter-spacing: 0.01em;
-  background: var(--base-black, #000) !important;
-  color: var(--text-color, #fff) !important;
+  font-size: 1em;
+  letter-spacing: 0.011em;
+  background: var(--base-dark, #101114) !important;
+  color: var(--text-color, #fafbfc) !important;
 }
 
 #root {
