@@ -1131,6 +1131,26 @@ function ReconDashboard() {
         </div>
       )}
 
+      {/* Premium feedback for schedule/job panel */}
+      {showSchedulePanel && (
+        <div style={{
+          background: "linear-gradient(96deg,#51b57f2a 30%,rgba(57,248,117,0.11) 80%)",
+          color: "#41a83d",
+          fontWeight: 650,
+          borderRadius: 18,
+          lineHeight: 1.33,
+          padding: "8px 19px",
+          margin: "10px 0 21px 0",
+          fontSize: 13.9,
+          boxShadow: "0 1.5px 10px -6px #121d1b48",
+          border:"1px solid #223e2333"
+        }}>
+          <span aria-hidden="true" style={{fontSize:19, marginRight:8}}>💡</span>
+          Scheduled jobs will trigger even if you close this window (if app stays running). You may pause, remove, or create multiple scan schedules as needed.
+        </div>
+      )}
+
+
       {/* Results Table & Graph. Always render the results panel (with animation), even if empty. */}
       <div
         style={{
