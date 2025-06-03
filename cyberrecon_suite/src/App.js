@@ -7,6 +7,7 @@ import DummyModule from "./modules/DummyModule";
 import ReconDashboard from "./modules/ReconDashboard";
 import VulnerabilityScanner from "./modules/VulnerabilityScanner";
 import WordlistGenerator from "./modules/WordlistGenerator";
+import ReportGenerator from "./modules/ReportGenerator";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -71,7 +72,7 @@ const MODULE_COMPONENTS = {
   exploitation: DummyModule,
   jsdebugger: DummyModule,
   wordlist: WordlistGenerator,
-  report: DummyModule,
+  report: ReportGenerator,
   bounty: DummyModule,
   settings: DummyModule
 };
