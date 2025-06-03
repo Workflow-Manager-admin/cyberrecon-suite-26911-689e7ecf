@@ -437,7 +437,30 @@ function TableDisplay({
                       ? row[col.field]
                         ? "✅"
                         : "❌"
-                      : row[col.field]}
+                      : (() => {
+                          // If user-defined render
+                          if (typeof col.render === "function") {
+                            return col.render(row[col.field], row);
+                          }
+                          // Check for anchor tags with invalid href
+                          if (
+                            col.field === "url" &&
+                            typeof row[col.field] === "string" &&
+                            row[col.field].startsWith("#")
+                          ) {
+                            return (
+                              <a
+                                href="/"
+                                role="button"
+                                tabIndex={0}
+                                style={{ color: "var(--base-accent)", textDecoration: "underline" }}
+                              >
+                                {row[col.field]}
+                              </a>
+                            );
+                          }
+                          return row[col.field];
+                        })()}
                   </td>
                 ))}
               </tr>
