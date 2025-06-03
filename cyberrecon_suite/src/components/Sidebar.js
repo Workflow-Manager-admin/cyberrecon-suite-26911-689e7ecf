@@ -215,9 +215,9 @@ function Sidebar({
               <span
                 aria-hidden="true"
                 style={{
-                  fontSize: 28,
-                  marginLeft: 8,
-                  marginRight: 10,
+                  fontSize: 30,
+                  marginLeft: 13,
+                  marginRight: 13,
                   filter: selected ? "drop-shadow(0 0 13px #ff9800bd)" : "none",
                   textShadow: selected
                     ? "0 2px 16px #ff980055, 0 1.8px 7px #ffad4280"
@@ -230,11 +230,11 @@ function Sidebar({
               </span>
               <span
                 style={{
-                  fontSize: 15.5,
+                  fontSize: 16,
                   marginLeft: 0,
                   color: selected ? "var(--base-accent,#ff9800)" : "var(--text-color,#fdfeff)",
                   fontWeight: selected ? 900 : 700,
-                  letterSpacing: ".009em",
+                  letterSpacing: ".012em",
                   flex: 1,
                   textAlign: "left",
                   whiteSpace: "nowrap",
@@ -244,6 +244,8 @@ function Sidebar({
                   textShadow: selected
                     ? "0 1.5px 11px #ffad4240"
                     : undefined,
+                  lineHeight: 1.18,
+                  paddingRight: 7,
                 }}
                 aria-hidden="false"
               >

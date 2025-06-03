@@ -135,7 +135,7 @@ function App() {
   const ActiveComp = MODULE_COMPONENTS[activeModule];
 
   // Sidebar width must match sidebar component
-  const SIDEBAR_WIDTH = 92; // Sync with Sidebar.js; compact modern nav
+  const SIDEBAR_WIDTH = 128; // Expanded for modern, readable nav
 
   return (
     <div
