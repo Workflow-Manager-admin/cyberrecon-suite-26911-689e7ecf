@@ -127,16 +127,26 @@ function App() {
   const ActiveComp = MODULE_COMPONENTS[activeModule];
 
   // Sidebar width must match sidebar component
-  const SIDEBAR_WIDTH = 254;
+  const SIDEBAR_WIDTH = 312; // Increased from 254 for a more premium, Burp-like navigation experience
 
   return (
-    <div className="app-root" style={{ display: "flex", minHeight: "100vh", background: "var(--base-dark)" }}>
+    <div
+      className="app-root"
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        background: "var(--base-dark)",
+        fontFamily: "var(--font-main, 'Inter', 'Roboto', Arial, sans-serif)"
+      }}
+    >
       <Sidebar
         modules={MODULES}
         activeModule={activeModule}
         onModuleSelect={openTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        // Pass explicit width to ensure sidebar and layout stay in sync
+        width={SIDEBAR_WIDTH}
       />
 
       <main
@@ -144,10 +154,14 @@ function App() {
         style={{
           flex: 1,
           background: "var(--base-dark)",
-          marginLeft: sidebarOpen ? 0 : 0,
+          // visually offset content a little more from sidebar for premium width
+          marginLeft: 0,
           transition: "margin .22s cubic-bezier(.38,.71,.68,1)",
           minWidth: 0,
-          position: "relative"
+          position: "relative",
+          // Add a larger minWidth for main content for wide nav feel (especially at large screens)
+          maxWidth: "calc(100vw - " + (sidebarOpen ? SIDEBAR_WIDTH : 0) + "px)",
+          boxSizing: "border-box"
         }}
       >
         <HeaderBar onAboutClick={() => setShowModal(true)} />
@@ -158,18 +172,18 @@ function App() {
             aria-label="Show sidebar"
             style={{
               position: "fixed",
-              top: 20,
-              left: 15,
+              top: 22,
+              left: 19,
               zIndex: 29,
-              background: "rgba(25,22,14,0.9)",
+              background: "rgba(25,22,14,0.98)",
               color: "#ffad42",
               border: "2px solid #ff9800",
-              borderRadius: 9,
-              fontSize: 23,
+              borderRadius: 11,
+              fontSize: 26,
               fontWeight: 800,
-              boxShadow: "0 3.5px 18px #ff980041",
-              width: 41,
-              height: 41,
+              boxShadow: "0 5px 22px #ff980041",
+              width: 48,
+              height: 48,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -179,7 +193,9 @@ function App() {
             }}
             onClick={() => setSidebarOpen(true)}
             tabIndex={0}
-          >≡</button>
+          >
+            ≡
+          </button>
         )}
 
         <TabbedWorkspace
