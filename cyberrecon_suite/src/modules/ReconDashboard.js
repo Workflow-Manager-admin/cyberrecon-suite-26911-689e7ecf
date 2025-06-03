@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import TableDisplay from "../components/TableDisplay";
 import GraphDisplay from "../components/GraphDisplay";
 import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
-// Scheduler integration
 import {
   getJobs,
   addJob,
@@ -12,6 +11,70 @@ import {
   getPrevRunTime
 } from "../utils/scheduler";
 
+/**
+ * Status notification (Accessible, styled)
+ */
+function PremiumStatusNotice({ msg, type = "info", onClose, ariaId, style }) {
+  let clr, icon, border;
+  if (type === "success") {
+    clr = "#51b57f";
+    icon = "✅";
+    border = "1.9px solid #51b57f33";
+  } else if (type === "error") {
+    clr = "#ff5964";
+    icon = "❌";
+    border = "1.9px solid #ff596488";
+  } else if (type === "warning") {
+    clr = "#ffc25c";
+    icon = "⚠️";
+    border = "1.9px solid #ffc25c66";
+  } else {
+    clr = "#4fbaff";
+    icon = "ℹ️";
+    border = "1.9px solid #4fbaff33";
+  }
+  return (
+    <div
+      id={ariaId}
+      role={type === "error" ? "alert" : "status"}
+      aria-live="polite"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        background: "var(--secondary)",
+        color: clr,
+        fontWeight: 700,
+        fontSize: 15.5,
+        borderRadius: 10,
+        border,
+        boxShadow: "0 2px 12px 1px rgba(0,0,0,0.09)",
+        padding: "9px 18px",
+        margin: "9px 0 17px 0",
+        ...style
+      }}
+    >
+      <span aria-hidden="true" style={{ fontSize: 21, marginRight: 13 }}>{icon}</span>
+      <span style={{ flex: 1 }}>{msg}</span>
+      {onClose &&
+        <button
+          tabIndex={0}
+          aria-label="Close notification"
+          style={{
+            background: "none",
+            border: "none",
+            color: clr,
+            fontSize: 21,
+            marginLeft: 14,
+            cursor: "pointer"
+          }}
+          onClick={onClose}
+        >
+          ×
+        </button>
+      }
+    </div>
+  );
+}
 /**
  * Premium Schedule Picker UI + Job Table
  * Schedules and manages recurring scan jobs including next/previous run details.
