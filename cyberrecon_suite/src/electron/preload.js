@@ -41,6 +41,41 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+
+  // === VULNERABILITY SCANNER: Nuclei CLI scan IPC API ===
+
+  /** 
+   * Triggers a Nuclei scan via IPC. 
+   * @param {{targets: string|array, templates?: string|array, processId?: string, extraArgs?: array}} opts 
+   * @returns {Promise<{ok:boolean, processId:string, streaming?:boolean, simulated?:boolean}>}
+   */
+  runScanCommand: (opts) => ipcRenderer.invoke('vulnscan:runScanCommand', opts),
+
+  /**
+   * Cancels an active Nuclei scan by processId.
+   * @param {string} processId
+   */
+  cancelScanCommand: (processId) => ipcRenderer.invoke('vulnscan:cancelScanCommand', processId),
+
+  /**
+   * Stream scan output/events (data/end/error) for running scan(s).
+   * Handler signature: (event, {processId, type, data|error|code}) => void
+   */
+  onScanCommandOutput: (handler) => {
+    // Use main process emitter if available – more efficient, lower latency
+    if (scanEmitter && scanEmitter.on) {
+      const localHandler = (evt) => handler(null, evt);
+      scanEmitter.on('scan-nuclei-data', localHandler);
+      scanEmitter.on('scan-nuclei-end', localHandler);
+      scanEmitter.on('scan-nuclei-error', localHandler);
+      scanListeners.add(localHandler);
+      // No-op for unsubscribe for now
+    } else {
+      // Fallback: listen via ipcRenderer (if main process broadcasts events there)
+      // For a full implementation, add: ipcRenderer.on('scan-nuclei-data') etc.
+    }
+  },
+
   // SCHEDULED JOBS: JOB CRUD AND SCHEDULING IPC API
   listScheduledJobs: () => ipcRenderer.invoke('scheduler:listJobs'),
   addScheduledJob: (job) => ipcRenderer.invoke('scheduler:addJob', job),
