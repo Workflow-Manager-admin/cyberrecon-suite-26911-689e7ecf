@@ -215,22 +215,23 @@ function Sidebar({
               <span
                 aria-hidden="true"
                 style={{
-                  fontSize: 30,
+                  fontSize: 38,
                   marginLeft: 13,
-                  marginRight: 13,
+                  marginRight: 18,
                   filter: selected ? "drop-shadow(0 0 13px #ff9800bd)" : "none",
                   textShadow: selected
                     ? "0 2px 16px #ff980055, 0 1.8px 7px #ffad4280"
                     : "0 1px 7px #1c1c2629",
                   transition: "all .22s cubic-bezier(.22,.8,.43,1)",
-                  flexShrink: 0
+                  flexShrink: 0,
+                  lineHeight: 1.1
                 }}
               >
                 {mod.icon}
               </span>
               <span
                 style={{
-                  fontSize: 16,
+                  fontSize: 18.5,
                   marginLeft: 0,
                   color: selected ? "var(--base-accent,#ff9800)" : "var(--text-color,#fdfeff)",
                   fontWeight: selected ? 900 : 700,
@@ -244,8 +245,8 @@ function Sidebar({
                   textShadow: selected
                     ? "0 1.5px 11px #ffad4240"
                     : undefined,
-                  lineHeight: 1.18,
-                  paddingRight: 7,
+                  lineHeight: 1.2,
+                  paddingRight: 18,
                 }}
                 aria-hidden="false"
               >
