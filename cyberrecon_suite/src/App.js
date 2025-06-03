@@ -127,7 +127,7 @@ function App() {
   const ActiveComp = MODULE_COMPONENTS[activeModule];
 
   // Sidebar width must match sidebar component
-  const SIDEBAR_WIDTH = 312; // Increased from 254 for a more premium, Burp-like navigation experience
+  const SIDEBAR_WIDTH = 340; // Increased for extra premium, Burp Suite-like navigation
 
   return (
     <div

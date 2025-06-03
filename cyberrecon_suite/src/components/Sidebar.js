@@ -16,10 +16,18 @@ import logo from "../assets/cyberrecon-logo.svg";
  *   - width: number (optional, allows parent to control exact width)
  * Always visually wider (wider than 88px: ~240-320px for Burp Suite feel), with all content spaced accordingly.
  */
+/**
+ * Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
+ * Accepts new props:
+ *   - isOpen: boolean
+ *   - onClose: function (optional)
+ *   - width: number (optional, allows parent to control exact width)
+ * Always visually wider (wider than 88px: ~240-340px for Burp Suite feel), with all content spaced accordingly.
+ */
 // PUBLIC_INTERFACE
 function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose, width }) {
-  // Responsive width: wider, support parent-passed width (default to legacy 254)
-  const SIDEBAR_WIDTH = width || 312;
+  // Responsive width: wider, support parent-passed width (default now 340 for premium experience)
+  const SIDEBAR_WIDTH = width || 340;
 
   // Premium slide-close: hide from left (use isOpen prop)
   return (
