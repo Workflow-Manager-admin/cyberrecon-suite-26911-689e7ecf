@@ -153,28 +153,33 @@ function ReconDashboard() {
     setAriaMsg("");
     setResults([]);
     setResultBuf([]);
+    setShowResults(false);
     setCancelScan(null);
 
     const inputDomains = validateDomains(domainsInput);
     if (!inputDomains.length) {
       setError("Please enter at least one valid domain. 🤚");
       setAriaMsg("Invalid domain input.");
+      setResults([]); // Always trigger result UI to show empty
+      setShowResults(true);
       return;
     }
     setDomains(inputDomains);
     setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"} `);
+
     let isElectron = hasElectronBridge();
     let nFinished = 0;
     let aborters = [];
-    const localResultBuf = [];
-
     let scanAborted = false;
+
+    // STREAM buffer for all results
+    let allScanResults = [];
+    setResultBuf([]);
+    setShowResults(false);
 
     // For all domains, run recon in parallel; handle error cancellations
     inputDomains.forEach((domain, idx) => {
-      // Internal state to ensure each domain's results are finalized and error handled
       let domainResultBuf = [];
-
       const handleData = (data) => {
         let entry;
         if (tool === "Amass") {
@@ -189,8 +194,12 @@ function ReconDashboard() {
         } else if (tool === "Masscan") {
           entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
         }
-        setResultBuf(rb => [...rb, entry]);
+        setResultBuf(rb => {
+          const newRb = [...rb, entry];
+          return newRb;
+        });
         domainResultBuf.push(entry);
+        allScanResults.push(entry);
       };
       const handleError = (err) => {
         setError(`❌ ${typeof err === "string" ? err : "Unknown Error"} (${domain})`);
@@ -207,25 +216,33 @@ function ReconDashboard() {
         nFinished += 1;
         if (nFinished >= inputDomains.length) {
           setLoading("");
-          setCancelScan(null);
+          setShowResults(true);
+          finalizeResults();
         }
       };
       const handleDone = () => {
         nFinished += 1;
-        // Only finish all domains
         if (nFinished >= inputDomains.length) {
           setLoading("");
+          setShowResults(true);
           finalizeResults();
         }
       };
       async function finalizeResults() {
-        if (scanAborted) return;
+        if (scanAborted) {
+          setResultBuf([]);
+          setResults([]); // Show empty or cancelled state
+          setShowResults(true);
+          setCancelScan(null);
+          return;
+        }
         const buf = resultBuf.length ? resultBuf : [];
-        setResults([...buf]);
-        await saveScanHistory(buf, "completed", "");
-        setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
+        setResults((b => [...b, ...buf].filter(Boolean))(allScanResults.length ? [] : [])); // Defensive: flush buf
+        setShowResults(true);
+        await saveScanHistory(buf.length ? buf : allScanResults, "completed", "");
         setResultBuf([]);
         setCancelScan(null);
+        setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
       }
       // CLI or API select, add try/catch for robust error fallback
       if (isElectron) {
@@ -233,7 +250,9 @@ function ReconDashboard() {
         if (tool === "Amass") args = ["enum", "-d", domain];
         else if (tool === "Masscan") args = ["-p1-1000", "--rate=2000", domain];
         try {
-          const [promise, canceler] = runViaElectron(tool, args, handleData, handleError, handleDone);
+          const [promise, canceler] = runViaElectron(
+            tool, args, handleData, handleError, handleDone
+          );
           aborters.push(canceler);
         } catch (electronError) {
           handleError(`Electron scan failed: ${(electronError && electronError.message) || "Unknown"}`);
@@ -254,6 +273,8 @@ function ReconDashboard() {
       setCancelScan(null);
       setAriaMsg("Scan cancelled.");
       setError("Scan cancelled. 🚫");
+      setResults([]); // Always show a result region
+      setShowResults(true);
     });
   }
 
