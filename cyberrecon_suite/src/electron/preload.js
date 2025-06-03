@@ -41,6 +41,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  // SCHEDULED JOBS: JOB CRUD AND SCHEDULING IPC API
+  listScheduledJobs: () => ipcRenderer.invoke('scheduler:listJobs'),
+  addScheduledJob: (job) => ipcRenderer.invoke('scheduler:addJob', job),
+  updateScheduledJob: (id, fields) => ipcRenderer.invoke('scheduler:updateJob', id, fields),
+  removeScheduledJob: (id) => ipcRenderer.invoke('scheduler:removeJob', id),
+  getNextRunTime: (schedule) => ipcRenderer.invoke('scheduler:getNextRun', schedule),
+  getPrevRunTime: (job) => ipcRenderer.invoke('scheduler:getPrevRun', job),
+
   // For compatibility
   isElectron: true
 });

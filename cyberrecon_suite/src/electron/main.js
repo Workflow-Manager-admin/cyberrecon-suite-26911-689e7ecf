@@ -50,6 +50,150 @@ function ensureDbSchema() {
 }
 ensureDbSchema();
 
+/** ----------------------------------------
+ *   SCHEDULER: Scheduled Job Management + Background Runner
+ * -----------------------------------------
+ * Persistent job storage, schedule, trigger background scans, and IPC
+ */
+const JOBS_PATH = path.join(app.getPath('userData'), 'scheduler_jobs.json');
+let jobsState = [];
+let jobTimers = {};
+
+/** Read jobs from file (persistent storage) */
+function readJobs() {
+  try {
+    if (fs.existsSync(JOBS_PATH)) {
+      const arr = JSON.parse(fs.readFileSync(JOBS_PATH, 'utf-8'));
+      jobsState = Array.isArray(arr) ? arr : [];
+    } else {
+      jobsState = [];
+    }
+  } catch {
+    jobsState = [];
+  }
+}
+
+/** Write jobs to file (persistent storage) */
+function writeJobs() {
+  try { fs.writeFileSync(JOBS_PATH, JSON.stringify(jobsState, null, 2), 'utf-8'); } catch {}
+}
+
+/** Compute next run time from schedule object (interval/cron/once/daily/weekly) */
+function getNextRunTime(schedule, from = Date.now()) {
+  if (!schedule) return null;
+  if (typeof schedule === 'string') {
+    if (schedule === 'daily') {
+      const dt = new Date(from); dt.setDate(dt.getDate() + 1); return +dt;
+    }
+    if (schedule === 'weekly') {
+      const dt = new Date(from); dt.setDate(dt.getDate() + 7); return +dt;
+    }
+  }
+  if (schedule.type === 'interval') {
+    return from + ((schedule.intervalMinutes || 60) * 60 * 1000);
+  }
+  if (schedule.type === 'cron') {
+    let dt = new Date(from);
+    dt.setSeconds(0, 0);
+    dt.setMinutes(schedule.minute || 0);
+    dt.setHours(schedule.hour || 0);
+    if (schedule.dow !== undefined && schedule.dow !== null) {
+      // Weekly, next date of the week
+      let add = (schedule.dow - dt.getDay() + 7) % 7;
+      if (add === 0 && dt < new Date(from)) add = 7;
+      dt.setDate(dt.getDate() + add);
+    } else {
+      if (dt <= new Date(from)) dt.setDate(dt.getDate() + 1);
+    }
+    return +dt;
+  }
+  if (schedule.type === 'once') {
+    return +schedule.runAt || null;
+  }
+  return null;
+}
+
+/** Stop/clear all scheduled timers */
+function clearAllJobTimers() { Object.values(jobTimers).forEach(tid => clearTimeout(tid)); jobTimers = {}; }
+
+/** Setup job timer for a single job; triggers a scan when due */
+function setupJobTimer(job) {
+  if (!job.enabled) return;
+  clearJobTimer(job.id);
+  const now = Date.now(), nextRun = getNextRunTime(job.schedule, now);
+  if (!nextRun || nextRun < now + 1000) return; // Don't schedule past runs
+  const delay = Math.max(1, nextRun - now);
+  jobTimers[job.id] = setTimeout(async () => {
+    // Trigger scan for job.targets using job.tool via event bus
+    scanEmitter.emit('scheduled-job-run', { job });
+    job.lastRun = Date.now();
+    job.nextRun = getNextRunTime(job.schedule, job.lastRun);
+    writeJobs();
+    setupJobTimer(job);
+  }, delay);
+}
+function clearJobTimer(id) { if (jobTimers[id]) { clearTimeout(jobTimers[id]); delete jobTimers[id]; } }
+/** Setup all job timers on load */
+function setupAllJobTimers() {
+  clearAllJobTimers();
+  jobsState.forEach(j => j.enabled !== false && setupJobTimer(j));
+}
+
+// On app startup, read persistent scheduled jobs & setup timers
+readJobs();
+setupAllJobTimers();
+
+// --- IPC interface for job CRUD ---
+ipcMain.handle('scheduler:listJobs', () => {
+  readJobs(); // Always re-read to support edits from multiple windows
+  return jobsState.map(j => Object.assign({}, j));
+});
+ipcMain.handle('scheduler:addJob', (e, job) => {
+  const jobCopy = Object.assign({}, job);
+  jobCopy.id = jobCopy.id || "sched_" + Math.random().toString(36).slice(2, 11);
+  jobCopy.createdAt = jobCopy.createdAt || Date.now();
+  jobCopy.enabled = true;
+  jobCopy.lastRun = null;
+  jobCopy.nextRun = getNextRunTime(jobCopy.schedule, Date.now());
+  jobsState.push(jobCopy);
+  writeJobs();
+  setupJobTimer(jobCopy);
+  return jobCopy;
+});
+ipcMain.handle('scheduler:updateJob', (e, id, newFields) => {
+  readJobs();
+  let idx = jobsState.findIndex(j => j.id === id);
+  if (idx === -1) return null;
+  jobsState[idx] = Object.assign({}, jobsState[idx], newFields);
+  jobsState[idx].nextRun = getNextRunTime(jobsState[idx].schedule, Date.now());
+  writeJobs();
+  setupJobTimer(jobsState[idx]);
+  return jobsState[idx];
+});
+ipcMain.handle('scheduler:removeJob', (e, id) => {
+  readJobs();
+  jobsState = jobsState.filter(j => j.id !== id);
+  writeJobs();
+  clearJobTimer(id);
+  return true;
+});
+
+// When app starts, watch for relevant events to refresh timers when jobs file changes from outside (multi-window support)
+// Not implemented: For now, always readJobs in each IPC call.
+
+ipcMain.handle('scheduler:getNextRun', (e, schedule) => getNextRunTime(schedule, Date.now()));
+ipcMain.handle('scheduler:getPrevRun', (e, job) => job.lastRun || null);
+
+/** When a scheduled job arrives (timer fires), simulate running the appropriate scan for each domain/target */
+scanEmitter.on('scheduled-job-run', async ({ job }) => {
+  // For each target, trigger the simulated scan (like user-initiated)
+  (job.targets || []).forEach(domain => {
+    const processId = "auto_" + job.id + "_" + (Math.random() + '').slice(2, 8);
+    simulateScan(job.tool, domain, processId);
+    // Optionally record run in recon_history for traceability (omitted for now)
+  });
+});
+
 // IPC handlers
 ipcMain.handle('recon:getHistory', async () => {
   if (!db) return [];
