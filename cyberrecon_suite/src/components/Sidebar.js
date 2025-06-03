@@ -40,14 +40,46 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
         position: "relative",
       }}
     >
-      {/* Logo area: strong brand, larger, crisp card-chip, dark shadow */}
+      {/* Slide-close button (scaffold for parent global control) */}
+      {onClose && isOpen && (
+        <button
+          aria-label="Hide sidebar"
+          className="sidebar-slide-close"
+          style={{
+            position: "absolute",
+            top: 18,
+            right: 12,
+            background: "rgba(255,152,0,0.10)",
+            color: "#ffad42",
+            border: "none",
+            borderRadius: "8px",
+            width: 31,
+            height: 31,
+            fontSize: 23,
+            fontWeight: 800,
+            boxShadow: "0 0px 9px #ff980066",
+            cursor: "pointer",
+            zIndex: 28,
+            transition: "background .14s,color .14s",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+          onClick={() => onClose?.()}
+          tabIndex={0}
+        >
+          <span aria-hidden="true">←</span>
+        </button>
+      )}
+
+      {/* Logo area: bigger width, maintain proportional look */}
       <div
         className="logo"
         aria-label="CyberRecon Suite"
         tabIndex={-1}
         style={{
-          width: 54,
-          marginBottom: 35,
+          width: 74,
+          marginBottom: 37,
           padding: 0,
           background: "linear-gradient(90deg,#23232e,#18191f 97%)",
           borderRadius: "16px",
