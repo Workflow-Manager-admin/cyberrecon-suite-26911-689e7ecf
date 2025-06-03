@@ -202,28 +202,48 @@ function ReconDashboard() {
 
     const inputDomains = validateDomains(domainsInput);
     if (!inputDomains.length) {
+      // Premium error state: always animate in "no results" on error
       setError("Please enter at least one valid domain. 🤚");
       setAriaMsg("Invalid domain input.");
-      setResults([]); // Guarantee: always render results panel, even if empty
+      setResults([]);
       setShowResults(true);
       return;
     }
-
     setDomains(inputDomains);
     setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"} `);
 
     const isElectron = hasElectronBridge();
-    let finishedCount = 0, aborted = false;
-    let cancels = []; // for all parallel scans
+    let finishedCount = 0;
+    let aborted = false;
+    const cancels = [];
     let allResults = [];
     setResultBuf([]);
     setShowResults(false);
 
-    // Scan for each domain in parallel, updating UI in real time
+    // Function for robustly finalizing result state with smooth transitions
+    async function finalizeAll() {
+      if (aborted) {
+        setResultBuf([]);
+        setResults([]);
+        setShowResults(true);
+        setCancelScan(null);
+        setAriaMsg("Scan cancelled.");
+        return;
+      }
+      const buf = [...resultBuf];
+      setResults(allResults.length ? [...allResults] : (buf.length ? buf : []));
+      setShowResults(true);
+      await saveScanHistory(allResults.length ? allResults : buf, "completed", "");
+      setResultBuf([]);
+      setCancelScan(null);
+      setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
+    }
+
+    // Run scans for each domain in parallel, tracking real-time streaming
     inputDomains.forEach((domain) => {
       let perDomainResults = [];
 
-      // Live data handler: update buf and append to allResults for premium real-time effect
+      // Handler: robust real-time results buffer for smooth UI
       const handleData = (data) => {
         let entry;
         if (tool === "Amass") {
@@ -238,12 +258,12 @@ function ReconDashboard() {
         } else if (tool === "Masscan") {
           entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
         }
-        setResultBuf((prev) => [...prev, entry]);
+        setResultBuf(prev => [...prev, entry]);
         perDomainResults.push(entry);
         allResults.push(entry);
       };
 
-      // Error state: update message, finish progress, trigger state transitions
+      // Error handling with premium UI polish
       const handleError = (err) => {
         setError(`❌ ${typeof err === "string" ? err : "Unknown Error"} (${domain})`);
         setLoading("");
@@ -259,40 +279,22 @@ function ReconDashboard() {
         if (finishedCount >= inputDomains.length) {
           setLoading("");
           setShowResults(true);
-          finalizeResults();
+          finalizeAll();
         }
       };
 
+      // Scan done for one domain
       const handleDone = () => {
         finishedCount += 1;
         if (finishedCount >= inputDomains.length) {
           setLoading("");
           setShowResults(true);
-          finalizeResults();
+          finalizeAll();
         }
       };
 
-      // When all domains have finished (successfully or error/abort/cancel), finalize results for display/history
-      async function finalizeResults() {
-        if (aborted) {
-          setResultBuf([]);
-          setResults([]);
-          setShowResults(true);
-          setCancelScan(null);
-          setAriaMsg("Scan cancelled.");
-          return;
-        }
-        const buf = [...resultBuf]; // Current stream buffer
-        setResults(allResults.length ? [...allResults] : (buf.length ? buf : []));
-        setShowResults(true);
-        await saveScanHistory(allResults.length ? allResults : buf, "completed", "");
-        setResultBuf([]);
-        setCancelScan(null);
-        setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
-      }
-
-      // Actual scan startup: Wire to Electron or HTTP API fallback
-      let scanCancel;
+      // Actual scan start: try Electron first, fallback to browser
+      let scanCancel = null;
       if (isElectron) {
         let args = [];
         if (tool === "Amass") args = ["enum", "-d", domain];
@@ -315,7 +317,7 @@ function ReconDashboard() {
       cancels.push(scanCancel);
     });
 
-    // Premium cancel: cancels all parallel scans, triggers state, and premium empty result view
+    // Premium cancel: cancels all parallel scans, triggers empty/error state
     setCancelScan(() => () => {
       aborted = true;
       cancels.forEach(fn => fn && fn());
