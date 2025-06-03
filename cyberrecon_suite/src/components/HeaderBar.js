@@ -69,121 +69,19 @@ function HeaderBar({ onAboutClick }) {
             marginRight: 11,
           }}
         >
-          {/* Visually bold SVG logo: radar/dish over accent arc-glow, premium icon */}
-          <svg
+          <img
+            src={logo}
+            alt="CyberRecon Suite Logo"
             width="39"
             height="39"
-            viewBox="0 0 39 39"
             style={{
               display: "block",
               filter: "drop-shadow(0 3px 17px #ffeeb305)",
+              maxHeight: 39,
+              maxWidth: 39,
             }}
-            aria-hidden="true"
-            focusable="false"
-          >
-            {/* Glassy arc background */}
-            <ellipse
-              cx="19.5"
-              cy="19.5"
-              rx="17.5"
-              ry="17"
-              fill="url(#logoGlassGrad)"
-              stroke="#ffad42"
-              strokeWidth="1.45"
-              opacity="0.99"
-            />
-            {/* Radar dish stylized */}
-            <g>
-              <rect
-                x="16"
-                y="21.5"
-                width="7"
-                height="9"
-                rx="3.5"
-                fill="url(#dishGrad)"
-                stroke="#ff9800"
-                strokeWidth="1.1"
-                opacity="0.91"
-              />
-              <ellipse
-                cx="19.5"
-                cy="21.5"
-                rx="5.25"
-                ry="1.75"
-                fill="#ffad42"
-                opacity="0.17"
-              />
-              <circle
-                cx="19.5"
-                cy="21.5"
-                r="2"
-                fill="#ffe88c"
-                opacity="0.72"
-                stroke="#ffd986"
-                strokeWidth="0.8"
-              />
-              {/* Antenna */}
-              <rect
-                x="19"
-                y="11"
-                width="1"
-                height="11"
-                rx="0.5"
-                fill="#ffe09a"
-                opacity="0.91"
-              />
-              <circle
-                cx="19.5"
-                cy="10"
-                r="2.2"
-                fill="url(#ballGrad)"
-                opacity="1"
-                stroke="#f4be6b"
-                strokeWidth="0.6"
-              />
-            </g>
-            {/* Radar sweep lines */}
-            <path
-              d="M20 25 Q27 22, 30 10"
-              stroke="#ff9800"
-              strokeWidth="0.5"
-              fill="none"
-              opacity="0.41"
-              strokeDasharray="3,3"
-            />
-            <path
-              d="M19 25 Q13 20, 6 19"
-              stroke="#f8c676"
-              strokeWidth="0.48"
-              fill="none"
-              opacity="0.29"
-              strokeDasharray="2,3"
-            />
-
-            <defs>
-              <radialGradient id="logoGlassGrad">
-                <stop offset="5%" stopColor="#ffad42" stopOpacity="1" />
-                <stop offset="82%" stopColor="#16191e" stopOpacity="0.93" />
-                <stop offset="100%" stopColor="#171921" stopOpacity="1" />
-              </radialGradient>
-              <linearGradient
-                id="dishGrad"
-                x1="0"
-                x2="0"
-                y1="1"
-                y2="0"
-                gradientUnits="objectBoundingBox"
-              >
-                <stop offset="0%" stopColor="#ffad42" />
-                <stop offset="97%" stopColor="#171921" />
-              </linearGradient>
-              <radialGradient id="ballGrad">
-                <stop offset="0%" stopColor="#ffffee" />
-                <stop offset="55%" stopColor="#ffe88c" />
-                <stop offset="100%" stopColor="#ff9800" />
-              </radialGradient>
-            </defs>
-          </svg>
+            draggable={false}
+          />
         </span>
         <span
           className="headerbar-title"

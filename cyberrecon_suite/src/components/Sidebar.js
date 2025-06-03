@@ -1,4 +1,5 @@
 import React from "react";
+import logo from "../assets/cyberrecon-logo.svg";
 
 // PUBLIC_INTERFACE
 function Sidebar({ modules, activeModule, onModuleSelect }) {
@@ -55,15 +56,28 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
           className="logo-symbol"
           aria-hidden="true"
           style={{
-            fontSize: 38,
-            textShadow:
-              "0 2.5px 22px #ffad429a, 0 2px 12px #1b525745",
-            color: "var(--base-light)",
             marginBottom: 3,
-            marginTop: 5
+            marginTop: 5,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: 38,
+            height: 38
           }}
         >
-          🛰️
+          <img
+            src={logo}
+            alt="CyberRecon Suite Logo"
+            width={34}
+            height={34}
+            style={{
+              display: "block",
+              filter: "drop-shadow(0 2px 14px #ffad42ad)",
+              maxHeight: 38,
+              maxWidth: 38
+            }}
+            draggable={false}
+          />
         </span>
       </div>
       {/* Nav buttons as crisp, modular sidebar cards */}
