@@ -8,6 +8,7 @@ import ReconDashboard from "./modules/ReconDashboard";
 import VulnerabilityScanner from "./modules/VulnerabilityScanner";
 import WordlistGenerator from "./modules/WordlistGenerator";
 import ReportGenerator from "./modules/ReportGenerator";
+import BugBountyAggregator from "./modules/BugBountyAggregator";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -73,7 +74,7 @@ const MODULE_COMPONENTS = {
   jsdebugger: DummyModule,
   wordlist: WordlistGenerator,
   report: ReportGenerator,
-  bounty: DummyModule,
+  bounty: BugBountyAggregator,
   settings: DummyModule
 };
 
