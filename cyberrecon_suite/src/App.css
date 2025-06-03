@@ -467,7 +467,33 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   font-size: 1.14rem;
 }
 
-/* Miscellaneous styles: logo, spacing, helpers */
+/* Miscellaneous accessibility/focus visible cues for icons/links/code */
+a, .focus-link {
+  color: var(--base-accent) !important;
+  outline: none;
+  text-decoration: none;
+  box-shadow: none;
+  transition: color 0.13s, text-shadow 0.13s;
+}
+a:hover, a:focus-visible, .focus-link:focus-visible {
+  color: var(--base-light) !important;
+  text-decoration: underline;
+  text-shadow: 0 1px 8px #ffad4229;
+  outline: 2.3px solid var(--focus-visible-ring);
+  outline-offset: 3px;
+  background: var(--focus-bg);
+}
+pre, code, kbd {
+  background: #202124;
+  color: var(--base-accent);
+  border-radius: 5px;
+  padding: 0.18em 0.5em;
+  font-size: 95%;
+  font-family: var(--font-code);
+  overflow-x: auto;
+}
+
+/* Icon/branding/logo */
 .logo {
   font-size: 1.46rem;
   font-weight: 900;
@@ -483,6 +509,7 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
   color: var(--base-light);
   font-size: 1.6em;
 }
+
 
 /* Responsive: make tab-content scrollable on small screens */
 @media (max-width:700px) {
