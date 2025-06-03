@@ -1,0 +1,1646 @@
+import React, { useState, useRef, useEffect } from "react";
+import TableDisplay from "../components/TableDisplay";
+import GraphDisplay from "../components/GraphDisplay";
+import HelpSidebar from "../components/HelpSidebar";
+import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
+import {
+  getJobs,
+  addJob,
+  updateJob,
+  removeJob,
+  getNextRunTime,
+  getPrevRunTime
+} from "../utils/scheduler";
+
+/**
+ * Status notification (Accessible, styled)
+ */
+function PremiumStatusNotice({ msg, type = "info", onClose, ariaId, style }) {
+  let clr, icon, border;
+  if (type === "success") {
+    clr = "#51b57f";
+    icon = "✅";
+    border = "1.9px solid #51b57f33";
+  } else if (type === "error") {
+    clr = "#ff5964";
+    icon = "❌";
+    border = "1.9px solid #ff596488";
+  } else if (type === "warning") {
+    clr = "#ffc25c";
+    icon = "⚠️";
+    border = "1.9px solid #ffc25c66";
+  } else {
+    clr = "#4fbaff";
+    icon = "ℹ️";
+    border = "1.9px solid #4fbaff33";
+  }
+  return (
+    <div
+      id={ariaId}
+      role={type === "error" ? "alert" : "status"}
+      aria-live="polite"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        background: "var(--secondary)",
+        color: clr,
+        fontWeight: 700,
+        fontSize: 15.5,
+        borderRadius: 10,
+        border,
+        boxShadow: "0 2px 12px 1px rgba(0,0,0,0.09)",
+        padding: "9px 18px",
+        margin: "9px 0 17px 0",
+        ...style
+      }}
+    >
+      <span aria-hidden="true" style={{ fontSize: 21, marginRight: 13 }}>{icon}</span>
+      <span style={{ flex: 1 }}>{msg}</span>
+      {onClose &&
+        <button
+          tabIndex={0}
+          aria-label="Close notification"
+          style={{
+            background: "none",
+            border: "none",
+            color: clr,
+            fontSize: 21,
+            marginLeft: 14,
+            cursor: "pointer"
+          }}
+          onClick={onClose}
+        >
+          ×
+        </button>
+      }
+    </div>
+  );
+}
+/**
+ * Premium Schedule Picker UI + Job Table
+ * Schedules and manages recurring scan jobs including next/previous run details.
+ */
+// PUBLIC_INTERFACE
+function PremiumSchedulePanel({
+  jobs,
+  setJobs,
+  onJobCreated,
+  onJobUpdated,
+  onJobRemoved,
+  errorState,
+  editingJob,
+  setEditingJob,
+  forceRefresh
+}) {
+  // Local state for schedule picker form
+  const [jobDomains, setJobDomains] = React.useState(editingJob?.targets?.join(", ") || "");
+  const [tool, setTool] = React.useState(editingJob?.tool || "Amass");
+  const [schedType, setSchedType] = React.useState(editingJob?.schedule?.type || "interval");
+  const [intervalMins, setIntervalMins] = React.useState(editingJob?.schedule?.intervalMinutes || 30);
+  const [timeHour, setTimeHour] = React.useState(editingJob?.schedule?.hour !== undefined ? editingJob?.schedule?.hour : 2);
+  const [timeMin, setTimeMin] = React.useState(editingJob?.schedule?.minute !== undefined ? editingJob?.schedule?.minute : 0);
+  const [dayOfWeek, setDayOfWeek] = React.useState(editingJob?.schedule?.dow !== undefined ? editingJob?.schedule?.dow : null);
+  const [oneTimeDate, setOneTimeDate] = React.useState(""); // For one-time schedule
+  const [formError, setFormError] = React.useState("");
+  const [savingJob, setSavingJob] = React.useState(false);
+
+  // Reset form when jobs or editingJob changes
+  React.useEffect(() => {
+    setJobDomains(editingJob?.targets?.join(", ") || "");
+    setTool(editingJob?.tool || "Amass");
+    setSchedType(editingJob?.schedule?.type || "interval");
+    setIntervalMins(editingJob?.schedule?.intervalMinutes || 30);
+    setTimeHour(editingJob?.schedule?.hour !== undefined ? editingJob?.schedule?.hour : 2);
+    setTimeMin(editingJob?.schedule?.minute !== undefined ? editingJob?.schedule?.minute : 0);
+    setDayOfWeek(editingJob?.schedule?.dow !== undefined ? editingJob?.schedule?.dow : null);
+    setOneTimeDate(""); // Only set if one-time and editing
+    setFormError("");
+  }, [editingJob, jobs]);
+
+  function handleSchedTypeChange(e) {
+    setSchedType(e.target.value);
+    setOneTimeDate("");
+  }
+
+  // PUBLIC_INTERFACE
+  async function handleJobSubmit(e) {
+    e.preventDefault();
+    setFormError("");
+    setSavingJob(true);
+    const doms = validateDomains(jobDomains);
+
+    if (!doms.length) {
+      setFormError("Enter at least one valid domain (comma or space separated).");
+      setSavingJob(false);
+      return;
+    }
+    let schedule;
+    if (schedType === "interval") {
+      const mins = parseInt(intervalMins, 10);
+      if (!mins || mins < 1) {
+        setFormError("Interval must be at least 1 minute.");
+        setSavingJob(false);
+        return;
+      }
+      schedule = { type: "interval", intervalMinutes: mins };
+    } else if (schedType === "cron") {
+      schedule = { type: "cron", hour: Number(timeHour), minute: Number(timeMin) };
+      if (dayOfWeek !== null && dayOfWeek !== "" && dayOfWeek !== "any") schedule.dow = Number(dayOfWeek);
+    } else if (schedType === "once") {
+      if (!oneTimeDate) {
+        setFormError("Set a valid date/time for a one-time schedule.");
+        setSavingJob(false);
+        return;
+      }
+      schedule = { type: "once", runAt: new Date(oneTimeDate).getTime() };
+    } else if (schedType === "daily") {
+      schedule = "daily";
+    } else if (schedType === "weekly") {
+      schedule = "weekly";
+    }
+    // Job object
+    const job = {
+      tool,
+      targets: doms,
+      schedule,
+      enabled: true
+    };
+
+    try {
+      if (editingJob && editingJob.id) {
+        await updateJob(editingJob.id, job);
+        setEditingJob(null);
+        onJobUpdated && onJobUpdated();
+      } else {
+        await addJob(job);
+        onJobCreated && onJobCreated();
+      }
+      setFormError("");
+      setJobDomains("");
+      setTool("Amass");
+    } catch (ex) {
+      setFormError("Failed to save job: " + (ex?.message || "unknown"));
+    }
+    setSavingJob(false);
+    forceRefresh && forceRefresh();
+  }
+
+  // Schedule form UI
+  return (
+    <section
+      aria-label="Schedule Recurring Scans"
+      style={{
+        background: "var(--secondary)",
+        borderRadius: 13,
+        boxShadow: "0 8px 32px -8px rgba(41,64,41,0.14)",
+        padding: "25px 29px",
+        marginBottom: 36,
+        marginTop: -9,
+      }}>
+      
+      {/* Schedule Picker */}
+      <form
+        aria-label="Schedule scan form"
+        onSubmit={handleJobSubmit}
+        style={{
+          background: "rgba(41,64,41,0.08)",
+          borderRadius: 11,
+          padding: "14px 16px 9px 16px",
+          marginBottom: 16,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          alignItems: "flex-end"
+        }}>
+        <div style={{ flex: "1 0 175px", minWidth: 150 }}>
+          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+            Domain(s)
+            <input
+              type="text"
+              placeholder="example.com, site.org"
+              value={jobDomains}
+              onChange={e => setJobDomains(e.target.value)}
+              required
+              spellCheck={false}
+              style={{
+                width: "100%",
+                padding: "6px 6px",
+                marginTop: 2,
+                borderRadius: 7,
+                fontSize: 14.2,
+                background: "#222d26",
+                color: "#caf9ed",
+                border: "1px solid #2d4e32",
+                outline: "none",
+                fontFamily: "var(--font-code)"
+              }}
+            />
+          </label>
+        </div>
+        <div>
+          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+            Tool
+            <select
+              value={tool}
+              onChange={e => setTool(e.target.value)}
+              style={{
+                background: "#222d26",
+                color: "#caf9ed",
+                marginTop: 2,
+                borderRadius: 7,
+                fontSize: 14.2,
+                border: "1px solid #2d4e32",
+                padding: "6px 7px"
+              }}>
+              <option value="Amass">Amass</option>
+              <option value="Masscan">Masscan</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+            Schedule Type
+            <select
+              value={schedType}
+              onChange={handleSchedTypeChange}
+              style={{
+                marginTop: 2,
+                padding: "6px 8px",
+                borderRadius: 7,
+                background: "#222d26",
+                color: "#caf9ed",
+                fontSize: 14.2,
+                border: "1px solid #2d4e32"
+              }}>
+              <option value="interval">Every X min</option>
+              <option value="cron">Daily/Weekly</option>
+              <option value="once">One time</option>
+              <option value="daily">Daily (auto)</option>
+              <option value="weekly">Weekly (auto)</option>
+            </select>
+          </label>
+        </div>
+        {schedType === "interval" && (
+          <div>
+            <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+              Interval (min)
+              <input
+                type="number"
+                min={1}
+                value={intervalMins}
+                onChange={e => setIntervalMins(e.target.value)}
+                required
+                style={{
+                  width: 66,
+                  marginTop: 2,
+                  padding: "6px 7px",
+                  borderRadius: 7,
+                  background: "#222d26",
+                  color: "#caf9ed",
+                  border: "1px solid #2d4e32",
+                  fontSize: 14.1
+                }}
+              />
+            </label>
+          </div>
+        )}
+        {schedType === "cron" && (
+          <>
+            <div>
+              <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+                Time (24h)
+                <input
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={timeHour}
+                  onChange={e => setTimeHour(Number(e.target.value))}
+                  style={{
+                    width: 52,
+                    marginRight: 6,
+                    marginTop: 2,
+                    borderRadius: 7,
+                    background: "#222d26",
+                    color: "#caf9ed",
+                    border: "1px solid #2d4e32",
+                    fontSize: 14.1
+                  }}
+                />
+                <span style={{ marginRight: 2 }}>:</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={timeMin}
+                  onChange={e => setTimeMin(Number(e.target.value))}
+                  style={{
+                    width: 52,
+                    marginTop: 2,
+                    borderRadius: 7,
+                    background: "#222d26",
+                    color: "#caf9ed",
+                    border: "1px solid #2d4e32",
+                    fontSize: 14.1
+                  }}
+                />
+              </label>
+            </div>
+            <div>
+              <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+                Day of Week
+                <select
+                  value={dayOfWeek === null ? "any" : String(dayOfWeek)}
+                  onChange={e => setDayOfWeek(e.target.value === "any" ? null : Number(e.target.value))}
+                  style={{
+                    marginTop: 2,
+                    padding: "6px 8px",
+                    borderRadius: 7,
+                    background: "#222d26",
+                    color: "#caf9ed",
+                    fontSize: 14.1,
+                    border: "1px solid #2d4e32"
+                  }}>
+                  <option value="any">Any</option>
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d, i) =>
+                    <option value={i} key={d}>{d}</option>
+                  )}
+                </select>
+              </label>
+            </div>
+          </>
+        )}
+        {schedType === "once" && (
+          <div>
+            <label style={{ fontWeight: 700, color: "#95ffd8", fontSize: 13.2 }}>
+              Run at
+              <input
+                type="datetime-local"
+                value={oneTimeDate}
+                onChange={e => setOneTimeDate(e.target.value)}
+                style={{
+                  marginTop: 2,
+                  padding: "6px 8px",
+                  borderRadius: 7,
+                  background: "#222d26",
+                  color: "#caf9ed",
+                  border: "1px solid #2d4e32",
+                  fontSize: 14.1
+                }}
+              />
+            </label>
+          </div>
+        )}
+        <button
+          type="submit"
+          className="btn"
+          style={{
+            background: "linear-gradient(91deg,#41b572,#90ffa9)",
+            color: "#191b22",
+            fontWeight: 700,
+            fontSize: 14.5,
+            borderRadius: 7,
+            marginLeft: 8,
+            minWidth: 72
+          }}
+          disabled={savingJob}
+        >
+          {editingJob ? "Update" : "Add"} Job
+        </button>
+        {formError && (
+          <div style={{
+            color: "#ff5964",
+            fontWeight: 700,
+            fontSize: 13,
+            marginLeft: 15
+          }}>{formError}</div>
+        )}
+      </form>
+      {/* Job List Table */}
+      <div style={{ marginTop: 16 }}>
+        <TableDisplay
+          data={
+            (jobs || []).map(j => {
+              // Provide calculated next/last run details if not present
+              let nextRun = j.nextRun || getNextRunTime(j.schedule, Date.now());
+              let lastRun = j.lastRun || null;
+              return { ...j, nextRun, lastRun }
+            })
+          }
+          columns={[
+            {
+              label: "Domain(s)",
+              field: "targets",
+              emoji: "🌐",
+              sortable: true,
+              filter: true,
+              bold: true,
+              render: v => Array.isArray(v) ? v.join(", ") : v
+            },
+            {
+              label: "Tool",
+              field: "tool",
+              emojiMap: { Amass: "🛰️", Masscan: "🖥️" },
+              sortable: true,
+              filter: true,
+              colored: true,
+              colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
+            },
+            {
+              label: "Schedule",
+              field: "schedule",
+              sortable: false,
+              filter: false,
+              render: v => formatScheduleDescription(v)
+            },
+            {
+              label: "Next Run",
+              field: "nextRun",
+              sortable: true,
+              render: (ts, row) =>
+                ts ? new Date(ts).toLocaleString() : (row.nextRun ? new Date(row.nextRun).toLocaleString() : "—")
+            },
+            {
+              label: "Last Run",
+              field: "lastRun",
+              sortable: true,
+              render: (ts, row) =>
+                ts ? new Date(ts).toLocaleString() : (row.lastRun ? new Date(row.lastRun).toLocaleString() : "—")
+            },
+            {
+              label: "Enabled",
+              field: "enabled",
+              filter: true,
+              sortable: true,
+              render: value => value ? "✅" : "❌"
+            }
+          ]}
+          initialSortField="nextRun"
+          filterable={true}
+          size="sm"
+          style={{ marginTop: 7, marginBottom: 9 }}
+        />
+      </div>
+      {/* Schedule Management Actions */}
+      <div style={{ display: "flex", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="btn"
+          aria-label="Refresh schedule list"
+          style={{ background: "#222c18", color: "#9feaf8", fontWeight: 700 }}
+          onClick={forceRefresh}
+        >🔄 Refresh</button>
+        {jobs && jobs.length > 0 && (
+          <button
+            type="button"
+            className="btn"
+            aria-label="Clear all jobs"
+            style={{ background: "#2c2122", color: "#ff5964", fontWeight: 700 }}
+            onClick={async () => {
+              for (const j of jobs) await removeJob(j.id);
+              forceRefresh && forceRefresh();
+            }}
+          >🗑️ Clear All</button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function validateDomains(input) {
+  // Accept comma/space/newline separated
+  return (input || "")
+    .split(/[\s,]+/)
+    .map(d => d.trim())
+    .filter(Boolean)
+    .filter(d => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d));
+}
+
+// Format schedule description for Table/UX
+function formatScheduleDescription(schedule) {
+  if (!schedule) return "";
+  if (typeof schedule === "string") {
+    if (schedule === "daily") return "Daily";
+    if (schedule === "weekly") return "Weekly";
+    return schedule;
+  }
+  if (schedule.type === "interval") {
+    return `Every ${schedule.intervalMinutes} minutes`;
+  }
+  if (schedule.type === "cron") {
+    const hh = String(schedule.hour ?? 0).padStart(2, "0");
+    const mm = String(schedule.minute ?? 0).padStart(2, "0");
+    if (schedule.dow !== undefined && schedule.dow !== null)
+      return `Every week on ${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][schedule.dow]} at ${hh}:${mm}`;
+    return `Daily at ${hh}:${mm}`;
+  }
+  if (schedule.type === "once") {
+    return `Once at ${new Date(schedule.runAt).toLocaleString()}`;
+  }
+  return "[custom schedule]";
+}
+
+function hasElectronBridge() {
+  return (
+    typeof window !== "undefined" &&
+    window.electronAPI &&
+    typeof window.electronAPI.runReconCommand === "function" &&
+    typeof window.electronAPI.onReconCommandOutput === "function"
+  );
+}
+
+// PUBLIC_INTERFACE
+/** Run scan via Electron IPC; returns [promise, cancel]. */
+function runViaElectron(tool, args, onData, onError, onDone) {
+  const processId = Math.random().toString(36).substring(2, 12); // Unique per scan
+  let isActive = true;
+  let detached = false;
+  let _onData = onData;
+  let _onError = onError;
+  let _onDone = onDone;
+
+  function handler(_event, payload) {
+    if (!payload || payload.processId !== processId || !isActive) return;
+    if (payload.type === "data") {
+      _onData && _onData(payload.data);
+    } else if (payload.type === "error") {
+      isActive = false;
+      _onError && _onError(payload.data || "Scan error");
+      _onDone && _onDone(payload.data);
+      detach();
+    } else if (payload.type === "end") {
+      isActive = false;
+      _onDone && _onDone(payload.data);
+      detach();
+    }
+  }
+  window.electronAPI.onReconCommandOutput(handler);
+
+  window.electronAPI.runReconCommand({ tool, args, processId });
+
+  function detach() {
+    if (detached) return;
+    detached = true;
+    isActive = false;
+    // Event handler removal would go here for a real backend.
+  }
+  function cancel() {
+    isActive = false;
+    detach();
+    window.electronAPI.cancelReconCommand(processId);
+  }
+  return [
+    new Promise((resolve, reject) => {
+      _onDone = (data) => {
+        isActive = false;
+        detach();
+        resolve(data);
+      };
+      _onError = (err) => {
+        isActive = false;
+        detach();
+        reject(err);
+      };
+    }),
+    cancel
+  ];
+}
+
+// Browser API fallback: simulate scan streaming with API fetch.
+async function runViaApi(tool, target, onData, onError, onDone) {
+  try {
+    let apiUrl, label;
+    if (tool === "Amass") {
+      apiUrl = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(target)}`;
+      label = "subdomains";
+    } else if (tool === "Masscan") {
+      apiUrl = `https://api.hackertarget.com/nmap/?q=${encodeURIComponent(target)}`;
+      label = "ports";
+    }
+    let res = await fetch(apiUrl);
+    if (!res.ok) {
+      onError && onError("Public API error.");
+      onDone && onDone();
+      return;
+    }
+    const txt = await res.text();
+    for (const line of txt.split("\n")) {
+      if (line.trim()) onData({ line: line.trim(), label });
+      await new Promise(r => setTimeout(r, 75));
+    }
+    onDone && onDone();
+  } catch (err) {
+    onError && onError("API call failed: " + (err?.message || "unknown"));
+    onDone && onDone();
+  }
+}
+
+/** ReconDashboard module: Premium UI with schedule picker, recurring scheduler, and job management. */
+function ReconDashboard() {
+  // Scans/results state
+  const [domainsInput, setDomainsInput] = useState("");
+  const [domains, setDomains] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState("");
+  const [results, setResults] = useState([]);
+  const [resultBuf, setResultBuf] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [exporting, setExporting] = useState(false);
+  const [cancelScan, setCancelScan] = useState(null);
+
+  // Scheduling state
+  const [jobs, setJobs] = useState([]);
+  const [showSchedulePanel, setShowSchedulePanel] = useState(false);
+  const [editingJob, setEditingJob] = useState(null); // Model for editing
+  const [scheduleError, setScheduleError] = useState("");
+  const [jobForceRefresh, setJobForceRefresh] = useState(false); // force re-fetch
+
+  // Status/feedback for schedule/job actions
+  const [notif, setNotif] = useState({ show: false, msg: "", type: "info" });
+  // Job run ARIA msg (for accessibility)
+  const [jobRunAria, setJobRunAria] = useState("");
+  const textareaRef = useRef();
+  const [ariaMsg, setAriaMsg] = useState("");
+
+  // Animate results in
+  useEffect(() => {
+    setShowResults(Array.isArray(results) && results.length > 0);
+  }, [results]);
+
+  // Load recon history on mount
+  useEffect(() => {
+    let ignore = false;
+    async function fetchHistory() {
+      try {
+        const hist = await fetchReconHistory();
+        if (!ignore) setHistory(Array.isArray(hist) ? hist : []);
+      } catch (e) {
+        if (!ignore) {
+          setHistory([]);
+          setError("⚠️ Failed to load recon history.");
+          setAriaMsg("History loading failed.");
+        }
+      }
+    }
+    fetchHistory();
+    return () => { ignore = true; };
+  }, []);
+
+  // Load scheduled jobs on mount & when panel shown or re-fetch forced
+  useEffect(() => {
+    let ignore = false;
+    async function fetchJobs() {
+      try {
+        const arr = await getJobs();
+        if (!ignore) setJobs(Array.isArray(arr) ? arr : []);
+      } catch (e) {
+        if (!ignore) setJobs([]);
+      }
+    }
+    fetchJobs();
+    // Only reloads if schedule UI toggled or explicit jobForceRefresh triggered
+    return () => { ignore = true; };
+  }, [showSchedulePanel, jobForceRefresh]);
+
+  // Listen to job runs (browser-only fallback) and notify user
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.setCyberreconJobRunHandler) {
+      // Set callback for job run events (browser fallback - called by storage.js)
+      window.setCyberreconJobRunHandler((job) => {
+        setNotif({
+          show: true,
+          msg: `Scheduled job <b>${job.tool}</b> for <b>${(job.targets || []).join(", ")}</b> ran at ${new Date(Date.now()).toLocaleTimeString()}.`,
+          type: "success"
+        });
+        setJobRunAria(`Job ${job.tool} for ${job.targets && job.targets.join(", ")} ran.`);
+        setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 4300);
+        setTimeout(() => setJobRunAria(""), 3200);
+      });
+    }
+  }, []);
+
+  // Helper: Format schedule info for UI.
+  function formatScheduleDescription(schedule) {
+    if (!schedule) return "";
+    if (typeof schedule === "string") {
+      if (schedule === "daily") return "Daily";
+      if (schedule === "weekly") return "Weekly";
+      return schedule;
+    }
+    if (schedule.type === "interval") {
+      return `Every ${schedule.intervalMinutes} minutes`;
+    }
+    if (schedule.type === "cron") {
+      const hh = schedule.hour?.toString().padStart(2,"0");
+      const mm = schedule.minute?.toString().padStart(2,"0");
+      if (schedule.dow !== undefined && schedule.dow !== null)
+        return `Every week on ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][schedule.dow]} at ${hh}:${mm}`;
+      return `Daily at ${hh}:${mm}`;
+    }
+    if (schedule.type === "once") {
+      return `Once at ${new Date(schedule.runAt).toLocaleString()}`;
+    }
+    return "[custom schedule]";
+  }
+
+  // Save results
+  async function saveScanHistory(rows, status, errorMsg) {
+    if (!rows || !rows.length) return;
+    const histRows = rows.map(r => ({
+      ...r,
+      status: status || "completed",
+      error: errorMsg || "",
+      timestamp: Date.now()
+    }));
+    await addReconHistory(histRows);
+    setHistory(prev => [...histRows, ...(prev || [])].slice(0, 120));
+  }
+
+  // PUBLIC_INTERFACE
+  async function handleSubmitScan(tool) {
+    setError("");
+    setAriaMsg("");
+    setResults([]);
+    setResultBuf([]);
+    setShowResults(false);
+    setCancelScan(null);
+
+    const inputDomains = validateDomains(domainsInput);
+    if (!inputDomains.length) {
+      setError("Please enter at least one valid domain. 🤚");
+      setAriaMsg("Invalid domain input.");
+      setResults([]);
+      setShowResults(true);
+      return;
+    }
+    setDomains(inputDomains);
+    setLoading(`${tool} scan in progress... Please wait ${tool === "Amass" ? "🛰️" : "🖥️"}`);
+    const isElectron = hasElectronBridge();
+    let finishedCount = 0;
+    let aborted = false;
+    const cancels = [];
+    let allResults = [];
+    setResultBuf([]);
+    setShowResults(false);
+
+    async function finalizeAll() {
+      if (aborted) {
+        setResultBuf([]);
+        setResults([]);
+        setShowResults(true);
+        setCancelScan(null);
+        setAriaMsg("Scan cancelled.");
+        return;
+      }
+      const buf = [...resultBuf];
+      setResults(allResults.length ? [...allResults] : (buf.length ? buf : []));
+      setShowResults(true);
+      await saveScanHistory(allResults.length ? allResults : buf, "completed", "");
+      setResultBuf([]);
+      setCancelScan(null);
+      setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
+    }
+
+    inputDomains.forEach((domain) => {
+      let perDomainResults = [];
+
+      const handleData = (data) => {
+        let entry;
+        if (tool === "Amass") {
+          if (typeof data === "string" && data.includes(",")) {
+            const [sub, ip] = data.split(",", 2);
+            entry = { domain, tool, result: `${sub} (${ip})`, time: new Date().toLocaleTimeString() };
+          } else if (data?.line) {
+            entry = { domain, tool, result: data.line, time: new Date().toLocaleTimeString() };
+          } else {
+            entry = { domain, tool, result: String(data), time: new Date().toLocaleTimeString() };
+          }
+        } else if (tool === "Masscan") {
+          entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
+        }
+        setResultBuf(prev => [...prev, entry]);
+        perDomainResults.push(entry);
+        allResults.push(entry);
+      };
+
+      const handleError = (err) => {
+        setError(`❌ ${typeof err === "string" ? err : "Unknown Error"} (${domain})`);
+        setLoading("");
+        setAriaMsg(`Error: ${err}`);
+        saveScanHistory(
+          perDomainResults.length ? perDomainResults : [{
+            domain, tool, result: "Error: " + String(err), time: new Date().toLocaleTimeString()
+          }],
+          "failed",
+          String(err)
+        );
+        finishedCount += 1;
+        if (finishedCount >= inputDomains.length) {
+          setLoading("");
+          setShowResults(true);
+          finalizeAll();
+        }
+      };
+
+      const handleDone = () => {
+        finishedCount += 1;
+        if (finishedCount >= inputDomains.length) {
+          setLoading("");
+          setShowResults(true);
+          finalizeAll();
+        }
+      };
+
+      let scanCancel = null;
+      if (isElectron) {
+        let args = [];
+        if (tool === "Amass") args = ["enum", "-d", domain];
+        else if (tool === "Masscan") args = ["-p1-1000", "--rate=2000", domain];
+        try {
+          const [/*promise*/, cancelFn] = runViaElectron(
+            tool, args, handleData, handleError, handleDone
+          );
+          scanCancel = cancelFn;
+        } catch (err) {
+          handleError(`Electron scan failed: ${(err && err.message) || "Unknown"}`);
+        }
+      } else {
+        try {
+          runViaApi(tool, domain, handleData, handleError, handleDone);
+        } catch (err) {
+          handleError(`API scan failed: ${(err && err.message) || "Unknown"}`);
+        }
+      }
+      cancels.push(scanCancel);
+    });
+
+    setCancelScan(() => () => {
+      aborted = true;
+      cancels.forEach(fn => fn && fn());
+      setLoading("");
+      setCancelScan(null);
+      setAriaMsg("Scan cancelled.");
+      setError("Scan cancelled. 🚫");
+      setResults([]);
+      setShowResults(true);
+    });
+  }
+
+  // PUBLIC_INTERFACE
+  async function handleExport(fmt) {
+    setExporting(true);
+    setAriaMsg("");
+    try {
+      const res = await exportReconResults(fmt === "CSV" ? "csv" : "json");
+      setExporting(false);
+      if (res && res.ok) {
+        setAriaMsg(`Results exported as ${fmt}.`);
+      } else if (res && res.canceled) {
+        setAriaMsg(`Export cancelled.`);
+      } else {
+        setAriaMsg(`Export failed: ${res && res.error ? res.error : "Unknown error"}`);
+      }
+    } catch (e) {
+      setExporting(false);
+      setAriaMsg(`Export error: ${(e && e.message) || "Unknown"}`);
+    }
+  }
+
+  // PUBLIC_INTERFACE
+  function handleTextareaKey(e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      handleSubmitScan("Amass");
+    } else if (e.key === "Escape") {
+      textareaRef.current && textareaRef.current.blur();
+    }
+  }
+
+  function AriaLive() {
+    return (
+      <>
+        <div className="visually-hidden" aria-live="polite">
+          {ariaMsg}
+        </div>
+        {/* Live job run ARIA notification */}
+        {!!jobRunAria && (
+          <div className="visually-hidden" aria-live="polite">
+            {jobRunAria}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // UI COMPONENT
+  return (
+    <div style={{ position: "relative", minHeight: 900 }}>
+      {/* HelpSidebar - togglable guide for current page, premium style (now overlay/fab) */}
+      <HelpSidebar
+        summary="Recon Dashboard – Multi-Tool Discovery"
+        usage={
+          <ul style={{ paddingLeft: 18, margin: 0 }}>
+            <li><b>Enter target domains</b> in the box to scan for subdomains and open ports.</li>
+            <li>Select <b>Amass</b> for subdomain recon, <b>Masscan</b> for rapid port scanning.</li>
+            <li>Click <b>Scheduling</b> to create recurring, automated scans (offline supported).</li>
+            <li>Review results &amp; history in the tables and export data as CSV/JSON anytime.</li>
+          </ul>
+        }
+        description={
+          <>
+            <p>
+              The <b>Recon Dashboard</b> lets you quickly enumerate subdomains and open ports for your targets, providing a crucial first step in any penetration test or bug bounty workflow.
+            </p>
+            <p>
+              <b>Instructions:</b> Enter one or more domains in the input area. Choose your scan type and press "<i>Start Amass</i>" or "<i>Run Masscan</i>". Results appear below in sortable tables and interactive graphs.
+            </p>
+            <p>
+              <b>Automate:</b> Use scheduled jobs to run scans on intervals—no advanced config needed.
+            </p>
+            <p>
+              <b>Tips for Beginners:</b> This tool never sends your scan data to outside servers. You can rerun, explore history, and export results. Try scanning famous domains to practice.
+            </p>
+          </>
+        }
+        placement="fixed"
+        style={{ top: 28, right: 30, boxShadow: "0 8px 39px 2px #0e0e1094", borderRadius: 19 }}
+        buttonAriaLabel="Open help for Recon Dashboard"
+      />
+      <section
+        aria-label="Recon Dashboard"
+        tabIndex={0}
+        style={{
+          maxWidth: 980,
+          margin: "0 auto",
+          padding: "36px 0",
+          color: "var(--text-color)",
+          background: "transparent"
+        }}
+      >
+        <AriaLive />
+
+      {/* Header */}
+      <header style={{
+        display: "flex",
+        alignItems: "center",
+        marginBottom: 26,
+        gap: 18,
+        padding: "0 14px",
+        background: "linear-gradient(88deg,#1b1a1f 80%,#191a1c 100%)",
+        borderRadius: "16px",
+        boxShadow: "0 8px 36px -11px #271f0e24, 0 3.5px 14px -4px #ff9c1c16"
+      }}>
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: 38,
+            background: "linear-gradient(90deg,#ffad42,#ff9800 60%)",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            fontWeight: 900,
+            marginRight: 12,
+            textShadow: "0 3px 20px rgba(255,168,32,0.21)"
+          }}
+        >🛰️</span>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 31,
+            letterSpacing: ".014em",
+            color: "var(--base-light)",
+            fontWeight: 890
+          }}
+        >Recon Dashboard</h1>
+        <span
+          aria-label="Premium"
+          style={{
+            fontSize: 14,
+            color: "#fcbf67",
+            background: "linear-gradient(90deg,#2b1f15 9%,#ffad4259 91%)",
+            borderRadius: 15,
+            padding: "4.5px 18px",
+            marginLeft: 19,
+            fontWeight: 800,
+            opacity: 0.94,
+            boxShadow: "0 3.5px 16px -2px #ffbf4251",
+            letterSpacing: ".09em",
+            border: "1.9px solid #ffbe4242"
+          }}
+        >PREMIUM</span>
+        <span style={{ flex: 1 }} />
+        <button
+          type="button"
+          className="btn"
+          aria-label="Open scheduling panel"
+          style={{
+            marginLeft: 14,
+            padding: "10px 22px",
+            fontWeight: 850,
+            fontSize: 16,
+            background: "linear-gradient(91deg, #41b572 70%, #a7ffed 120%)",
+            color: "#111a18",
+            borderRadius: 10,
+            boxShadow: "0 2px 10px 0 #4ec99e14"
+          }}
+          onClick={() => setShowSchedulePanel(v => !v)}
+        >📅 Scheduling</button>
+      </header>
+
+      {/* Scheduling Panel */}
+      {showSchedulePanel && (
+        <div style={{
+          padding: 0,
+          marginBottom: 32,
+          marginTop: 0,
+          borderRadius: 18,
+          boxShadow: "0 13px 36px -10px #26db8641,0 4px 14px -5px #116c41c2"
+        }}>
+          {notif.show &&
+            <PremiumStatusNotice
+              msg={<span dangerouslySetInnerHTML={{ __html: notif.msg }} />}
+              type={notif.type}
+              onClose={() => setNotif({ show: false, msg: "", type: "info" })}
+              ariaId="sched-feedback"
+              style={{ marginBottom: 14, marginTop: -10 }}
+            />
+          }
+          <PremiumSchedulePanel
+            jobs={jobs}
+            setJobs={setJobs}
+            onJobCreated={() => {
+              setNotif({
+                show: true,
+                msg: "Scheduled job created successfully!",
+                type: "success"
+              });
+              setJobForceRefresh(f => !f);
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 3500);
+            }}
+            onJobUpdated={() => {
+              setNotif({
+                show: true,
+                msg: "Job schedule updated.",
+                type: "success"
+              });
+              setJobForceRefresh(f => !f);
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 3000);
+            }}
+            onJobRemoved={() => {
+              setNotif({
+                show: true,
+                msg: "Scheduled job removed.",
+                type: "info"
+              });
+              setJobForceRefresh(f => !f);
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 2200);
+            }}
+            errorState={[scheduleError, (err) => {
+              setScheduleError(err);
+              setNotif({ show: true, msg: String(err || "An error occurred."), type: "error" });
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 3850);
+            }]}
+            editingJob={editingJob}
+            setEditingJob={setEditingJob}
+            forceRefresh={() => setJobForceRefresh(f => !f)}
+          />
+        </div>
+      )}
+
+      {/* Input Panel */}
+      <div style={{
+        background: "linear-gradient(90deg,#121212 85%,#1a1a1e 100%)",
+        borderRadius: 19,
+        padding: "34px 38px 32px 38px",
+        maxWidth: 755,
+        marginBottom: 40,
+        boxShadow: "0 8px 34px -6px #ffad420d, 0 3.5px 14px -6px #151c4a29",
+        border: "2.2px solid var(--border-color)",
+        marginLeft: "auto", marginRight: "auto"
+      }}>
+        <form
+          aria-label="Domain input form"
+          style={{ marginBottom: 0 }}
+          onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}>
+          <label htmlFor="domain-input"
+            style={{
+              fontWeight: 700,
+              color: "var(--base-accent)",
+              letterSpacing: ".01em",
+              fontSize: 17.5,
+              display: "block",
+              marginBottom: 10
+            }}>
+            Domains or Targets <span aria-hidden="true" style={{ fontSize: 20, marginLeft: 8 }}>🔍</span>
+          </label>
+          <textarea
+            ref={textareaRef}
+            id="domain-input"
+            name="domains"
+            value={domainsInput}
+            spellCheck={false}
+            required
+            aria-required="true"
+            aria-describedby="domain-desc"
+            rows={3}
+            onChange={e => setDomainsInput(e.target.value)}
+            onKeyDown={handleTextareaKey}
+            tabIndex={0}
+            style={{
+              width: "100%",
+              padding: "15px 13px",
+              borderRadius: 10,
+              fontSize: 16,
+              fontFamily: "var(--font-code)",
+              color: "var(--text-color)",
+              border: "2px solid var(--border-color)",
+              background: "#16171a",
+              marginBottom: 7,
+              boxShadow: "0 3px 15px -6px #191e36b0",
+              fontWeight: 510,
+              letterSpacing: ".012em"
+            }}
+            placeholder="e.g. example.com&#10;or: domain1.com, domain2.com"
+          />
+          <small
+            id="domain-desc"
+            style={{
+              color: "var(--text-tertiary)",
+              fontSize: 13,
+              display: "block",
+              marginBottom: 8,
+              letterSpacing: ".01em",
+              marginTop: -2,
+            }}
+          >
+            Enter one or more domains separated by comma, space, or new lines.
+          </small>
+          {error && (
+            <PremiumStatusNotice
+              msg={error}
+              type="error"
+              ariaId="error-feedback"
+              style={{ marginBottom: 13, marginTop: 6 }}
+              onClose={() => setError("")}
+            />
+          )}
+          {/* Action Buttons */}
+          <div style={{
+            marginTop: 7,
+            display: "flex",
+            gap: 18,
+            flexWrap: "wrap",
+            alignItems: "center"
+          }}>
+            <button
+              type="submit"
+              className="btn btn-large"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                fontSize: 17.7,
+                fontWeight: 800,
+                background: "var(--base-light)",
+                color: "#191a24",
+                gap: 9,
+                border: "none",
+                borderRadius: "7px",
+                boxShadow: "0 1.5px 11px 0 #ffba420c"
+              }}
+              aria-label="Run Amass Recon"
+              disabled={!!loading}
+            >🚀 Start Amass</button>
+            <button
+              type="button"
+              className="btn btn-large"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                background: "linear-gradient(90deg,#51b57f,#aefbaa 80%)",
+                color: "#181b1e",
+                fontWeight: 700,
+                fontSize: 17.6,
+                borderRadius: "7px",
+                boxShadow: "0 1.5px 9px 0 #2cfbc219"
+              }}
+              aria-label="Run Masscan Network Scan"
+              disabled={!!loading}
+              onClick={() => handleSubmitScan("Masscan")}
+            >🖥️ Run Masscan</button>
+            <button
+              type="button"
+              className="btn"
+              style={{
+                marginLeft: 16,
+                fontSize: 16,
+                fontWeight: 640,
+                borderRadius: "9px"
+              }}
+              aria-label="Clear domains input"
+              disabled={!!loading}
+              onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setShowResults(false); setError(""); }}
+            >🧹 Clear</button>
+          </div>
+          <div
+            style={{
+              marginTop: 7,
+              fontSize: 13.2,
+              color: "var(--text-secondary)"
+            }}
+          >
+            Ctrl+Enter (or Cmd+Enter) to trigger Amass scan.
+          </div>
+        </form>
+      </div>
+
+      {/* Loading Panel */}
+      {loading && (
+        <div
+          style={{
+            background: "linear-gradient(91deg,rgba(255,168,64,0.12),rgba(255,202,102,0.10))",
+            color: "var(--base-accent)",
+            borderRadius: 10,
+            padding: "23px 27px",
+            fontWeight: 700,
+            marginBottom: 25,
+            fontSize: 19,
+            display: "flex",
+            alignItems: "center",
+            gap: 15,
+            boxShadow: "0 4px 32px -7px #21242936",
+            border: "1.3px solid var(--border-color)",
+            position: "relative",
+            minHeight: 63
+          }}
+          aria-live="assertive"
+        >
+          <span
+            className="premium-loader"
+            aria-hidden="true"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              marginRight: 10,
+              fontSize: 26,
+              animation: "spin-emoji 1.3s linear infinite"
+            }}
+          >✨<span role="img" aria-label="loading" style={{ marginLeft: 2 }}>⏳</span>
+          </span>
+          {loading}
+          {cancelScan &&
+            <button
+              type="button"
+              className="btn"
+              aria-label="Cancel scan"
+              style={{
+                marginLeft: 18,
+                fontSize: 15.5,
+                background: "linear-gradient(90deg,#ff5964,#ffa237)",
+                color: "#191b22",
+                borderRadius: 8,
+                fontWeight: 700,
+                boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.05)"
+              }}
+              onClick={() => cancelScan && cancelScan()}
+            >Cancel 🚫</button>
+          }
+          {/* Loader keyframes */}
+          <style>{`
+            @keyframes spin-emoji {
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Premium feedback for schedule/job panel */}
+      {showSchedulePanel && (
+        <div style={{
+          background: "linear-gradient(96deg,#51b57f2a 30%,rgba(57,248,117,0.11) 80%)",
+          color: "#41a83d",
+          fontWeight: 650,
+          borderRadius: 18,
+          lineHeight: 1.33,
+          padding: "8px 19px",
+          margin: "10px 0 21px 0",
+          fontSize: 13.9,
+          boxShadow: "0 1.5px 10px -6px #121d1b48",
+          border:"1px solid #223e2333"
+        }}>
+          <span aria-hidden="true" style={{fontSize:19, marginRight:8}}>💡</span>
+          Scheduled jobs will trigger even if you close this window (if app stays running). You may pause, remove, or create multiple scan schedules as needed.
+        </div>
+      )}
+
+      {/* Results Table & Graph */}
+      <div
+        style={{
+          minHeight: 260,
+          transition: "opacity 0.33s cubic-bezier(.22,.8,.62,1.12), box-shadow 0.21s",
+          opacity: showResults ? 1 : 0,
+          pointerEvents: showResults ? "all" : "none"
+        }}
+      >
+        <section
+          aria-label="Scan Results"
+          style={{
+            background: "var(--secondary)",
+            borderRadius: 14,
+            marginBottom: 25,
+            padding: 24,
+            boxShadow: showResults
+              ? "0 4px 36px -10px rgba(0,0,0,0.13)"
+              : "0 2px 16px -14px rgba(0,0,0,0.07)",
+            filter: showResults
+              ? "drop-shadow(0 0 12px #eebc5c0c)"
+              : "unset"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 13 }}>
+            <span aria-hidden="true" style={{ fontSize: 22, marginRight: 8 }}>📊</span>
+            <h2 style={{
+              margin: 0,
+              fontSize: 20.5,
+              fontWeight: 800,
+              color: "var(--base-light)",
+              letterSpacing: 0.012
+            }}>Results</h2>
+            <span style={{ flex: 1 }} />
+            <button
+              className="btn"
+              aria-label="Export results as CSV"
+              style={{
+                marginRight: 10,
+                background: "linear-gradient(90deg,#ff9800,#ffad42)",
+                color: "#23272e",
+                fontWeight: 700,
+                fontSize: 15.7
+              }}
+              disabled={exporting}
+              onClick={() => handleExport("CSV")}
+            >📤 Export CSV</button>
+            <button
+              className="btn"
+              aria-label="Export results as JSON"
+              style={{
+                background: "linear-gradient(90deg,#6ce9ff,#8d76ff)",
+                color: "#191b22",
+                fontWeight: 700,
+                fontSize: 15.7
+              }}
+              disabled={exporting}
+              onClick={() => handleExport("JSON")}
+            >🗎 Export JSON</button>
+          </div>
+          {!results.length && !error && (
+            <div style={{
+              opacity: 0.72,
+              width: "100%",
+              minHeight: 140,
+              background: "linear-gradient(90deg,#22242c 68%,#232028 95%)",
+              borderRadius: 11,
+              margin: "15px 0 28px 0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#bba157",
+              fontWeight: 600,
+              fontSize: 19,
+              letterSpacing: ".03em"
+            }}>
+              {loading
+                ? <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <span aria-hidden="true" style={{
+                      fontSize: 18,
+                      marginLeft: 8,
+                      animation: "spin-emoji 1.1s linear infinite"
+                    }}>🛠️</span>
+                    Retrieving results...
+                    <style>{`@keyframes spin-emoji { 100% { transform: rotate(360deg); } }`}</style>
+                  </span>
+                : <span style={{ opacity: 0.6 }}>No output yet.</span>
+              }
+            </div>
+          )}
+          {/* Premium Graph: Visualize findings by tool */}
+          {results.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <GraphDisplay
+                type="bar"
+                data={(() => {
+                  if (!results.length) return {labels: [], datasets: []};
+                  const toolCounts = {};
+                  results.forEach(r => {
+                    toolCounts[r.tool] = (toolCounts[r.tool] || 0) + 1;
+                  });
+                  return {
+                    labels: Object.keys(toolCounts),
+                    datasets: [{
+                      label: "Findings",
+                      data: Object.values(toolCounts),
+                      backgroundColor: "#ff9800"
+                    }]
+                  };
+                })()}
+                options={{
+                  title: "Findings by Tool",
+                  legend: {display: false}
+                }}
+                style={{marginBottom: 10, maxWidth: 550}}
+              />
+            </div>
+          )}
+          {/* Premium Table: Always show for visual stability */}
+          <TableDisplay
+            data={results}
+            columns={[
+              {
+                label: "Domain",
+                field: "domain",
+                emoji: "🌐",
+                sortable: true,
+                filter: true,
+                bold: true
+              },
+              {
+                label: "Tool",
+                field: "tool",
+                emojiMap: {Amass: "🛰️", Masscan: "🖥️"},
+                sortable: true,
+                filter: true,
+                colored: true,
+                colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
+              },
+              {
+                label: "Result",
+                field: "result",
+                emojiMap: {
+                  "open": "🟢",
+                  "closed": "🔴",
+                  "filtered": "🟡",
+                  "host": "🌎"
+                },
+                sortable: false,
+                filter: true
+              },
+              {
+                label: "Time",
+                field: "time",
+                emoji: "⏰",
+                sortable: true,
+                filter: false
+              }
+            ]}
+            initialSortField="domain"
+            size="md"
+            filterable={true}
+            style={{margin: "0 0 0 0"}}
+          />
+        </section>
+      </div>
+
+      {!!history.length && (
+        <section
+          aria-label="Recon History"
+          style={{
+            background: "var(--secondary)",
+            borderRadius: 12,
+            padding: 22,
+            marginBottom: 18,
+            boxShadow: "0 1.5px 8px 0 rgba(0,0,0,0.11)"
+          }}
+        >
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: 11
+          }}>
+            <span aria-hidden="true" style={{ fontSize: 18, marginRight: 8 }}>🕒</span>
+            <h3 style={{
+              margin: 0,
+              fontSize: 17.2,
+              color: "#b38126",
+              fontWeight: 800
+            }}>
+              Recent Recon History
+            </h3>
+            <span style={{ flex: 1 }} />
+          </div>
+          {/* Mini graph: findings by domain */}
+          <div style={{ maxWidth: 420, marginBottom: 12 }}>
+            <GraphDisplay
+              type="bar"
+              data={(() => {
+                const h = history.slice(-20);
+                const byDomain = {};
+                h.forEach(it => {
+                  byDomain[it.domain] = (byDomain[it.domain] || 0) + 1;
+                });
+                return {
+                  labels: Object.keys(byDomain),
+                  datasets: [{
+                    label: "Scans",
+                    data: Object.values(byDomain),
+                    backgroundColor: "#ffad42"
+                  }]
+                };
+              })()}
+              options={{
+                title: "Scan count by Domain",
+                legend: {display: false}
+              }}
+              style={{marginBottom: 8, maxWidth: 380}}
+            />
+          </div>
+          <TableDisplay
+            data={[...history.slice(-12)].reverse().map(h => ({
+              ...h,
+              time: h.time || (h.timestamp ? new Date(h.timestamp).toLocaleTimeString() : ""),
+              status: h.status || "completed"
+            }))}
+            columns={[
+              {
+                label: "Domain",
+                field: "domain",
+                emoji: "🌐",
+                sortable: true,
+                filter: true,
+                bold: true
+              },
+              {
+                label: "Tool",
+                field: "tool",
+                emojiMap: {Amass: "🛰️", Masscan: "🖥️"},
+                sortable: true,
+                filter: true,
+                colored: true,
+                colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
+              },
+              {
+                label: "Result",
+                field: "result",
+                emojiMap: {
+                  "open": "🟢",
+                  "closed": "🔴",
+                  "filtered": "🟡",
+                  "host": "🌎"
+                },
+                sortable: false,
+                filter: true
+              },
+              {
+                label: "Status",
+                field: "status",
+                emojiMap: { completed: "✅", failed: "❌", cancelled: "🚫" },
+                sortable: true,
+                filter: true,
+                colored: true,
+                colorMap: { completed: "#41b572", failed: "#e1463b", cancelled: "#cfc71f" }
+              },
+              {
+                label: "Time",
+                field: "time",
+                emoji: "⏰",
+                sortable: true,
+                filter: false
+              }
+            ]}
+            size="sm"
+            filterable={true}
+          />
+        </section>
+      )}
+
+      {/* Exporting/Feedback */}
+      {exporting && (
+        <PremiumStatusNotice
+          msg="Export in progress... Please wait"
+          type="info"
+          ariaId="export-status"
+          style={{
+            color: "#4fbaff",
+            border: "1.4px solid #405f8982",
+            background: "linear-gradient(92deg,#222b4d22,#191b2425)",
+            fontSize: 17.5,
+            marginBottom: 24
+          }}
+        />
+      )}
+
+      {/* Accessible footer */}
+      <footer style={{
+        padding: "12px 0 0 0",
+        fontSize: 12.5,
+        color: "var(--text-tertiary)",
+        display: "flex",
+        alignItems: "center",
+        gap: 12
+      }}>
+        <span aria-hidden="true" style={{ fontSize: 17, marginRight: 7 }}>🔑</span>
+        Results are cached locally. For privacy, data is <b>never sent to remote servers</b>.
+      </footer>
+    </section>
+    </div>
+  );
+}
+
+export default ReconDashboard;

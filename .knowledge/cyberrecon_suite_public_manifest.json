@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 8, "knowledge_revision": 26, "git_revision": "1bdcd73e2646a4cbeae42268436cb216006fde44", "hash": "d9d975cebe2ec20b6c652e1e4c12ccf0", "format-version": 4, "code-base-name": "default", "filename": "cyberrecon_suite/public/manifest.json", "revision_history": [{"26": "1bdcd73e2646a4cbeae42268436cb216006fde44"}]}
+=======
+{"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 2, "knowledge_revision": 19, "git_revision": "", "hash": "d9d975cebe2ec20b6c652e1e4c12ccf0", "format-version": 4, "code-base-name": "default", "filename": "cyberrecon_suite/public/manifest.json", "revision_history": [{"19": ""}]}
+>>>>>>> 464537c5d72036da33c9a3d043329fdb46e1242b

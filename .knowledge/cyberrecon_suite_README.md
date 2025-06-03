@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 3, "knowledge_revision": 19, "git_revision": "", "hash": "ebece526bc2eadd78ddd787a76c56607", "format-version": 4, "code-base-name": "default", "filename": "cyberrecon_suite/README.md", "revision_history": [{"19": ""}]}
+=======
+{"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 14, "knowledge_revision": 27, "git_revision": "ef5d107c84b582a056f6ebcf4fcc2989ba8d67e3", "hash": "ebece526bc2eadd78ddd787a76c56607", "format-version": 4, "code-base-name": "default", "filename": "cyberrecon_suite/README.md", "revision_history": [{"27": "ef5d107c84b582a056f6ebcf4fcc2989ba8d67e3"}]}
+>>>>>>> 464537c5d72036da33c9a3d043329fdb46e1242b

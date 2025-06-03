@@ -1,0 +1,44 @@
+<!--
+CyberRecon Suite SVG Logo
+Distinct, premium, glassy/minimal look for dark header/sidebar.
+-->
+<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="CyberRecon Suite premium logo">
+  <defs>
+    <radialGradient id="logoBgGrad" cx="50%" cy="50%" r="49%" fx="52%" fy="48%">
+      <stop offset="0%" stop-color="#ffad42" stop-opacity="1"/>
+      <stop offset="70%" stop-color="#222327" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#13151b" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="arcGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="10%" stop-color="#ffe88c" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#ffad42" stop-opacity="0.13"/>
+      <stop offset="93%" stop-color="#ff9800" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="dishGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffad42"/>
+      <stop offset="80%" stop-color="#141720"/>
+    </linearGradient>
+    <radialGradient id="antennaBall" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#fffbe3"/>
+      <stop offset="70%" stop-color="#ffe88c"/>
+      <stop offset="100%" stop-color="#ff9800"/>
+    </radialGradient>
+  </defs>
+  <!-- Glassy circular bg -->
+  <ellipse cx="22" cy="22" rx="20" ry="19.6" fill="url(#logoBgGrad)" stroke="#ffad42" stroke-width="1.7" opacity="0.99"/>
+  <!-- Arc glow (bottom right, premium theme accent) -->
+  <path d="M41 29 Q34 37, 22 40 Q10 37 3 29" stroke="url(#arcGlow)" stroke-width="3.2" fill="none" opacity="0.75"/>
+  <!-- Radar dish base -->
+  <rect x="17" y="23.2" width="10" height="12" rx="5" fill="url(#dishGrad)" stroke="#ff9800" stroke-width="1.35" opacity="0.93"/>
+  <!-- Inner shadow ellipse for dish contact -->
+  <ellipse cx="22" cy="24.2" rx="7.2" ry="2.7" fill="#ffad42" opacity="0.14"/>
+  <!-- Central highlight -->
+  <circle cx="22" cy="24.2" r="2.2" fill="#fff8cf" opacity="0.93" stroke="#ffd986" stroke-width="0.9"/>
+  <!-- Antenna -->
+  <rect x="21" y="11.2" width="2" height="15" rx="1" fill="#ffe09a" opacity="0.87"/>
+  <!-- Antenna ball -->
+  <circle cx="22" cy="11.2" r="2.7" fill="url(#antennaBall)" opacity="1" stroke="#f4be6b" stroke-width="0.7"/>
+  <!-- Radar sweep premium lines -->
+  <path d="M22.8 28 Q35 24, 39 10" stroke="#ff9800" stroke-width="0.88" fill="none" opacity="0.41" stroke-dasharray="4,3"/>
+  <path d="M21.2 28 Q13 22, 5 22" stroke="#f8c676" stroke-width="0.85" fill="none" opacity="0.27" stroke-dasharray="2,3"/>
+</svg>

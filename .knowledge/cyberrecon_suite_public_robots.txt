@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 {"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 5, "knowledge_revision": 22, "git_revision": "1bdcd73e2646a4cbeae42268436cb216006fde44", "hash": "fa1ded1ed7c11438a9b0385b1e112850", "format-version": 4, "code-base-name": "default", "filename": "cyberrecon_suite/public/robots.txt", "revision_history": [{"22": "1bdcd73e2646a4cbeae42268436cb216006fde44"}]}
+=======
+{"is_source_file": false, "format": "", "description": "", "external_files": [], "external_methods": [], "published": [], "classes": [], "methods": [], "calls": [], "search-terms": [], "state": 2, "file_id": 7, "knowledge_revision": 22, "git_revision": "ef5d107c84b582a056f6ebcf4fcc2989ba8d67e3", "hash": "fa1ded1ed7c11438a9b0385b1e112850", "format-version": 4, "code-base-name": "default", "filename": "cyberrecon_suite/public/robots.txt", "revision_history": [{"22": "ef5d107c84b582a056f6ebcf4fcc2989ba8d67e3"}]}
+>>>>>>> 464537c5d72036da33c9a3d043329fdb46e1242b
