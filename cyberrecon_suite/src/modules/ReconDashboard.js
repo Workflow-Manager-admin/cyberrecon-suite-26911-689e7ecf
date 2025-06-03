@@ -96,10 +96,13 @@ function runViaElectron(tool, args, onData, onError, onDone) {
   ];
 }
 
-// Browser HTTP fallback: simulate streaming
+/**
+ * Browser-only HTTP fallback: Simulates scan streaming by fetching from a public API.
+ * Used only when Electron is not available (guaranteed premium fallback).
+ */
 async function runViaApi(tool, target, onData, onError, onDone) {
   try {
-    let apiUrl = "", label = tool;
+    let apiUrl, label;
     if (tool === "Amass") {
       apiUrl = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(target)}`;
       label = "subdomains";
@@ -108,16 +111,19 @@ async function runViaApi(tool, target, onData, onError, onDone) {
       label = "ports";
     }
     let res = await fetch(apiUrl);
-    if (!res.ok) { onError("Public API error."); onDone && onDone(); return; }
+    if (!res.ok) {
+      onError && onError("Public API error.");
+      onDone && onDone();
+      return;
+    }
     const txt = await res.text();
-    const lines = txt.split("\n");
-    for (const line of lines) {
+    for (const line of txt.split("\n")) {
       if (line.trim()) onData({ line: line.trim(), label });
       await new Promise(r => setTimeout(r, 80));
     }
     onDone && onDone();
   } catch (err) {
-    onError("API call failed: " + (err?.message || "unknown"));
+    onError && onError("API call failed: " + (err?.message || "unknown"));
     onDone && onDone();
   }
 }
