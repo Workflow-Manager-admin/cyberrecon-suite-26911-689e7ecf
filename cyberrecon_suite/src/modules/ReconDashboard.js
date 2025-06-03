@@ -555,7 +555,7 @@ function ReconDashboard() {
         </section>
       )}
 
-      {/* Recon History */}
+      {/* Recon History Table & Graph */}
       {!!history.length && (
         <section
           aria-label="Recon History"
@@ -570,43 +570,84 @@ function ReconDashboard() {
           <div style={{
             display: "flex",
             alignItems: "center",
-            marginBottom: 7
+            marginBottom: 12
           }}>
-            <span
-              aria-hidden="true"
-              style={{ fontSize: 18, marginRight: 8 }}
-            >🕒</span>
+            <span aria-hidden="true" style={{ fontSize: 18, marginRight: 8 }}>🕒</span>
             <h3 style={{ margin: 0, fontSize: 16.5, color: "#b38126", fontWeight: 600 }}>Recent Recon History</h3>
+            <span style={{ flex: 1 }} />
           </div>
-          <div style={{ overflowX: "auto", fontSize: 14.3 }}>
-            <table style={{
-              width: "100%",
-              borderCollapse: "collapse"
-            }}>
-              <thead>
-                <tr style={{ color: "#daa84b", borderBottom: "1px solid var(--border-color)" }}>
-                  <th style={{ padding: "4.5px 11px", textAlign: "left" }}>Domain</th>
-                  <th style={{ padding: "4.5px 11px", textAlign: "left" }}>Tool</th>
-                  <th style={{ padding: "4.5px 11px", textAlign: "left" }}>Result</th>
-                  <th style={{ padding: "4.5px 11px", textAlign: "left" }}>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...history.slice(-6)].reverse().map((h, idx) => (
-                  <tr key={idx}
-                    style={{
-                      background: idx % 2 ? "rgba(90,68,11,0.08)" : "transparent",
-                      borderBottom: "1px solid var(--border-color)"
-                    }}>
-                    <td style={{ padding: "4.5px 11px", wordBreak: "break-word" }}>{h.domain}</td>
-                    <td style={{ padding: "4.5px 11px" }}>{h.tool}</td>
-                    <td style={{ padding: "4.5px 11px" }}>{h.result}</td>
-                    <td style={{ padding: "4.5px 11px" }}>{h.time || new Date(h.timestamp).toLocaleTimeString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Mini graph: findings by domain */}
+          <div style={{ maxWidth: 420, marginBottom: 9 }}>
+            <GraphDisplay
+              type="bar"
+              data={(() => {
+                const h = history.slice(-20);
+                const byDomain = {};
+                h.forEach(it => {
+                  byDomain[it.domain] = (byDomain[it.domain] || 0) + 1;
+                });
+                return {
+                  labels: Object.keys(byDomain),
+                  datasets: [{
+                    label: "Scans",
+                    data: Object.values(byDomain),
+                    backgroundColor: "#ffad42"
+                  }]
+                };
+              })()}
+              options={{
+                title: "Scan count by Domain",
+                legend: {display: false}
+              }}
+              style={{marginBottom: 7, maxWidth: 380}}
+            />
           </div>
+          <TableDisplay
+            data={[...history.slice(-12)].reverse().map(h => ({
+              ...h,
+              time: h.time || (h.timestamp ? new Date(h.timestamp).toLocaleTimeString() : "")
+            }))}
+            columns={[
+              {
+                label: "Domain",
+                field: "domain",
+                emoji: "🌐",
+                sortable: true,
+                filter: true,
+                bold: true,
+              },
+              {
+                label: "Tool",
+                field: "tool",
+                emojiMap: {Amass: "🛰️", Masscan: "🖥️"},
+                sortable: true,
+                filter: true,
+                colored: true,
+                colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
+              },
+              {
+                label: "Result",
+                field: "result",
+                emojiMap: {
+                  "open": "🟢",
+                  "closed": "🔴",
+                  "filtered": "🟡",
+                  "host": "🌎"
+                },
+                sortable: false,
+                filter: true,
+              },
+              {
+                label: "Time",
+                field: "time",
+                emoji: "⏰",
+                sortable: true,
+                filter: false,
+              }
+            ]}
+            size="sm"
+            filterable={true}
+          />
         </section>
       )}
 
