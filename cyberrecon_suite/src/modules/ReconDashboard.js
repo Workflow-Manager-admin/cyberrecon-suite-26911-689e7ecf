@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import TableDisplay from "../components/TableDisplay";
 import GraphDisplay from "../components/GraphDisplay";
 import { fetchReconHistory, addReconHistory, exportReconResults } from "../utils/storage";
+// ReconDashboard now supports premium real-time scan streaming via Electron IPC (runReconCommand, onReconCommandOutput), with robust fallback to browser API if Electron is unavailable.
 
 /**
  * ReconDashboard: Full-featured recon interface connecting Electron IPC (runReconCommand) or browser fallback.
@@ -17,12 +18,17 @@ function validateDomains(input) {
     .filter(d => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d));
 }
 
-// Check if Electron IPC interface is present and functional
+/**
+ * Check if the Electron IPC bridge is available and functional.
+ * Guarantees fallback to browser API if not running in Electron.
+ */
 function hasElectronBridge() {
-  return typeof window !== "undefined"
-    && window.electronAPI
-    && typeof window.electronAPI.runReconCommand === "function"
-    && typeof window.electronAPI.onReconCommandOutput === "function";
+  return (
+    typeof window !== "undefined" &&
+    window.electronAPI &&
+    typeof window.electronAPI.runReconCommand === "function" &&
+    typeof window.electronAPI.onReconCommandOutput === "function"
+  );
 }
 
 // --- Wrapped IPC connection: listen/cancel semantics ---
