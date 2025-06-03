@@ -185,6 +185,9 @@ ipcMain.handle('scheduler:getNextRun', (e, schedule) => getNextRunTime(schedule,
 ipcMain.handle('scheduler:getPrevRun', (e, job) => job.lastRun || null);
 
 /** When a scheduled job arrives (timer fires), simulate running the appropriate scan for each domain/target */
+const { EventEmitter } = require('events');
+const scanEmitter = new EventEmitter();
+
 scanEmitter.on('scheduled-job-run', async ({ job }) => {
   // For each target, trigger the simulated scan (like user-initiated)
   (job.targets || []).forEach(domain => {
@@ -278,8 +281,6 @@ ipcMain.handle('recon:export', async (e, { format, onlyHistory }) => {
  * Enables the renderer to trigger a scan and stream fake recon results for Electron/IPC integration validation.
  */
 const { ipcMain: _ipcMain } = require('electron');
-const { EventEmitter } = require('events');
-const scanEmitter = new EventEmitter();
 const activeScans = Object.create(null);
 
 // Helper: Simulate streaming results for Amass or Masscan (stub/fake for now)
