@@ -301,6 +301,45 @@ body {
   white-space: nowrap !important;
 }
 
+/* === HelpSidebar Overlay/FAB Styling === */
+.help-fab {
+  /* For js: main style set inline, enhance here for accessibility/fallback */
+  outline: none;
+  border: none;
+  margin: 0;
+  appearance: none;
+  box-sizing: border-box;
+  background: radial-gradient(circle at 63% 23%, var(--base-black) 56%, #111 100%);
+  color: var(--base-accent, #ff9800);
+  font-size: 23px;
+}
+.help-fab:focus-visible, .help-fab:focus {
+  outline: 2.5px solid var(--focus-visible-ring,#ffb85c);
+  outline-offset: 2.5px;
+  box-shadow: 0 0 0 5px #281a0560;
+}
+.help-sidebar-overlay {
+  /* The backdrop (set inline with inline style + zIndex) */
+  scrollbar-width: none;
+}
+.help-sidebar-overlay > section {
+  /* Panel main section focus ring */
+  outline: none;
+}
+@media (max-width: 700px) {
+  .help-fab {
+    top: 12vw !important;
+    right: 4vw !important;
+  }
+  .help-sidebar-overlay > section {
+    margin-right: 7vw !important;
+    min-width: 0;
+    width: 95vw !important;
+    padding: 24px 6vw 24px 7vw !important;
+    max-width: 99vw;
+  }
+}
+
 /* Button styles */
 .btn {
   background: var(--base-light);
