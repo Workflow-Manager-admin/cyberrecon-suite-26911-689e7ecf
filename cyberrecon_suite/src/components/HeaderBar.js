@@ -1,5 +1,6 @@
 import React from "react";
 import "../App.css";
+import logo from "../assets/cyberrecon-logo.svg";
 
 /**
  * Modern, bold headerbar for CyberRecon Suite.
