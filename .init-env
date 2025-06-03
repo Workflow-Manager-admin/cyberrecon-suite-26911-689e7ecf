@@ -1,0 +1,17 @@
+# Initialization actions for CyberRecon Suite environment
+
+# Unable to verify or install all environment requirements due to persistent container port allocation errors (port 3001 allocated). 
+# The only source-of-truth dependency requirement detected: express@4.21.2
+# Please ensure the following are present and at stable/compatible versions:
+# 1. Node.js (LTS recommended)
+# 2. npm (matching Node.js version)
+# 3. React (latest stable)
+# 4. Electron (latest stable)
+# 5. express@4.21.2
+# 6. Additional JS libraries: sqlite3, amass, masscan, nuclei (via npm or system, as relevant)
+# 7. Tools: curl/wget (for remote resource fetching, if needed)
+
+# To install express at correct version:
+# npm install express@4.21.2
+
+# For full environment setup, please resolve port 3001 allocation conflicts and rerun setup.
