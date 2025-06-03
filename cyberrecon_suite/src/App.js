@@ -95,6 +95,9 @@ function App() {
   ]);
   const [showModal, setShowModal] = useState(false);
 
+  // Sidebar-open state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   function openTab(moduleId) {
     setActiveModule(moduleId);
     if (!tabs.find(tab => tab.id === moduleId)) {
@@ -108,6 +111,7 @@ function App() {
         }
       ]);
     }
+    setSidebarOpen(true); // Always expose sidebar when opening a module via nav
   }
 
   function closeTab(moduleId) {
@@ -122,23 +126,61 @@ function App() {
 
   const ActiveComp = MODULE_COMPONENTS[activeModule];
 
+  // Sidebar width must match sidebar component
+  const SIDEBAR_WIDTH = 254;
+
   return (
     <div className="app-root" style={{ display: "flex", minHeight: "100vh", background: "var(--base-dark)" }}>
       <Sidebar
         modules={MODULES}
         activeModule={activeModule}
         onModuleSelect={openTab}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <main
         role="main"
         style={{
           flex: 1,
-          background: "var(--base-dark)"
+          background: "var(--base-dark)",
+          marginLeft: sidebarOpen ? 0 : 0,
+          transition: "margin .22s cubic-bezier(.38,.71,.68,1)",
+          minWidth: 0,
+          position: "relative"
         }}
       >
-        {/* New Modern HeaderBar */}
         <HeaderBar onAboutClick={() => setShowModal(true)} />
+
+        {/* Sidebar show button (appears if sidebar is closed) */}
+        {!sidebarOpen && (
+          <button
+            aria-label="Show sidebar"
+            style={{
+              position: "fixed",
+              top: 20,
+              left: 15,
+              zIndex: 29,
+              background: "rgba(25,22,14,0.9)",
+              color: "#ffad42",
+              border: "2px solid #ff9800",
+              borderRadius: 9,
+              fontSize: 23,
+              fontWeight: 800,
+              boxShadow: "0 3.5px 18px #ff980041",
+              width: 41,
+              height: 41,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              outline: "none",
+              transition: "background .14s,color .14s"
+            }}
+            onClick={() => setSidebarOpen(true)}
+            tabIndex={0}
+          >≡</button>
+        )}
 
         <TabbedWorkspace
           tabs={tabs}
