@@ -1,13 +1,13 @@
 :root {
-  /* OLED-true Black Theme Palette REFRESHED for extreme contrast and accessibility */
-  --base-black: #000000;
-  --base-dark: #101114;
-  --base-darker: #0b0c0f;
-  --base-deep: #16171a;
-  --sidebar-dark: #0a0a0a;
-  --secondary: #18191c;
-  --elevated: #22242a;
-  --contrast: #35363f;
+  /* OLED-true Black Theme Palette, maximum contrast, accessibility enhancements */
+  --base-black: #000000;        /* TRUE-BLACK for all critical backgrounds */
+  --base-dark: #070707;         /* Slight elevation for non-OLED areas */
+  --base-darker: #0c0c0f;
+  --base-deep: #19191b;
+  --sidebar-dark: #000000;      /* Sidebar should be solid black for OLEDs */
+  --secondary: #111214;         /* Subtle dark for cards, not gray */
+  --elevated: #17181c;          /* Modal/card upper surface: nearly black */
+  --contrast: #26272f;          /* For borders/lines: enough to be seen vs. black */
   --base-light: #ff9800;
   --base-accent: #ffad42;
   --accent-blue: #53d0f9;
@@ -16,41 +16,38 @@
   --accent-red: #ff6c7c;
   --accent-yellow: #ffe88c;
 
-  /* --- Typography --- */
+  /* Typography */
   --font-main: 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
   --font-code: 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
 
-  /* Text colors */
-  --text-color: #ffffff;
-  --text-secondary: #ccccdd;
-  --text-tertiary: #848489;
+  /* Text colors: MAXIMUM contrast */
+  --text-color: #fff;
+  --text-secondary: #e0e1f0;
+  --text-tertiary: #8d8e99;
   --text-on-accent: #191a1f;
 
-  /* Border & Shadow (vivid) */
-  --border-color: #23242c;
-  --border-contrast: #35363f;
-  --focus-visible-ring: #ffd589;
-  --focus-bg: rgba(255,184,92,0.08);
+  /* Borders, Focus */
+  --border-color: #25252c;
+  --border-contrast: #444551;
+  --focus-visible-ring: #ffe766;   /* Super bright for visible focus */
+  --focus-bg: rgba(255,231,102,0.13); /* Yellow tint for focus bg */
   --focus-outline-offset: 3px;
-  --box-shadow-elevate: 0 7px 32px -13px rgba(0,0,0,0.82);
-  --box-shadow-card: 0 2px 18px -7px rgba(0,0,0,0.24);
-  --shadow-overlay: 0 4px 36px -12px #000d;
+  --box-shadow-elevate: 0 7px 32px -13px rgba(0,0,0,0.96);
+  --box-shadow-card: 0 2px 18px -7px rgba(0,0,0,0.29);
+  --shadow-overlay: 0 3px 44px -18px #000d;
   --glass-overlay: linear-gradient(90deg,rgba(13,14,18,0.92) 44%,rgba(21,22,29,0.82) 100%);
 
-  /* UI Spacing */
+  /* Spacing and radius */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
   --spacing-xxl: 56px;
-
-  /* Border Radius */
   --radius-base: 10px;
   --radius-card: 14px;
   --radius-modal: 18px;
   --radius-btn: 8px;
-
 }
 
 /* Always prefer true black for critical containers and highest contrast borders */
@@ -135,8 +132,9 @@ body {
   margin: 0;
   font-family: var(--font-main);
   font-size: 16px;
-  background: var(--base-black); /* TRUE BLACK always */
-  color: var(--text-color);
+  background-color: #000 !important;
+  background: var(--base-black, #000) !important; /* TRUE BLACK always, OLED-priority */
+  color: var(--text-color, #fff);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: 0.012em;
