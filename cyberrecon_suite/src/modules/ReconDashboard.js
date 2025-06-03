@@ -1484,6 +1484,7 @@ function ReconDashboard() {
         Results are cached locally. For privacy, data is <b>never sent to remote servers</b>.
       </footer>
     </section>
+    {/* The above closes the main ReconDashboard section. */}
   );
 }
 
