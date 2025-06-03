@@ -38,13 +38,14 @@
 }
 
 .sidebar .sidebar-btn {
-  font-size: 18.5px !important;
-  padding-left: 32px !important;
-  padding-right: 12px !important;
-  border-radius: 0 22px 22px 0 !important;
-  min-width: 94%;
-  width: 94%;
+  font-size: 19.5px !important;
+  padding-left: 38px !important;
+  padding-right: 22px !important;
+  border-radius: 0 26px 26px 0 !important;
+  min-width: 96%;
+  width: 96%;
   text-align: left;
+  margin-bottom: 10px;
 }
 .sidebar .sidebar-btn.active,
 .sidebar .sidebar-btn:focus-visible {
