@@ -131,19 +131,15 @@ function ReconDashboard() {
     }
     setDomains(inputDomains);
     setLoading(`${tool} scan in progress...`);
-    // Start scan, possibly stream results
     let isElectron = hasElectronBridge();
-    let allResults = [];
     let nFinished = 0;
-    // Cancel logic (future)
+    let allResults = [];
     let aborters = [];
+    const localResultBuf = [];
     inputDomains.forEach((domain, idx) => {
-      // Data handler: called on every line/chunk per domain/target
       const handleData = (data) => {
-        // Unified format
         let entry;
         if (tool === "Amass") {
-          // Try parse subdomain:target format
           if (typeof data === "string" && data.includes(",")) {
             const [sub, ip] = data.split(",", 2);
             entry = { domain, tool, result: `${sub} (${ip})`, time: new Date().toLocaleTimeString() };
@@ -153,15 +149,19 @@ function ReconDashboard() {
             entry = { domain, tool, result: String(data), time: new Date().toLocaleTimeString() };
           }
         } else if (tool === "Masscan") {
-          // Port parsing: nmap API style output
           entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
         }
         setResultBuf(rb => [...rb, entry]);
+        localResultBuf.push(entry);
       };
       const handleError = (err) => {
         setError(String(err));
         setLoading("");
         setAriaMsg(`Error: ${err}`);
+        // Save failed run to history!
+        saveScanHistory(localResultBuf.length ? localResultBuf : [{
+          domain, tool, result: "Error: " + String(err), time: new Date().toLocaleTimeString()
+        }], "failed", String(err));
         nFinished += 1;
       };
       const handleDone = () => {
@@ -171,23 +171,15 @@ function ReconDashboard() {
           finalizeResults();
         }
       };
-      function finalizeResults() {
-        // Collate and flush buffer to results/history
+      async function finalizeResults() {
         const buf = resultBuf.length ? resultBuf : [];
         setResults([...buf]);
-        setHistory(prev => [
-          ...prev,
-          ...buf.map(r => ({
-            ...r,
-            timestamp: Date.now(),
-          }))
-        ]);
+        await saveScanHistory(buf, "completed", "");
         setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
         setResultBuf([]);
       }
       // CLI or API select
       if (isElectron) {
-        // Arguments for each tool:
         let args = [];
         if (tool === "Amass") args = ["enum", "-d", domain];
         else if (tool === "Masscan") args = ["-p1-1000", "--rate=2000", domain];
