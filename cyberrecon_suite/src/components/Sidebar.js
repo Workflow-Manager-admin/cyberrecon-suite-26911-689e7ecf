@@ -26,7 +26,7 @@ function Sidebar({
   const SIDEBAR_WIDTH = width || 128;
 
   const sidebarPalette = {
-    background: "linear-gradient(105deg,#181a21 92%,#181b22 100%)",
+    background: "linear-gradient(105deg,#191b24 82%,#181b22 100%)",
     borderRight: isOpen ? "2.5px solid var(--border-color,#29262a)" : "none",
     color: "var(--text-secondary)",
     width: SIDEBAR_WIDTH,
@@ -39,7 +39,7 @@ function Sidebar({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: isOpen ? "18px 0 0 0" : "0",
+    padding: isOpen ? "22px 0 0 0" : "0",
     position: "relative",
     minHeight: "100vh",
     pointerEvents: isOpen ? "auto" : "none",
