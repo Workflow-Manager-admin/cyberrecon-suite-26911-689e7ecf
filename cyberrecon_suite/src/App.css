@@ -145,12 +145,12 @@ body {
 .app-root {
   min-height: 100vh;
   display: flex;
-  background: var(--base-black);
+  background: var(--base-black, #000);
 }
 
 /* Sidebar */
 .sidebar {
-  background: var(--sidebar-dark);
+  background: var(--sidebar-dark, #000);
   border-right: 2px solid var(--border-color);
   color: var(--text-secondary);
   min-width: 72px;
