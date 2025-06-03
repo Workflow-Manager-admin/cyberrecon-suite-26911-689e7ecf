@@ -325,7 +325,6 @@ function validateDomains(input) {
     .filter(d => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(d));
 }
 
-// Check Electron IPC bridge presence for scan API; fallback if not found.
 function hasElectronBridge() {
   return (
     typeof window !== "undefined" &&
@@ -336,10 +335,7 @@ function hasElectronBridge() {
 }
 
 // PUBLIC_INTERFACE
-/**
- * *Run Electron IPC scan for one process; stream results in real time, support robust UI updates and cancellation.
- *  Returns [promise, cancel].
- */
+/** Run scan via Electron IPC; returns [promise, cancel]. */
 function runViaElectron(tool, args, onData, onError, onDone) {
   const processId = Math.random().toString(36).substring(2, 12); // Unique per scan
   let isActive = true;
@@ -348,7 +344,6 @@ function runViaElectron(tool, args, onData, onError, onDone) {
   let _onError = onError;
   let _onDone = onDone;
 
-  // Local handler
   function handler(_event, payload) {
     if (!payload || payload.processId !== processId || !isActive) return;
     if (payload.type === "data") {
@@ -364,7 +359,6 @@ function runViaElectron(tool, args, onData, onError, onDone) {
       detach();
     }
   }
-  // Attach event
   window.electronAPI.onReconCommandOutput(handler);
 
   window.electronAPI.runReconCommand({ tool, args, processId });
@@ -373,8 +367,7 @@ function runViaElectron(tool, args, onData, onError, onDone) {
     if (detached) return;
     detached = true;
     isActive = false;
-    // (In a real implementation, would remove this handler)
-    // For now, event demux by processId is safe.
+    // Event handler removal would go here for a real backend.
   }
   function cancel() {
     isActive = false;
@@ -428,11 +421,9 @@ async function runViaApi(tool, target, onData, onError, onDone) {
 }
 
 // PUBLIC_INTERFACE
-/**
- * ReconDashboard module: Premium UI with Electron/IPC scan, live UI, browser fallback.
- */
+/** ReconDashboard module: Premium UI with Electron/IPC scan, live UI, browser fallback. */
 function ReconDashboard() {
-  // Existing State for scans/results
+  // Scans/results state
   const [domainsInput, setDomainsInput] = useState("");
   const [domains, setDomains] = useState([]);
   const [error, setError] = useState("");
@@ -444,7 +435,7 @@ function ReconDashboard() {
   const [exporting, setExporting] = useState(false);
   const [cancelScan, setCancelScan] = useState(null);
 
-  // State for scheduling
+  // Scheduling
   const [jobs, setJobs] = useState([]);
   const [showSchedulePanel, setShowSchedulePanel] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
@@ -490,7 +481,7 @@ function ReconDashboard() {
       }
     }
     fetchJobs();
-    // Don't need dependency on jobs itself; only reloads if schedule panel is toggled
+    // Don't need dependency on jobs itself; only reloads if schedule panel is toggled or jobs change
     return () => { ignore = true; };
   }, [showSchedulePanel, jobPending]);
 
@@ -931,9 +922,7 @@ function ReconDashboard() {
           marginBottom: 34,
           boxShadow: "0 6px 32px -8px rgba(0,0,0,0.16)"
         }}
-        onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}
-      >
-        {/* Form content below; removed ScheduleForm from here for correct JSX nesting */}
+        onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}>
         <label htmlFor="domain-input"
           style={{
             fontWeight: 700,
@@ -1001,141 +990,6 @@ function ReconDashboard() {
             <span aria-hidden="true" style={{ marginRight: 5 }}>❌</span>{error}
           </div>
         )}
-        {/* Action Buttons */}
-        <div style={{
-          marginTop: 7,
-          display: "flex",
-          gap: 14,
-          flexWrap: "wrap",
-          alignItems: "center"
-        }}>
-          <button
-            type="submit"
-            className="btn btn-large"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 17.5,
-              fontWeight: 700,
-              background: "var(--base-light)",
-              color: "#272a31",
-              gap: 9,
-              border: "none"
-            }}
-            aria-label="Run Amass Recon"
-            disabled={!!loading}
-          >🚀 Start Amass</button>
-          <button
-            type="button"
-            className="btn btn-large"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "linear-gradient(90deg,#51b57f,#90ffa9)",
-              color: "#181b1e",
-              fontWeight: 700,
-              fontSize: 17.5
-            }}
-            aria-label="Run Masscan Network Scan"
-            disabled={!!loading}
-            onClick={() => handleSubmitScan("Masscan")}
-          >🖥️ Run Masscan</button>
-          <button
-            type="button"
-            className="btn"
-            style={{
-              marginLeft: 14,
-              fontSize: 16,
-              fontWeight: 600
-            }}
-            aria-label="Clear domains input"
-            disabled={!!loading}
-            onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setShowResults(false); setError(""); }}
-          >🧹 Clear</button>
-        </div>
-        <div
-          style={{
-            marginTop: 7,
-            fontSize: 13.1,
-            color: "var(--text-secondary)"
-          }}
-        >
-          Ctrl+Enter (or Cmd+Enter) to trigger Amass scan.
-        </div>
-      </form>
-      {/* ScheduleForm Component */}
-      {/* The ScheduleForm function definition should not appear here! It must be top-level, outside of ReconDashboard. */}
-        <label htmlFor="domain-input"
-          style={{
-            fontWeight: 700,
-            color: "var(--base-accent)",
-            letterSpacing: ".01em",
-            fontSize: 17.5,
-            display: "block",
-            marginBottom: 8
-          }}>
-          Domains or Targets <span aria-hidden="true" style={{ fontSize: 20, marginLeft: 8 }}>🔍</span>
-        </label>
-        <textarea
-          ref={textareaRef}
-          id="domain-input"
-          name="domains"
-          value={domainsInput}
-          spellCheck={false}
-          required
-          aria-required="true"
-          aria-describedby="domain-desc"
-          rows={3}
-          onChange={e => setDomainsInput(e.target.value)}
-          onKeyDown={handleTextareaKey}
-          tabIndex={0}
-          style={{
-            width: "100%",
-            padding: "14px 12px",
-            borderRadius: 9,
-            fontSize: 15.7,
-            fontFamily: "var(--font-code)",
-            color: "var(--text-color)",
-            border: "1.4px solid var(--border-color)",
-            background: "var(--base-dark)",
-            marginBottom: 6,
-            boxShadow: "0 2.5px 9px -6px rgba(0,0,0,0.13)",
-            fontWeight: 500,
-            letterSpacing: ".01em"
-          }}
-          placeholder="e.g. example.com\nor: domain1.com, domain2.com"
-        />
-        <small
-          id="domain-desc"
-          style={{
-            color: "var(--text-tertiary)",
-            fontSize: 13,
-            display: "block",
-            marginBottom: 8,
-            letterSpacing: ".01em"
-          }}
-        >
-          Enter one or more domains separated by comma, space, or new lines.
-        </small>
-
-        {/* Error message */}
-        {error && (
-          <div role="alert"
-            style={{
-              background: "rgba(255,59,64,0.065)",
-              color: "var(--danger)",
-              borderRadius: 6,
-              padding: "8px 14px",
-              fontWeight: 600,
-              marginBottom: 14,
-              fontSize: 14.5
-            }}
-          >
-            <span aria-hidden="true" style={{ marginRight: 5 }}>❌</span>{error}
-          </div>
-        )}
-
         {/* Action Buttons */}
         <div style={{
           marginTop: 7,
@@ -1279,8 +1133,7 @@ function ReconDashboard() {
         </div>
       )}
 
-
-      {/* Results Table & Graph. Always render the results panel (with animation), even if empty. */}
+      {/* Results Table & Graph */}
       <div
         style={{
           minHeight: 260,
@@ -1340,8 +1193,6 @@ function ReconDashboard() {
               onClick={() => handleExport("JSON")}
             >🗎 Export JSON</button>
           </div>
-
-          {/* Results skeleton: if scan is running or no results */}
           {!results.length && !error && (
             <div style={{
               opacity: 0.72,
@@ -1372,16 +1223,13 @@ function ReconDashboard() {
               }
             </div>
           )}
-
           {/* Premium Graph: Visualize findings by tool */}
           {results.length > 0 && (
             <div style={{ marginBottom: 28 }}>
               <GraphDisplay
                 type="bar"
-                // Build bar chart data from recon results
                 data={(() => {
                   if (!results.length) return {labels: [], datasets: []};
-                  // Bar: group by tool, count
                   const toolCounts = {};
                   results.forEach(r => {
                     toolCounts[r.tool] = (toolCounts[r.tool] || 0) + 1;
@@ -1403,8 +1251,7 @@ function ReconDashboard() {
               />
             </div>
           )}
-
-          {/* Premium Table: Always show for visual stability, with "No data" message if needed */}
+          {/* Premium Table: Always show for visual stability */}
           <TableDisplay
             data={results}
             columns={[
@@ -1453,7 +1300,6 @@ function ReconDashboard() {
         </section>
       </div>
 
-      {/* Recon History Table & Graph */}
       {!!history.length && (
         <section
           aria-label="Recon History"
@@ -1611,7 +1457,6 @@ function ReconDashboard() {
         <span aria-hidden="true" style={{ fontSize: 17, marginRight: 7 }}>🔑</span>
         Results are cached locally. For privacy, data is <b>never sent to remote servers</b>.
       </footer>
-      {/* FINAL closing tag for outermost <section> for ReconDashboard */}
     </section>
   );
 }
