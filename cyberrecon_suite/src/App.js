@@ -135,7 +135,7 @@ function App() {
   const ActiveComp = MODULE_COMPONENTS[activeModule];
 
   // Sidebar width must match sidebar component
-  const SIDEBAR_WIDTH = 340; // Increased for extra premium, Burp Suite-like navigation
+  const SIDEBAR_WIDTH = 92; // Sync with Sidebar.js; compact modern nav
 
   return (
     <div
@@ -162,14 +162,14 @@ function App() {
         style={{
           flex: 1,
           background: "var(--base-dark)",
-          // visually offset content a little more from sidebar for premium width
+          // Adjust premium padding to match compact sidebar
           marginLeft: 0,
           transition: "margin .22s cubic-bezier(.38,.71,.68,1)",
           minWidth: 0,
           position: "relative",
-          // Add a larger minWidth for main content for wide nav feel (especially at large screens)
           maxWidth: "calc(100vw - " + (sidebarOpen ? SIDEBAR_WIDTH : 0) + "px)",
-          boxSizing: "border-box"
+          boxSizing: "border-box",
+          paddingLeft: sidebarOpen ? 0 : 0,
         }}
       >
         <HeaderBar onAboutClick={() => setShowModal(true)} />
