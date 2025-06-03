@@ -22,7 +22,8 @@ function Sidebar({
   onClose,
   width
 }) {
-  const SIDEBAR_WIDTH = width || 92;
+  // Increased sidebar width for clarity and premium feel
+  const SIDEBAR_WIDTH = width || 128;
 
   const sidebarPalette = {
     background: "linear-gradient(105deg,#181a21 92%,#181b22 100%)",
