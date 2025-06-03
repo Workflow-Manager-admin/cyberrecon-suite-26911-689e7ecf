@@ -2,12 +2,7 @@ import React, { useState, useRef } from "react";
 
 /**
  * ReconDashboard: Fully functional recon interface for CyberRecon Suite.
- * Features:
- *  - Input for one or multiple domains (validated, accessible)
- *  - Modern action buttons (Amass, Masscan) with emoji accents
- *  - Scan results display, history, error and loading feedback
- *  - Responsive, professional, premium dark UI with ARIA/keyboard/contrast support
- *  - Export & caching functionality are stubbed, to be implemented
+ * Feature Patch: Replace simulation logic with real Amass/Masscan integration using Electron IPC & public API fallback, robust streaming.
  */
 
 // Helpers
@@ -22,6 +17,60 @@ function validateDomains(input) {
     );
 }
 
+// Check for exposed Electron CLI bridge in window
+function hasElectronBridge() {
+  return typeof window !== "undefined" && window.electronAPI && typeof window.electronAPI.runReconCommand === "function";
+}
+
+// Run command via Electron (returns [Promise, cancelFn])
+function runViaElectron(tool, args, onData, onError, onDone) {
+  // For production, window.electronAPI must be injected by preload
+  const processId = Math.random().toString(36).substr(2, 10);
+  let resolve, reject;
+  const resultPromise = new Promise((res, rej) => { resolve = res; reject = rej; });
+  const handler = (evt, payload) => {
+    if (payload && payload.processId === processId) {
+      if (payload.type === "data") onData(payload.data);
+      else if (payload.type === "error") { onError(payload.data); reject(payload.data); }
+      else if (payload.type === "end") { onDone(payload.data); resolve(payload.data); }
+    }
+  };
+  window.electronAPI.onReconCommandOutput(handler);
+  window.electronAPI.runReconCommand({
+    tool,
+    args,
+    processId,
+  });
+  // Dummy cancel (for expansion)
+  return [resultPromise, () => window.electronAPI.cancelReconCommand(processId)];
+}
+
+// Fallback to public API (returns Promise, streaming is simulated)
+async function runViaApi(tool, target, onData, onError, onDone) {
+  try {
+    let apiUrl = "", label = tool;
+    if (tool === "Amass") {
+      apiUrl = `https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(target)}`;
+      label = "subdomains";
+    } else if (tool === "Masscan") {
+      apiUrl = `https://api.hackertarget.com/nmap/?q=${encodeURIComponent(target)}`;
+      label = "ports";
+    }
+    let res = await fetch(apiUrl);
+    if (!res.ok) { onError("Public API error."); onDone(); return; }
+    const txt = await res.text();
+    const lines = txt.split("\n");
+    for (const line of lines) {
+      if (line.trim()) onData({ line: line.trim(), label });
+      await new Promise(r => setTimeout(r, 80));
+    }
+    onDone();
+  } catch (err) {
+    onError("API call failed: " + (err?.message || "unknown"));
+    onDone();
+  }
+}
+
 // PUBLIC_INTERFACE
 function ReconDashboard() {
   // State management
@@ -29,20 +78,24 @@ function ReconDashboard() {
   const [domains, setDomains] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState("");
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState([]); // Array of {domain, tool, result, time}
+  const [resultBuf, setResultBuf] = useState([]); // For streaming lines
   const [history, setHistory] = useState([]);
   const [exporting, setExporting] = useState(false);
+
+  const [cancelScan, setCancelScan] = useState(null);
 
   const textareaRef = useRef();
 
   // Accessibility: announcements
   const [ariaMsg, setAriaMsg] = useState("");
 
-  // Handle domain input submit
   // PUBLIC_INTERFACE
-  function handleSubmitScan(tool) {
+  async function handleSubmitScan(tool) {
     setError("");
     setAriaMsg("");
+    setResults([]);
+    setResultBuf([]);
     const inputDomains = validateDomains(domainsInput);
     if (!inputDomains.length) {
       setError("Please enter at least one valid domain.");
@@ -51,36 +104,73 @@ function ReconDashboard() {
     }
     setDomains(inputDomains);
     setLoading(`${tool} scan in progress...`);
-    setResults([]);
-    setTimeout(() => runScan(tool, inputDomains), 600); // Simulate async start
-  }
-
-  // Simulate running the scan (replace with real Electron backend IPC)
-  // PUBLIC_INTERFACE
-  function runScan(tool, doms) {
-    // TODO: Wire to Electron's IPC backend for Amass/Masscan real run. For now, fake output.
-    setLoading(`${tool} scan running...`);
-    setAriaMsg(`${tool} scan started`);
-    setTimeout(() => {
-      let scanRes = doms.map(domain => ({
-        domain,
-        tool,
-        time: new Date().toLocaleTimeString(),
-        result: tool === "Amass"
-          ? "Found 11 subdomains"
-          : "22 unique ports open"
-      }));
-      setResults(scanRes);
-      setHistory(prev => [
-        ...prev,
-        ...scanRes.map(r => ({
-          ...r,
-          timestamp: Date.now(),
-        }))
-      ]);
-      setLoading("");
-      setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
-    }, 2000 + Math.random() * 1000);
+    // Start scan, possibly stream results
+    let isElectron = hasElectronBridge();
+    let allResults = [];
+    let nFinished = 0;
+    // Cancel logic (future)
+    let aborters = [];
+    inputDomains.forEach((domain, idx) => {
+      // Data handler: called on every line/chunk per domain/target
+      const handleData = (data) => {
+        // Unified format
+        let entry;
+        if (tool === "Amass") {
+          // Try parse subdomain:target format
+          if (typeof data === "string" && data.includes(",")) {
+            const [sub, ip] = data.split(",", 2);
+            entry = { domain, tool, result: `${sub} (${ip})`, time: new Date().toLocaleTimeString() };
+          } else if (data?.line) {
+            entry = { domain, tool, result: data.line, time: new Date().toLocaleTimeString() };
+          } else {
+            entry = { domain, tool, result: String(data), time: new Date().toLocaleTimeString() };
+          }
+        } else if (tool === "Masscan") {
+          // Port parsing: nmap API style output
+          entry = { domain, tool, result: data?.line || String(data), time: new Date().toLocaleTimeString() };
+        }
+        setResultBuf(rb => [...rb, entry]);
+      };
+      const handleError = (err) => {
+        setError(String(err));
+        setLoading("");
+        setAriaMsg(`Error: ${err}`);
+        nFinished += 1;
+      };
+      const handleDone = () => {
+        nFinished += 1;
+        if (nFinished >= inputDomains.length) {
+          setLoading("");
+          finalizeResults();
+        }
+      };
+      function finalizeResults() {
+        // Collate and flush buffer to results/history
+        const buf = resultBuf.length ? resultBuf : [];
+        setResults([...buf]);
+        setHistory(prev => [
+          ...prev,
+          ...buf.map(r => ({
+            ...r,
+            timestamp: Date.now(),
+          }))
+        ]);
+        setAriaMsg(`${tool} scan finished. Record(s) added to history.`);
+        setResultBuf([]);
+      }
+      // CLI or API select
+      if (isElectron) {
+        // Arguments for each tool:
+        let args = [];
+        if (tool === "Amass") args = ["enum", "-d", domain];
+        else if (tool === "Masscan") args = ["-p1-1000", "--rate=2000", domain];
+        const [promise, canceler] = runViaElectron(tool, args, handleData, handleError, handleDone);
+        aborters.push(canceler);
+      } else {
+        runViaApi(tool, domain, handleData, handleError, handleDone);
+      }
+    });
+    setCancelScan(() => () => aborters.forEach(a => a && a())); // allow cancel
   }
 
   // PUBLIC_INTERFACE
