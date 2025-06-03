@@ -216,13 +216,13 @@ function Sidebar({
               <span
                 aria-hidden="true"
                 style={{
-                  fontSize: 38,
-                  marginLeft: 13,
-                  marginRight: 18,
-                  filter: selected ? "drop-shadow(0 0 13px #ff9800bd)" : "none",
+                  fontSize: 42,        // Larger for easier touch/click, accentuates visual hierarchy
+                  marginLeft: 22,      // Increased left margin to space icon and button left edge
+                  marginRight: 24,     // Wider gap from icon to label
+                  filter: selected ? "drop-shadow(0 0 17px #ff9800c5)" : "none",
                   textShadow: selected
-                    ? "0 2px 16px #ff980055, 0 1.8px 7px #ffad4280"
-                    : "0 1px 7px #1c1c2629",
+                    ? "0 2px 19px #ff980055, 0 2.5px 10px #ffad42b1"
+                    : "0 1.4px 7px #1c1c262e",
                   transition: "all .22s cubic-bezier(.22,.8,.43,1)",
                   flexShrink: 0,
                   lineHeight: 1.1
@@ -232,11 +232,11 @@ function Sidebar({
               </span>
               <span
                 style={{
-                  fontSize: 18.5,
-                  marginLeft: 0,
+                  fontSize: 20,      // Bigger label text for clarity
+                  marginLeft: 3,
                   color: selected ? "var(--base-accent,#ff9800)" : "var(--text-color,#fdfeff)",
-                  fontWeight: selected ? 900 : 700,
-                  letterSpacing: ".012em",
+                  fontWeight: selected ? 950 : 750,
+                  letterSpacing: ".014em",
                   flex: 1,
                   textAlign: "left",
                   whiteSpace: "nowrap",
@@ -244,10 +244,10 @@ function Sidebar({
                   overflow: "hidden",
                   opacity: selected ? 1 : 0.93,
                   textShadow: selected
-                    ? "0 1.5px 11px #ffad4240"
+                    ? "0 1.5px 13px #ffad4268"
                     : undefined,
-                  lineHeight: 1.2,
-                  paddingRight: 18,
+                  lineHeight: 1.22,
+                  paddingRight: 22, // Matches increased icon gap
                 }}
                 aria-hidden="false"
               >
