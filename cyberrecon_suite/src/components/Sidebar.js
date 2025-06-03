@@ -1,13 +1,17 @@
 import React from "react";
 import logo from "../assets/cyberrecon-logo.svg";
 
-// PUBLIC_INTERFACE
-function Sidebar({ modules, activeModule, onModuleSelect }) {
-  /**
-   * Renders the premium, modern sidebar for module navigation.
-   * Now features rich emoji/icons, sharper contrast, vibrant highlights,
-   * and a more energetic dark visual hierarchy suitable for a "deep black" workflow.
-   */
+/** Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
+ * Accepts new props:
+ *   - isOpen: boolean
+ *   - onClose: function (optional)
+ * Always visually wider (wider than 88px: ~240-260px), with all content spaced accordingly.
+ */
+function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose }) {
+  // Responsive width: wider, with close button overlay for compact screens
+  const SIDEBAR_WIDTH = 254; // 240-260 for Burp Suite feel
+
+  // Premium slide-close: hide from left (use isOpen prop)
   return (
     <nav
       className="sidebar"
@@ -15,19 +19,23 @@ function Sidebar({ modules, activeModule, onModuleSelect }) {
       tabIndex={0}
       role="navigation"
       style={{
-        width: 88,
-        // Deeper black for sidebar, edge-glow left
-        background: "linear-gradient(90deg,var(--base-black) 93%,#19191c 100%)",
-        borderRight: "2px solid var(--border-color)",
+        width: isOpen ? SIDEBAR_WIDTH : 0,
+        minWidth: isOpen ? SIDEBAR_WIDTH : 0,
+        maxWidth: SIDEBAR_WIDTH,
+        transition: "width 0.23s cubic-bezier(.38,.71,.68,1), min-width 0.21s",
+        overflow: "hidden",
+        background: "linear-gradient(90deg,var(--base-black) 88%,#19191c 100%)",
+        borderRight: isOpen ? "2px solid var(--border-color)" : "none",
         color: "var(--text-secondary)",
         flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "38px 0 0 0",
+        padding: isOpen ? "38px 0 0 0" : "0",
         minHeight: "100vh",
-        boxShadow:
-          "0 20px 42px -16px #000b, 2px 0 21px 1.5px #10110f28",
+        boxShadow: isOpen
+          ? "0 20px 42px -16px #000b, 2px 0 21px 1.5px #10110f28"
+          : "none",
         zIndex: 16,
         position: "relative",
       }}
