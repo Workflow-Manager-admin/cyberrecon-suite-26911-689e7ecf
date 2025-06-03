@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar";
 import TabbedWorkspace from "./components/TabbedWorkspace";
 import Modal from "./components/Modal";
 import HeaderBar from "./components/HeaderBar";
+import SmartFooter from "./components/SmartFooter";
 import DummyModule from "./modules/DummyModule";
 import ReconDashboard from "./modules/ReconDashboard";
 import VulnerabilityScanner from "./modules/VulnerabilityScanner";
