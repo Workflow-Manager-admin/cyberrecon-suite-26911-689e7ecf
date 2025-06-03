@@ -321,6 +321,8 @@ function TableDisplay({
             size === "sm" ? 13.2 : size === "md" ? 15 : 16.2,
           background: "transparent",
         }}
+        role="table"
+        aria-label="Result Table"
       >
         <thead>
           <tr style={{ color: "var(--base-accent)", borderBottom: "1.45px solid var(--border-color)" }}>
@@ -360,6 +362,8 @@ function TableDisplay({
                     else setSortField(col.field);
                   }
                 }}
+                scope="col"
+                role="columnheader"
               >
                 {col.emoji && (
                   <span aria-hidden="true" style={{ marginRight: 4 }}>
@@ -388,10 +392,21 @@ function TableDisplay({
             sortedData.map((row, rowIdx) => (
               <tr
                 key={rowIdx}
+                tabIndex={0}
                 style={{
                   borderBottom: "1px solid var(--border-color)",
                   background:
                     rowIdx % 2 ? "rgba(33,33,44,0.10)" : "transparent",
+                  cursor: typeof rest.onRowClick === "function" ? "pointer" : undefined,
+                  outline: "none",
+                }}
+                role="row"
+                aria-label={columns.map(col => row[col.field]).join(", ")}
+                onClick={() => rest.onRowClick && rest.onRowClick(row, rowIdx)}
+                onKeyDown={e => {
+                  if ((e.key === "Enter" || e.key === " ") && typeof rest.onRowClick === "function") {
+                    rest.onRowClick(row, rowIdx);
+                  }
                 }}
               >
                 {columns.map((col, colIdx) => (
@@ -407,6 +422,7 @@ function TableDisplay({
                         : "inherit",
                       wordBreak: "break-word",
                     }}
+                    role="cell"
                   >
                     {col.emojiMap ? (
                       <span
