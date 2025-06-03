@@ -275,8 +275,8 @@ body {
   font-size: 1.05em;
   line-height: 1.61;
   letter-spacing: 0.012em;
-  background: var(--base-black);
-  color: var(--text-color);
+  background: var(--base-black, #000); /* OLED black for highest contrast */
+  color: var(--text-color, #fff);
 }
 
 /* Modal */
