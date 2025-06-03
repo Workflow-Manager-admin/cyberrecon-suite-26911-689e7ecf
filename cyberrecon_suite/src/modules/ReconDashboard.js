@@ -328,7 +328,7 @@ function ReconDashboard() {
         maxWidth: 880,
         margin: "0 auto",
         padding: "32px 0",
-        color: "var(--text-color)",
+        color: "var(--text-color)"
       }}
     >
       <AriaLive />
@@ -338,40 +338,42 @@ function ReconDashboard() {
         display: "flex",
         alignItems: "center",
         marginBottom: 24,
-        gap: 16,
+        gap: 16
       }}>
         <span
           aria-hidden="true"
           style={{
-            fontSize: 32,
-            background: "linear-gradient(90deg,#ff9800,#ffad42)",
+            fontSize: 33,
+            background: "linear-gradient(88deg,#ffad42,#ff9800 80%)",
             WebkitBackgroundClip: "text",
             color: "transparent",
             fontWeight: 900,
-            marginRight: 6,
-            textShadow: "0 2px 16px rgba(255,152,4,0.21)"
+            marginRight: 9,
+            textShadow: "0 2.8px 18px rgba(255,168,32,0.18)"
           }}
         >🛰️</span>
         <h1
           style={{
             margin: 0,
-            fontSize: 28,
-            letterSpacing: "0.01em",
-            color: "var(--base-light)"
+            fontSize: 29,
+            letterSpacing: ".012em",
+            color: "var(--base-light)",
+            fontWeight: 800
           }}
         >Recon Dashboard</h1>
         <span
           aria-label="Beta"
           style={{
-            fontSize: 13,
+            fontSize: 14,
             color: "#daa84b",
             background: "rgba(255,168,64,0.09)",
-            borderRadius: 11,
-            padding: "3px 12px",
-            marginLeft: 14,
-            fontWeight: 600,
+            borderRadius: 13,
+            padding: "3.5px 14px",
+            marginLeft: 15,
+            fontWeight: 700,
             boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.04)",
-            letterSpacing: ".08em"
+            letterSpacing: ".08em",
+            border: "1.4px solid rgba(255,184,72,0.1)"
           }}
         >PREMIUM</span>
       </header>
@@ -381,20 +383,20 @@ function ReconDashboard() {
         aria-label="Domain input form"
         style={{
           background: "var(--secondary)",
-          borderRadius: 11,
-          padding: "28px 32px",
+          borderRadius: 13,
+          padding: "30px 34px",
           maxWidth: 700,
           marginBottom: 34,
-          boxShadow: "0 4px 32px -8px rgba(0,0,0,0.17)"
+          boxShadow: "0 6px 32px -8px rgba(0,0,0,0.16)"
         }}
         onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}
       >
         <label htmlFor="domain-input"
           style={{
-            fontWeight: 600,
+            fontWeight: 700,
             color: "var(--base-accent)",
             letterSpacing: ".01em",
-            fontSize: 17,
+            fontSize: 17.5,
             display: "block",
             marginBottom: 8
           }}>
@@ -415,15 +417,17 @@ function ReconDashboard() {
           tabIndex={0}
           style={{
             width: "100%",
-            padding: "14px 11px",
-            borderRadius: 7,
+            padding: "14px 12px",
+            borderRadius: 9,
             fontSize: 15.7,
             fontFamily: "var(--font-code)",
             color: "var(--text-color)",
-            border: "1.8px solid var(--border-color)",
+            border: "1.4px solid var(--border-color)",
             background: "var(--base-dark)",
-            marginBottom: 7,
-            boxShadow: "0 2.5px 9px -6px rgba(0,0,0,0.13)"
+            marginBottom: 6,
+            boxShadow: "0 2.5px 9px -6px rgba(0,0,0,0.13)",
+            fontWeight: 500,
+            letterSpacing: ".01em"
           }}
           placeholder="e.g. example.com\nor: domain1.com, domain2.com"
         />
@@ -433,7 +437,7 @@ function ReconDashboard() {
             color: "var(--text-tertiary)",
             fontSize: 13,
             display: "block",
-            marginBottom: 7,
+            marginBottom: 8,
             letterSpacing: ".01em"
           }}
         >
@@ -448,9 +452,9 @@ function ReconDashboard() {
               color: "var(--danger)",
               borderRadius: 6,
               padding: "8px 14px",
-              fontWeight: 500,
-              marginBottom: 13,
-              fontSize: 14
+              fontWeight: 600,
+              marginBottom: 14,
+              fontSize: 14.5
             }}
           >
             <span aria-hidden="true" style={{ marginRight: 5 }}>❌</span>{error}
@@ -461,7 +465,7 @@ function ReconDashboard() {
         <div style={{
           marginTop: 7,
           display: "flex",
-          gap: 12,
+          gap: 14,
           flexWrap: "wrap",
           alignItems: "center"
         }}>
@@ -472,11 +476,11 @@ function ReconDashboard() {
               display: "flex",
               alignItems: "center",
               fontSize: 17.5,
-              fontWeight: 600,
+              fontWeight: 700,
               background: "var(--base-light)",
               color: "#272a31",
               gap: 9,
-              border: "none",
+              border: "none"
             }}
             aria-label="Run Amass Recon"
             disabled={!!loading}
@@ -490,8 +494,8 @@ function ReconDashboard() {
               gap: 8,
               background: "linear-gradient(90deg,#51b57f,#90ffa9)",
               color: "#181b1e",
-              fontWeight: 600,
-              fontSize: 17.5,
+              fontWeight: 700,
+              fontSize: 17.5
             }}
             aria-label="Run Masscan Network Scan"
             disabled={!!loading}
@@ -501,12 +505,13 @@ function ReconDashboard() {
             type="button"
             className="btn"
             style={{
-              marginLeft: 12,
+              marginLeft: 14,
               fontSize: 16,
+              fontWeight: 600
             }}
             aria-label="Clear domains input"
             disabled={!!loading}
-            onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setError(""); }}
+            onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setShowResults(false); setError(""); }}
           >🧹 Clear</button>
         </div>
         <div
@@ -524,19 +529,20 @@ function ReconDashboard() {
       {loading && (
         <div
           style={{
-            background: "linear-gradient(92deg,rgba(255,168,64,0.09),rgba(255,186,64,0.10))",
+            background: "linear-gradient(91deg,rgba(255,168,64,0.12),rgba(255,202,102,0.10))",
             color: "var(--base-accent)",
-            borderRadius: 8,
-            padding: "19px 26px",
-            fontWeight: 600,
-            marginBottom: 22,
-            fontSize: 18,
+            borderRadius: 10,
+            padding: "23px 27px",
+            fontWeight: 700,
+            marginBottom: 25,
+            fontSize: 19,
             display: "flex",
             alignItems: "center",
             gap: 15,
-            boxShadow: "0 4px 32px -6px #292b2e44",
-            border: "1.2px solid var(--border-color)",
-            position: "relative"
+            boxShadow: "0 4px 32px -7px #21242936",
+            border: "1.3px solid var(--border-color)",
+            position: "relative",
+            minHeight: 63
           }}
           aria-live="assertive"
         >
@@ -546,14 +552,11 @@ function ReconDashboard() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              marginRight: 9,
-              fontSize: 24,
-              animation: "spin-emoji 1.4s linear infinite"
+              marginRight: 10,
+              fontSize: 26,
+              animation: "spin-emoji 1.3s linear infinite"
             }}
-          >✨
-            <span role="img" aria-label="loading" style={{
-              marginLeft: 2
-            }}>⏳</span>
+          >✨<span role="img" aria-label="loading" style={{ marginLeft: 2 }}>⏳</span>
           </span>
           {loading}
           {cancelScan &&
@@ -562,13 +565,13 @@ function ReconDashboard() {
               className="btn"
               aria-label="Cancel scan"
               style={{
-                marginLeft: 17,
+                marginLeft: 18,
                 fontSize: 15.5,
                 background: "linear-gradient(90deg,#ff5964,#ffa237)",
                 color: "#191b22",
-                borderRadius: 7,
+                borderRadius: 8,
                 fontWeight: 700,
-                boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.05)",
+                boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.05)"
               }}
               onClick={() => cancelScan && cancelScan()}
             >Cancel 🚫</button>
@@ -582,37 +585,49 @@ function ReconDashboard() {
         </div>
       )}
 
-      {/* Results Table & Graph */}
-      {!!results.length && (
+      {/* Results Table & Graph. Always render the results panel (with animation), even if empty. */}
+      <div
+        style={{
+          minHeight: 260,
+          transition: "opacity 0.33s cubic-bezier(.22,.8,.62,1.12), box-shadow 0.21s",
+          opacity: showResults ? 1 : 0,
+          pointerEvents: showResults ? "all" : "none"
+        }}
+      >
         <section
           aria-label="Scan Results"
           style={{
             background: "var(--secondary)",
-            borderRadius: 12,
-            marginBottom: 24,
-            padding: 22,
-            boxShadow: "0 4px 32px -8px rgba(0,0,0,0.14)",
+            borderRadius: 14,
+            marginBottom: 25,
+            padding: 24,
+            boxShadow: showResults
+              ? "0 4px 36px -10px rgba(0,0,0,0.13)"
+              : "0 2px 16px -14px rgba(0,0,0,0.07)",
+            filter: showResults
+              ? "drop-shadow(0 0 12px #eebc5c0c)"
+              : "unset"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", marginBottom: 13 }}>
             <span aria-hidden="true" style={{ fontSize: 22, marginRight: 8 }}>📊</span>
             <h2 style={{
               margin: 0,
-              fontSize: 20,
-              fontWeight: 600,
+              fontSize: 20.5,
+              fontWeight: 800,
               color: "var(--base-light)",
-              letterSpacing: 0.01
+              letterSpacing: 0.012
             }}>Results</h2>
             <span style={{ flex: 1 }} />
             <button
               className="btn"
               aria-label="Export results as CSV"
               style={{
-                marginRight: 9,
+                marginRight: 10,
                 background: "linear-gradient(90deg,#ff9800,#ffad42)",
                 color: "#23272e",
                 fontWeight: 700,
-                fontSize: 15.5
+                fontSize: 15.7
               }}
               disabled={exporting}
               onClick={() => handleExport("CSV")}
@@ -624,43 +639,77 @@ function ReconDashboard() {
                 background: "linear-gradient(90deg,#6ce9ff,#8d76ff)",
                 color: "#191b22",
                 fontWeight: 700,
-                fontSize: 15.5
+                fontSize: 15.7
               }}
               disabled={exporting}
               onClick={() => handleExport("JSON")}
             >🗎 Export JSON</button>
           </div>
 
-          {/* Premium Graph: Visualize count of discoverd results by tool */}
-          <div style={{ marginBottom: 30 }}>
-            <GraphDisplay
-              type="bar"
-              // Build bar chart data from recon results
-              data={(() => {
-                if (!results.length) return {labels: [], datasets: []};
-                // Bar: group by tool, count
-                const toolCounts = {};
-                results.forEach(r => {
-                  toolCounts[r.tool] = (toolCounts[r.tool] || 0) + 1;
-                });
-                return {
-                  labels: Object.keys(toolCounts),
-                  datasets: [{
-                    label: "Findings",
-                    data: Object.values(toolCounts),
-                    backgroundColor: "#ff9800"
-                  }]
-                };
-              })()}
-              options={{
-                title: "Findings by Tool",
-                legend: {display: false},
-              }}
-              style={{marginBottom: 10, maxWidth: 550}}
-            />
-          </div>
+          {/* Results skeleton: if scan is running or no results */}
+          {!results.length && !error && (
+            <div style={{
+              opacity: 0.72,
+              width: "100%",
+              minHeight: 140,
+              background: "linear-gradient(90deg,#22242c 68%,#232028 95%)",
+              borderRadius: 11,
+              margin: "15px 0 28px 0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#bba157",
+              fontWeight: 600,
+              fontSize: 19,
+              letterSpacing: ".03em"
+            }}>
+              {loading
+                ? <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <span aria-hidden="true" style={{
+                      fontSize: 18,
+                      marginLeft: 8,
+                      animation: "spin-emoji 1.1s linear infinite"
+                    }}>🛠️</span>
+                    Retrieving results...
+                    <style>{`@keyframes spin-emoji { 100% { transform: rotate(360deg); } }`}</style>
+                  </span>
+                : <span style={{ opacity: 0.6 }}>No output yet.</span>
+              }
+            </div>
+          )}
 
-          {/* Premium Table */}
+          {/* Premium Graph: Visualize findings by tool */}
+          {results.length > 0 && (
+            <div style={{ marginBottom: 28 }}>
+              <GraphDisplay
+                type="bar"
+                // Build bar chart data from recon results
+                data={(() => {
+                  if (!results.length) return {labels: [], datasets: []};
+                  // Bar: group by tool, count
+                  const toolCounts = {};
+                  results.forEach(r => {
+                    toolCounts[r.tool] = (toolCounts[r.tool] || 0) + 1;
+                  });
+                  return {
+                    labels: Object.keys(toolCounts),
+                    datasets: [{
+                      label: "Findings",
+                      data: Object.values(toolCounts),
+                      backgroundColor: "#ff9800"
+                    }]
+                  };
+                })()}
+                options={{
+                  title: "Findings by Tool",
+                  legend: {display: false}
+                }}
+                style={{marginBottom: 10, maxWidth: 550}}
+              />
+            </div>
+          )}
+
+          {/* Premium Table: Always show for visual stability, with "No data" message if needed */}
           <TableDisplay
             data={results}
             columns={[
@@ -670,7 +719,7 @@ function ReconDashboard() {
                 emoji: "🌐",
                 sortable: true,
                 filter: true,
-                bold: true,
+                bold: true
               },
               {
                 label: "Tool",
@@ -685,21 +734,20 @@ function ReconDashboard() {
                 label: "Result",
                 field: "result",
                 emojiMap: {
-                  // Heuristics for types
                   "open": "🟢",
                   "closed": "🔴",
                   "filtered": "🟡",
-                  "host": "🌎",
+                  "host": "🌎"
                 },
                 sortable: false,
-                filter: true,
+                filter: true
               },
               {
                 label: "Time",
                 field: "time",
                 emoji: "⏰",
                 sortable: true,
-                filter: false,
+                filter: false
               }
             ]}
             initialSortField="domain"
@@ -708,7 +756,7 @@ function ReconDashboard() {
             style={{margin: "0 0 0 0"}}
           />
         </section>
-      )}
+      </div>
 
       {/* Recon History Table & Graph */}
       {!!history.length && (
@@ -719,20 +767,27 @@ function ReconDashboard() {
             borderRadius: 12,
             padding: 22,
             marginBottom: 18,
-            boxShadow: "0 1.5px 8px 0 rgba(0,0,0,0.12)"
+            boxShadow: "0 1.5px 8px 0 rgba(0,0,0,0.11)"
           }}
         >
           <div style={{
             display: "flex",
             alignItems: "center",
-            marginBottom: 12
+            marginBottom: 11
           }}>
             <span aria-hidden="true" style={{ fontSize: 18, marginRight: 8 }}>🕒</span>
-            <h3 style={{ margin: 0, fontSize: 16.5, color: "#b38126", fontWeight: 600 }}>Recent Recon History</h3>
+            <h3 style={{
+              margin: 0,
+              fontSize: 17.2,
+              color: "#b38126",
+              fontWeight: 800
+            }}>
+              Recent Recon History
+            </h3>
             <span style={{ flex: 1 }} />
           </div>
           {/* Mini graph: findings by domain */}
-          <div style={{ maxWidth: 420, marginBottom: 9 }}>
+          <div style={{ maxWidth: 420, marginBottom: 12 }}>
             <GraphDisplay
               type="bar"
               data={(() => {
@@ -754,14 +809,14 @@ function ReconDashboard() {
                 title: "Scan count by Domain",
                 legend: {display: false}
               }}
-              style={{marginBottom: 7, maxWidth: 380}}
+              style={{marginBottom: 8, maxWidth: 380}}
             />
           </div>
           <TableDisplay
             data={[...history.slice(-12)].reverse().map(h => ({
               ...h,
               time: h.time || (h.timestamp ? new Date(h.timestamp).toLocaleTimeString() : ""),
-              status: h.status || "completed",
+              status: h.status || "completed"
             }))}
             columns={[
               {
@@ -770,7 +825,7 @@ function ReconDashboard() {
                 emoji: "🌐",
                 sortable: true,
                 filter: true,
-                bold: true,
+                bold: true
               },
               {
                 label: "Tool",
@@ -791,7 +846,7 @@ function ReconDashboard() {
                   "host": "🌎"
                 },
                 sortable: false,
-                filter: true,
+                filter: true
               },
               {
                 label: "Status",
@@ -800,14 +855,14 @@ function ReconDashboard() {
                 sortable: true,
                 filter: true,
                 colored: true,
-                colorMap: { completed: "#41b572", failed: "#e1463b", cancelled: "#cfc71f" },
+                colorMap: { completed: "#41b572", failed: "#e1463b", cancelled: "#cfc71f" }
               },
               {
                 label: "Time",
                 field: "time",
                 emoji: "⏰",
                 sortable: true,
-                filter: false,
+                filter: false
               }
             ]}
             size="sm"
@@ -820,25 +875,25 @@ function ReconDashboard() {
       {exporting && (
         <div
           style={{
-            background: "linear-gradient(94deg,#232b4a2a,#161b2f2F)",
+            background: "linear-gradient(92deg,#222b4d22,#191b2425)",
             color: "#4fbaff",
-            borderRadius: 10,
+            borderRadius: 11,
             padding: "13px 32px",
-            fontWeight: 600,
-            fontSize: 17.2,
+            fontWeight: 700,
+            fontSize: 17.5,
             marginBottom: 28,
             display: "flex",
             alignItems: "center",
-            gap: 13,
+            gap: 14,
             border: "1.1px solid #405f89a5",
-            boxShadow: "0 1.5px 8px 0 rgba(0,28,88,0.08)"
+            boxShadow: "0 1.5px 8px 0 rgba(0,28,88,0.09)"
           }}
         >
           <span
             aria-hidden="true"
             style={{
               fontSize: 21,
-              animation: "spin-emoji 1.5s linear infinite"
+              animation: "spin-emoji 1.25s linear infinite"
             }}>💾</span>
           Export in progress... Please wait
           <style>{`
@@ -852,7 +907,7 @@ function ReconDashboard() {
       {/* Accessible footer */}
       <footer style={{
         padding: "12px 0 0 0",
-        fontSize: 12.8,
+        fontSize: 12.5,
         color: "var(--text-tertiary)",
         display: "flex",
         alignItems: "center",
