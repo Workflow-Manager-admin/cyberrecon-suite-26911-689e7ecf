@@ -468,19 +468,19 @@ button:focus:not(:focus-visible), input:focus:not(:focus-visible), select:focus:
 
 /* Miscellaneous accessibility/focus visible cues for icons/links/code */
 a, .focus-link {
-  color: var(--base-accent) !important;
+  color: var(--base-accent, #ffad42) !important;
   outline: none;
-  text-decoration: none;
+  text-decoration: underline dotted transparent;
   box-shadow: none;
-  transition: color 0.13s, text-shadow 0.13s;
+  transition: color 0.15s, text-decoration-color 0.13s, text-shadow 0.11s;
 }
 a:hover, a:focus-visible, .focus-link:focus-visible {
-  color: var(--base-light) !important;
-  text-decoration: underline;
-  text-shadow: 0 1px 8px #ffad4229;
-  outline: 2.3px solid var(--focus-visible-ring);
+  color: var(--base-light, #ff9800) !important;
+  text-decoration: underline solid var(--base-light,#ff9800);
+  text-shadow: 0 1px 8px #ffad422d;
+  outline: 2.3px solid var(--focus-visible-ring,#ffe766);
   outline-offset: 3px;
-  background: var(--focus-bg);
+  background: var(--focus-bg,#ffe76620);
 }
 pre, code, kbd {
   background: #202124;
