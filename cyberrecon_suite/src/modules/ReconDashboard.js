@@ -916,9 +916,17 @@ function ReconDashboard() {
 
   function AriaLive() {
     return (
-      <div className="visually-hidden" aria-live="polite">
-        {ariaMsg}
-      </div>
+      <>
+        <div className="visually-hidden" aria-live="polite">
+          {ariaMsg}
+        </div>
+        {/* Live job run ARIA notification */}
+        {!!jobRunAria && (
+          <div className="visually-hidden" aria-live="polite">
+            {jobRunAria}
+          </div>
+        )}
+      </>
     );
   }
 
@@ -999,17 +1007,56 @@ function ReconDashboard() {
 
       {/* Scheduling Panel */}
       {showSchedulePanel && (
-        <PremiumSchedulePanel
-          jobs={jobs}
-          setJobs={setJobs}
-          onJobCreated={() => setJobForceRefresh(f => !f)}
-          onJobUpdated={() => setJobForceRefresh(f => !f)}
-          onJobRemoved={() => setJobForceRefresh(f => !f)}
-          errorState={[scheduleError, setScheduleError]}
-          editingJob={editingJob}
-          setEditingJob={setEditingJob}
-          forceRefresh={() => setJobForceRefresh(f => !f)}
-        />
+        <>
+          {notif.show &&
+            <PremiumStatusNotice
+              msg={<span dangerouslySetInnerHTML={{ __html: notif.msg }} />}
+              type={notif.type}
+              onClose={() => setNotif({ show: false, msg: "", type: "info" })}
+              ariaId="sched-feedback"
+              style={{ marginBottom: 14, marginTop: -10 }}
+            />
+          }
+          <PremiumSchedulePanel
+            jobs={jobs}
+            setJobs={setJobs}
+            onJobCreated={() => {
+              setNotif({
+                show: true,
+                msg: "Scheduled job created successfully!",
+                type: "success"
+              });
+              setJobForceRefresh(f => !f);
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 3500);
+            }}
+            onJobUpdated={() => {
+              setNotif({
+                show: true,
+                msg: "Job schedule updated.",
+                type: "success"
+              });
+              setJobForceRefresh(f => !f);
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 3000);
+            }}
+            onJobRemoved={() => {
+              setNotif({
+                show: true,
+                msg: "Scheduled job removed.",
+                type: "info"
+              });
+              setJobForceRefresh(f => !f);
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 2200);
+            }}
+            errorState={[scheduleError, (err) => {
+              setScheduleError(err);
+              setNotif({ show: true, msg: String(err || "An error occurred."), type: "error" });
+              setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 3850);
+            }]}
+            editingJob={editingJob}
+            setEditingJob={setEditingJob}
+            forceRefresh={() => setJobForceRefresh(f => !f)}
+          />
+        </>
       )}
 
       {/* Input Panel */}
@@ -1077,19 +1124,13 @@ function ReconDashboard() {
           Enter one or more domains separated by comma, space, or new lines.
         </small>
         {error && (
-          <div role="alert"
-            style={{
-              background: "rgba(255,59,64,0.065)",
-              color: "var(--danger)",
-              borderRadius: 6,
-              padding: "8px 14px",
-              fontWeight: 600,
-              marginBottom: 14,
-              fontSize: 14.5
-            }}
-          >
-            <span aria-hidden="true" style={{ marginRight: 5 }}>❌</span>{error}
-          </div>
+          <PremiumStatusNotice
+            msg={error}
+            type="error"
+            ariaId="error-feedback"
+            style={{ marginBottom: 13, marginTop: 6 }}
+            onClose={() => setError("")}
+          />
         )}
         {/* Action Buttons */}
         <div style={{
