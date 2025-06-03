@@ -131,14 +131,14 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
         }}
       >
         {modules.map((mod, idx) => {
-          // Enhanced: card shadow and stronger accent highlight
+          // Enhanced: card shadow and strong accent highlight
           const accentGlow =
             activeModule === mod.id
               ? "0px 4px 26px 0 #ff980044,0 0px 22px 2px #ff980077"
               : "";
           const cardBg = activeModule === mod.id
-            ? "linear-gradient(93deg,#111116 85%,#191a1d 100%)"
-            : "linear-gradient(89deg,var(--sidebar-dark) 65%,#181a1f 97%)";
+            ? "linear-gradient(93deg,#111116 86%,#191a1d 100%)"
+            : "linear-gradient(88deg,var(--sidebar-dark) 81%,#181a1f 99%)";
           return (
             <button
               key={mod.id}
@@ -148,37 +148,39 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
               tabIndex={0}
               style={{
                 display: "flex",
-                flexDirection: "column",
+                flexDirection: "row",
                 alignItems: "center",
                 minWidth: "100%",
-                width: "100%",
+                width: "96%", // Slight margin for shadow
                 background: cardBg,
                 border: "none",
                 borderRight: activeModule === mod.id
-                  ? "5px solid var(--base-accent)"
+                  ? "7px solid var(--base-accent)"
                   : "2px solid transparent",
                 color: activeModule === mod.id
                   ? "var(--base-accent)"
                   : "var(--text-secondary)",
                 fontWeight: activeModule === mod.id ? 900 : 570,
-                fontSize: 14,
+                fontSize: 16, // Bigger font for premium nav
                 cursor: "pointer",
-                borderRadius: "0 15px 15px 0",
+                borderRadius: "0 19px 19px 0",
                 outline: "none",
-                margin: "13px 0 10px 0",
-                padding: "17px 0 9px 0",
+                margin: "13px 0 11px 0",
+                padding: "18px 0 12px 22px",
+                gap: "13px",
                 position: "relative",
                 boxShadow: accentGlow + ",0 4px 14px -2px #000b",
                 transition:
                   "background 0.14s, color 0.14s, box-shadow 0.19s, border-color 0.16s",
-                letterSpacing: ".013em"
+                letterSpacing: ".015em",
+                justifyContent: "flex-start"
               }}
               onClick={() => onModuleSelect(mod.id)}
               onKeyDown={e => {
                 if (e.key === "Enter" || e.key === " ") onModuleSelect(mod.id);
               }}
               onFocus={e => {
-                if (e.target) e.target.style.background = "linear-gradient(95deg,#000002 65%,#292c33 100%)";
+                if (e.target) e.target.style.background = "linear-gradient(94deg,#10121a 68%,#282b31 99%)";
               }}
               onBlur={e => {
                 if (e.target && activeModule !== mod.id) e.target.style.background = cardBg;
@@ -188,12 +190,13 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
                 aria-hidden="true"
                 style={{
                   display: "block",
-                  fontSize: 30,
-                  marginBottom: 9,
-                  filter: activeModule === mod.id ? "drop-shadow(0 0 17px #ff9800cc)" : "none",
+                  fontSize: 36,
+                  marginRight: 13,
+                  marginBottom: 2,
+                  filter: activeModule === mod.id ? "drop-shadow(0 0 18px #ff9800cc)" : "none",
                   textShadow: activeModule === mod.id
-                    ? "0 2.5px 20px #000b, 0 2.2px 12px #ffad4244"
-                    : "0 2.5px 13px #10152912",
+                    ? "0 2.8px 20px #000c, 0 2.2px 13px #ffad4264"
+                    : "0 2.5px 14px #10152912",
                   transition: "all .18s cubic-bezier(.22,.84,.43,1)"
                 }}
               >
@@ -201,14 +204,14 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
               </span>
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 15,
                   marginTop: -2,
                   color: activeModule === mod.id
                     ? "var(--base-accent)"
                     : "var(--text-secondary)",
-                  fontWeight: activeModule === mod.id ? 800 : 420,
-                  letterSpacing: ".05em",
-                  textShadow: activeModule === mod.id ? "0 1.9px 8px #ffbe4278" : "none"
+                  fontWeight: activeModule === mod.id ? 880 : 440,
+                  letterSpacing: ".07em",
+                  textShadow: activeModule === mod.id ? "0 2px 13px #ffbe4278" : "none"
                 }}
               >
                 {mod.short}
