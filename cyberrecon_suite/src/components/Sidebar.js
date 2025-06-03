@@ -8,10 +8,18 @@ import logo from "../assets/cyberrecon-logo.svg";
  *   - onClose: function (optional)
  * Always visually wider (wider than 88px: ~240-260px), with all content spaced accordingly.
  */
+/**
+ * Dashboard/sidebar: Premium, wider, with optional slide-close (scaffolded for use)
+ * Accepts new props:
+ *   - isOpen: boolean
+ *   - onClose: function (optional)
+ *   - width: number (optional, allows parent to control exact width)
+ * Always visually wider (wider than 88px: ~240-320px for Burp Suite feel), with all content spaced accordingly.
+ */
 // PUBLIC_INTERFACE
-function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose }) {
-  // Responsive width: wider, with close button overlay for compact screens
-  const SIDEBAR_WIDTH = 254; // 240-260 for Burp Suite feel
+function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose, width }) {
+  // Responsive width: wider, support parent-passed width (default to legacy 254)
+  const SIDEBAR_WIDTH = width || 312;
 
   // Premium slide-close: hide from left (use isOpen prop)
   return (
@@ -26,17 +34,17 @@ function Sidebar({ modules, activeModule, onModuleSelect, isOpen = true, onClose
         maxWidth: SIDEBAR_WIDTH,
         transition: "width 0.23s cubic-bezier(.38,.71,.68,1), min-width 0.21s",
         overflow: "hidden",
-        background: "linear-gradient(90deg,var(--base-black) 88%,#19191c 100%)",
-        borderRight: isOpen ? "2px solid var(--border-color)" : "none",
+        background: "linear-gradient(90deg,var(--base-black) 85%,#19191c 100%)",
+        borderRight: isOpen ? "2.7px solid var(--border-color)" : "none",
         color: "var(--text-secondary)",
         flexShrink: 0,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: isOpen ? "38px 0 0 0" : "0",
+        padding: isOpen ? "42px 0 0 0" : "0",
         minHeight: "100vh",
         boxShadow: isOpen
-          ? "0 20px 42px -16px #000b, 2px 0 21px 1.5px #10110f28"
+          ? "0 22px 48px -16px #000b, 2px 0 36px 2.5px #18181c44"
           : "none",
         zIndex: 16,
         position: "relative",
