@@ -27,8 +27,11 @@ function ScheduleForm({ onJobAdded, errorState, editingJob }) {
     editingJob?.schedule?.dow !== undefined ? editingJob?.schedule?.dow : null
   );
   const [oneTimeDate, setOneTimeDate] = React.useState(""); // e.g. "2024-06-30T20:00"
-  const [formError, setFormError] = errorState || React.useState("");
+  const [localFormError, setLocalFormError] = React.useState("");
   const [savingJob, setSavingJob] = React.useState(false);
+  // Always use hooks at top level; select from props only after hook setup
+  const formError = errorState ? errorState[0] : localFormError;
+  const setFormError = errorState ? errorState[1] : setLocalFormError;
 
   function handleSchedTypeChange(e) {
     setSchedType(e.target.value);
