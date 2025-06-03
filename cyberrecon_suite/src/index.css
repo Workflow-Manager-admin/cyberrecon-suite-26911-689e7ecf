@@ -1,19 +1,48 @@
-/* Base resets and coding styles */
-* {
+/* Global CSS reset and base styles for premium dark mode */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  font: inherit;
+  background: var(--base-dark, #191b22);
+  color: var(--text-color, #fafbfc);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  width: 100vw;
+  min-height: 100vh;
+  font-family: var(--font-main, 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif);
+  font-size: 16px;
+  letter-spacing: 0.01em;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+code, pre {
+  font-family: var(--font-code, 'Menlo', 'Monaco', 'Consolas', monospace);
+  background: #22242c;
+  color: var(--base-light, #ff9800);
+  padding: 0.15em 0.5em;
+  border-radius: 5px;
+  font-size: 95%;
+}
+
+a {
+  color: var(--base-accent, #ffad42);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+a:hover, a:focus-visible {
+  color: var(--base-light, #ff9800);
+  text-decoration: underline;
 }
