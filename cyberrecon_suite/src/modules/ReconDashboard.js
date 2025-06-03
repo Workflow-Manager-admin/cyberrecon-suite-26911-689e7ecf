@@ -201,13 +201,25 @@ function ReconDashboard() {
   }
 
   // PUBLIC_INTERFACE
-  function handleExport(fmt) {
+  async function handleExport(fmt) {
     setExporting(true);
-    setTimeout(() => {
-      // TODO: Implement real export via backend or FileSaver
+    setAriaMsg("");
+    try {
+      const res = await exportReconResults(fmt === "CSV" ? "csv" : "json");
       setExporting(false);
-      setAriaMsg(`Results exported as ${fmt}.`);
-    }, 750);
+      if (res && res.ok) {
+        setAriaMsg(`Results exported as ${fmt}.`);
+      } else if (res && res.canceled) {
+        setAriaMsg(`Export cancelled.`);
+      } else {
+        setAriaMsg(
+          `Export failed: ${res && res.error ? res.error : "Unknown error"}`
+        );
+      }
+    } catch (e) {
+      setExporting(false);
+      setAriaMsg(`Export error: ${(e && e.message) || "Unknown"}`);
+    }
   }
 
   // Keyboard accessibility: Enter triggers scan, Esc blurs
