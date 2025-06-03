@@ -634,7 +634,8 @@ function ReconDashboard() {
           <TableDisplay
             data={[...history.slice(-12)].reverse().map(h => ({
               ...h,
-              time: h.time || (h.timestamp ? new Date(h.timestamp).toLocaleTimeString() : "")
+              time: h.time || (h.timestamp ? new Date(h.timestamp).toLocaleTimeString() : ""),
+              status: h.status || "completed",
             }))}
             columns={[
               {
@@ -665,6 +666,15 @@ function ReconDashboard() {
                 },
                 sortable: false,
                 filter: true,
+              },
+              {
+                label: "Status",
+                field: "status",
+                emojiMap: { completed: "✅", failed: "❌", cancelled: "🚫" },
+                sortable: true,
+                filter: true,
+                colored: true,
+                colorMap: { completed: "#41b572", failed: "#e1463b", cancelled: "#cfc71f" },
               },
               {
                 label: "Time",
