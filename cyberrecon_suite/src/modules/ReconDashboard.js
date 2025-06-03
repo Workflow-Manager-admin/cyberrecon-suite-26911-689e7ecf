@@ -31,42 +31,66 @@ function hasElectronBridge() {
   );
 }
 
-// --- Wrapped IPC connection: listen/cancel semantics ---
-// Listen for a single scan's result stream. Returns [promise, cancelFn].
+/**
+ * Use the Electron IPC scan API (runReconCommand, onReconCommandOutput) to run a scan for a specific tool/args.
+ * Ensures each scan attaches its own demuxed event handler, and provides a cancel function.
+ * Returns [promise, cancelFn].
+ */
 function runViaElectron(tool, args, onData, onError, onDone) {
-  // Each scan instance gets a unique processId for correct demuxing
-  const processId = Math.random().toString(36).substring(2, 12);
-  let isActive = true; // Defensive safety
+  const processId = Math.random().toString(36).substring(2, 12); // Unique per scan
+  let isActive = true;
+  let detached = false;
 
-  // Handler receives every event; only act on processId match
+  // Local handler: listens for events, correctly demuxed by processId
   function handler(_event, payload) {
-    if (!payload || payload.processId !== processId) return;
-    if (!isActive) return;
-    if (payload.type === "data") onData(payload.data);
-    else if (payload.type === "error") { onError(payload.data); isActive = false; onDone && onDone(payload.data); }
-    else if (payload.type === "end") { isActive = false; onDone && onDone(payload.data); }
+    if (!payload || payload.processId !== processId || !isActive) return;
+    if (payload.type === "data") {
+      onData(payload.data);
+    } else if (payload.type === "error") {
+      onError && onError(payload.data || "Scan error");
+      isActive = false;
+      onDone && onDone(payload.data);
+      detach();
+    } else if (payload.type === "end") {
+      isActive = false;
+      onDone && onDone(payload.data);
+      detach();
+    }
   }
 
-  // Listen
+  // Attach event handler
   window.electronAPI.onReconCommandOutput(handler);
 
-  // Run scan via IPC with args
+  // Trigger scan IPC call
   window.electronAPI.runReconCommand({ tool, args, processId });
 
-  // Cancel logic (calls IPC; also disables handler)
+  // Detach function (no-op in stub, robust in real)
+  function detach() {
+    if (detached) return;
+    detached = true;
+    isActive = false;
+    // Real Electron could removeHandler here; stub is safe (demuxed by processId)
+  }
+
+  // Cancel: stops scan and detaches events
   function cancel() {
     isActive = false;
+    detach();
     window.electronAPI.cancelReconCommand(processId);
   }
 
-  // Defensive: detach logic is not provided by stub, usually not needed since processId ensures separation
-  // In a production-quality preload.js: a handler removal mechanism is better for perf
-
   return [
     new Promise((resolve, reject) => {
-      // We'll use onDone/onError above to call
-      onDone = (data) => { isActive = false; resolve(data); };
-      onError = (err) => { isActive = false; reject(err); };
+      onDone = (data) => {
+        isActive = false;
+        detach();
+        resolve(data);
+      };
+      onError = (err) => {
+        isActive = false;
+        detach();
+        reject(err);
+      };
     }),
     cancel
   ];
