@@ -1,514 +1,614 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import TableDisplay from "../components/TableDisplay";
 import Modal from "../components/Modal";
 
-// Regex patterns for extraction
-const regexRules = [
-  // Keywords
+// == REGEX EXTRACT PATTERNS == //
+const REGEXES = [
   {
-    label: "Keyword",
-    field: "keyword",
-    type: "keyword",
-    // Simple identifiers/variable assignments (including camelCase, snake_case, configs)
-    regex: /(?:var|let|const|function|class|enum|interface)\s+([a-zA-Z_]\w+)|([a-zA-Z_]\w+)\s*=/g
+    label: "JWT Token",
+    field: "jwt",
+    emoji: "🔑",
+    regex: /\beyJ[a-zA-Z0-9._-]{20,}\.[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+/g,
+    desc: "JSON Web Token (JWT)"
   },
-  // Secrets: API keys, tokens, JWTs, basic auth, etc.
   {
-    label: "Secret",
-    field: "secret",
-    type: "secret",
-    // API KEY (Google, AWS, generic), JWT, random long tokens
-    // Google API: AIza..., AWS: AKIA..., JWT: [header].[payload].[sig], Bearer, anything that looks like secret=...
-    regex: /\b(AIza[0-9A-Za-z-_]{30,35}|AKIA[0-9A-Z]{16}|eyJ[\w=-]+\.[\w=-]+\.[\w=-]+|secret[^\s:="'`<>]{4,32}|token\W{0,6}[a-zA-Z0-9_\-=]{8,}|\bBearer\s+[A-Za-z0-9\-_\.=]+\b|sk_live_[a-zA-Z0-9]{24,})\b/gi
+    label: "Bearer Token",
+    field: "bearer",
+    emoji: "🪪",
+    regex: /\bBearer\s+([\w-]{8,}\.[\w-]{8,}\.[\w-]{8,})/gi,
+    desc: "Bearer OAuth/JWT Token"
   },
-  // Endpoints/URLs (excluding obvious assets/css/js/image, favor API, .php, etc.)
   {
-    label: "Endpoint",
+    label: "API Key",
+    field: "apikey",
+    emoji: "🔑",
+    // Common API key, Azure, Google, GitHub etc patterns
+    regex: /\b(?:(?:AIza[0-9A-Za-z-_]{35})|(?:sk_live_[0-9a-zA-Z]{24,})|(?:ghp_[0-9a-zA-Z]{36,})|(?:[a-zA-Z0-9]{32,45}[_-]?(?:api|key|secret)[a-zA-Z0-9]*)|(?:[A-Za-z0-9_\-]{30,})\b)/g,
+    desc: "Common API/Secret Key"
+  },
+  {
+    label: "Endpoint (HTTP[S])",
     field: "endpoint",
-    type: "endpoint",
-    // Looks for /api/... or /v1/v2..., .php, .asp, .jsp, .aspx, .cgi endpoint paths, http URLs, websocket URLs
-    regex: /\b(https?:\/\/[^\s"'`<>]+|wss?:\/\/[^\s"'`<>]+|\/[a-zA-Z0-9_\-\/\.]*(?:api|api\/v\d+|admin|login|register|users|reset|auth)[^\s"'`<>]*|\b\/[a-zA-Z0-9\/_.-]+\.php\b|\b\/[a-zA-Z0-9\/_.-]+\.as(px)?\b|\b\/[a-zA-Z0-9\/_.-]+\.jsp\b|\b\/[a-zA-Z0-9\/_.-]+\.cgi\b)/gi
+    emoji: "🌐",
+    regex: /(https?:\/\/[a-zA-Z0-9\-._~:/?#@!$&'()*+,;=%]+(?:[a-zA-Z0-9/_-]{2,}))/g,
+    desc: "HTTP(S) Endpoints"
+  },
+  {
+    label: "AWS Access Key",
+    field: "awskey",
+    emoji: "🪪",
+    regex: /\bAKIA[0-9A-Z]{16}\b/g,
+    desc: "AWS Access Key"
+  },
+  {
+    label: "Google OAuth Refresh",
+    field: "googleoauth",
+    emoji: "🔑",
+    regex: /\b1\/[A-Za-z0-9\-_]{43}\b/g,
+    desc: "Google OAuth Token"
+  },
+  {
+    label: "ID/Secret Pattern",
+    field: "idsecret",
+    emoji: "🧬",
+    regex: /\b(?:client(?:Id|Secret)|api(?:Key|Secret)|access(?:Key|Secret)|secret[_-]key)\s*[:=]\s*['"`]{0,1}([a-zA-Z0-9\-_]{12,})['"`]{0,1}/gi,
+    desc: "Client/API ID or Secret"
   }
 ];
 
-// Column defs for premium table
-const TABLE_COLS = [
-  {
-    label: "Type",
-    field: "type",
-    emojiMap: { keyword: "🔑", secret: "🧪", endpoint: "🌐" },
-    sortable: true,
-    filter: true,
-    colored: true,
-    colorMap: { keyword: "#ffad42", secret: "#ff5964", endpoint: "#51b57f" },
-    bold: true
-  },
-  {
-    label: "Match",
-    field: "value",
-    emoji: "🔍",
-    sortable: true,
-    filter: true,
-    bold: true
-  },
-  {
-    label: "Context",
-    field: "context",
-    sortable: false,
-    filter: false
-  },
-  {
-    label: "Line",
-    field: "lineNumber",
-    sortable: true,
-    filter: false
-  }
-];
+function getDefaultColumns() {
+  return [
+    {
+      label: "Type",
+      field: "type",
+      emojiMap: Object.fromEntries(REGEXES.map(r => [r.field, r.emoji])),
+      sortable: true,
+      filter: true,
+      colored: true,
+      colorMap: {
+        jwt: "#ff9800",
+        bearer: "#ffad42",
+        apikey: "#5ac8fa",
+        endpoint: "#41b57f",
+        awskey: "#ffd700",
+        googleoauth: "#fa81ff",
+        idsecret: "#ff5964"
+      }
+    },
+    {
+      label: "Value",
+      field: "value",
+      bold: true,
+      sortable: false,
+      filter: true
+    },
+    {
+      label: "Line #",
+      field: "line",
+      sortable: true,
+      filter: false
+    },
+    {
+      label: "Context",
+      field: "context",
+      sortable: false,
+      filter: false
+    }
+  ];
+}
+
+// Helper: Extract findings per regex
+function extractFindings(text = "") {
+  let findings = [];
+  // Each line, for easier context
+  const lines = text.split("\n");
+  REGEXES.forEach(({ regex, field, label }) => {
+    let r = new RegExp(regex); // Fresh instance per use
+    lines.forEach((line, idx) => {
+      let match;
+      while ((match = r.exec(line)) !== null) {
+        findings.push({
+          type: field,
+          value: match[0],
+          line: idx + 1,
+          context: line.trim().slice(0, 160)
+        });
+        // Prevent infinite loop if 0-width match
+        if (!match[0] || r.lastIndex === match.index)
+          r.lastIndex++;
+      }
+      r.lastIndex = 0;
+    });
+  });
+  return findings;
+}
+
+function sanitizeInput(src = "") {
+  // Remove null bytes, compress whitespace
+  return src.replace(/\0/g, "").replace(/\r\n/g, "\n");
+}
 
 // PUBLIC_INTERFACE
 /**
- * Premium JS Debugger module:
- * - Paste/upload JS/HTML, live regex extraction (secrets, endpoints, keywords)
- * - Results in modern, filterable table.
- * - Accessible, dark-themed, premium UI.
+ * JS Debugger module: Paste/upload JS or HTML, extract secrets/endpoints/tokens via regex,
+ * display in a premium filterable/sortable table. Supports drag-drop, clipboard paste,
+ * modern accessible UI.
  */
 function JSDebugger() {
   const [input, setInput] = useState("");
-  const [results, setResults] = useState([]);
-  const [lastUpdated, setLastUpdated] = useState(Date.now());
-  const [fileName, setFileName] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [findings, setFindings] = useState([]);
+  const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState("");
+  const [showResultModal, setShowResultModal] = useState(false);
+  const [selectedFinding, setSelectedFinding] = useState(null);
   const fileInputRef = useRef();
-  const textareaRef = useRef();
 
-  // Main extraction logic
-  function extractMatches(src) {
-    if (!src) return [];
-    let res = [];
-    const lines = src.split(/\r?\n/);
-    lines.forEach((line, idx) => {
-      regexRules.forEach(({ label, field, type, regex }) => {
-        let match;
-        // Reset regex lastIndex; avoid global state bleed across calls
-        let re = new RegExp(regex.source, regex.flags);
-        while ((match = re.exec(line)) !== null) {
-          let val =
-            (match[1] ??
-              match[2] ??
-              match[0] ??
-              (typeof match === "string" ? match : null));
-          // Avoid weird empty
-          if (!val || String(val).length < 2) continue;
-          // De-duplicate by value, type, line
-          if (
-            !res.some(
-              (r) =>
-                r.value === val &&
-                r.type === type &&
-                r.lineNumber === idx + 1
-            )
-          ) {
-            let context = line.length > 200
-              ? line.slice(0, 100) + "..." + line.slice(-60)
-              : line;
-            res.push({
-              type,
-              value: val,
-              context,
-              lineNumber: idx + 1
-            });
-          }
-        }
-      });
-    });
-    return res;
-  }
-
-  // Handle paste, textarea input, file upload
-  function handleInputChange(e) {
-    let val = e?.target?.value ?? "";
-    setInput(val);
-    setFileName("");
-    const matches = extractMatches(val);
-    setResults(matches);
-    setLastUpdated(Date.now());
-  }
-
-  // Handle paste event to support right-click/paste in browser/electron
-  function handlePasteEvent(e) {
-    let pasted = e.clipboardData?.getData("Text");
-    if (pasted) {
-      setInput(pasted);
-      setFileName("");
-      const matches = extractMatches(pasted);
-      setResults(matches);
-      setLastUpdated(Date.now());
+  // Live update findings as input changes
+  React.useEffect(() => {
+    if (!input || !input.trim()) {
+      setFindings([]);
+      return;
     }
-  }
+    setFindings(extractFindings(input));
+  }, [input]);
 
-  // File upload: read as text, update input/results
-  function handleFileUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = function (loadEvt) {
-      setInput(loadEvt.target.result);
-      const matches = extractMatches(loadEvt.target.result);
-      setResults(matches);
-      setLastUpdated(Date.now());
-    };
-    reader.readAsText(file);
-  }
-
-  // Drag-and-drop upload
-  function handleDrop(e) {
+  // Drag-drop support
+  const handleDrop = useCallback(e => {
     e.preventDefault();
-    let file = e.dataTransfer?.files?.[0];
-    if (file) {
-      setFileName(file.name);
+    setDragActive(false);
+    setError("");
+    // Accept only the first file
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const f = e.dataTransfer.files[0];
+      if (!/(javascript|html|text|plain)/i.test(f.type) && !/\.(js|html)$/i.test(f.name)) {
+        setError("Unsupported file type. Please upload JS/HTML/text files.");
+        return;
+      }
       const reader = new FileReader();
-      reader.onload = function (loadEvt) {
-        setInput(loadEvt.target.result);
-        const matches = extractMatches(loadEvt.target.result);
-        setResults(matches);
-        setLastUpdated(Date.now());
-      };
-      reader.readAsText(file);
+      reader.onload = evt => setInput(sanitizeInput(evt.target.result));
+      reader.onerror = () => setError("File read failed.");
+      reader.readAsText(f, "utf-8");
     }
-  }
-  function handleDragOver(e) {
-    e.preventDefault();
+  }, []);
+
+  // Clipboard paste support
+  const handlePaste = useCallback(e => {
+    let pasted = e.clipboardData?.getData("text/plain");
+    if (pasted) {
+      setInput(sanitizeInput(pasted));
+      e.preventDefault();
+    }
+  }, []);
+
+  // Upload via file browse
+  const handleFileChange = e => {
+    setError("");
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!/(javascript|html|text|plain)/i.test(file.type) && !/\.(js|html)$/i.test(file.name)) {
+      setError("Unsupported file type. Please upload JS/HTML/text files.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = evt => setInput(sanitizeInput(evt.target.result));
+    reader.onerror = () => setError("File read failed.");
+    reader.readAsText(file, "utf-8");
+  };
+
+  // Result table columns
+  const columns = getDefaultColumns();
+
+  // Result table quick filter fields
+  const quickFields = [
+    {
+      field: "type",
+      label: "Type",
+      options: REGEXES.map(r => r.field)
+    }
+  ];
+
+  // Show detail modal for a finding
+  function openFindingDetail(f) {
+    setSelectedFinding(f);
+    setShowResultModal(true);
   }
 
-  // Export results as CSV/JSON
-  function exportCSV() {
-    if (!results.length) return;
-    const header = TABLE_COLS.map((c) => c.field).join(",");
-    const rows = results.map((r) =>
-      TABLE_COLS.map((c) => `"${(r[c.field] || "").toString().replace(/"/g, '""')}"`).join(",")
-    );
-    const blob = new Blob([header + "\r\n" + rows.join("\r\n")], { type: "text/csv" });
-    downloadBlob(blob, fileName ? fileName.replace(/\.(js|html?)$/i, "_matches.csv") : "jsdebug-matches.csv");
-  }
-  function exportJSON() {
-    if (!results.length) return;
-    const blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
-    downloadBlob(blob, fileName ? fileName.replace(/\.(js|html?)$/i, "_matches.json") : "jsdebug-matches.json");
-  }
-  function downloadBlob(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 200);
+  function closeModal() {
+    setShowResultModal(false);
+    setSelectedFinding(null);
   }
 
-  // Accessible modal explaining regex/fields
-  function HelpModal() {
-    return (
-      <Modal isOpen={showModal} title="About Extraction & Regex" onClose={() => setShowModal(false)}>
-        <div>
-          <b>Extraction Rules:</b>
-          <ul>
-            <li><b>Keyword:</b> Top-level identifiers (var/let/const/class/function names), useful for wordlists or endpoint guessing.</li>
-            <li><b>Secret:</b> Strings matching API key/JWT/token patterns (ex: <code>AIza...</code>, <code>eyJ...</code>, <code>AKIA...</code>, <code>Bearer ...</code>).</li>
-            <li><b>Endpoint:</b> URLs or API routes (<code>/api/... /admin</code>, <code>.php</code>, <code>.jsp</code>, <code>.aspx</code>).</li>
-          </ul>
-          <p><b>Tips:</b></p>
-          <ul>
-            <li>For large files, use Table search/filter to isolate secrets/endpoints.</li>
-            <li>This extraction is purely <b>regex-based</b>; no deobfuscation or minified code expansion.</li>
-          </ul>
-        </div>
-      </Modal>
-    );
-  }
+  // Example file for download (sample.js)
+  const SAMPLE_JS = [
+    "// Sample JS/HTML for Premium JS Debugger Extraction Demo",
+    "<script>",
+    "const token = 'eyJhbGciOi...';",
+    "fetch('https://api.example.com/v2/users?key=AIzaSy...')",
+    "let clientId = 'my_client_secret_123456789012';",
+    "const url = 'https://mysite.io/api/user';",
+    "</script>"
+  ].join("\n");
 
-  // Render premium, modern, accessible UI
+  // UI
   return (
     <section
-      aria-label="JS Debugger"
+      aria-label="JS Debugger Extractor"
       tabIndex={0}
       style={{
-        maxWidth: 980,
+        maxWidth: 960,
         margin: "0 auto",
-        padding: "32px 0",
+        padding: "38px 0",
         color: "var(--text-color)"
       }}
     >
-      <HelpModal />
       <header
         style={{
           display: "flex",
           alignItems: "center",
-          marginBottom: 24,
-          gap: 14
+          marginBottom: 27,
+          gap: 17
         }}
       >
         <span
           aria-hidden="true"
           style={{
             fontSize: 32,
-            background: "linear-gradient(94deg,#a9ffcf 10%,#ffad42 85%)",
+            background: "linear-gradient(95deg,#ff9800,#ffad42 96%)",
             WebkitBackgroundClip: "text",
             color: "transparent",
             fontWeight: 900,
-            marginRight: 8,
-            textShadow: "0 2.2px 8px rgba(255,168,32,0.12)"
+            marginRight: 9,
+            textShadow: "0 2.2px 12px rgba(255,168,32,0.16)"
           }}
         >
           🧩
         </span>
-        <h1 style={{
-          margin: 0,
-          fontSize: 26.5,
-          letterSpacing: ".012em",
-          color: "var(--base-light)",
-          fontWeight: 800
-        }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 27,
+            letterSpacing: ".012em",
+            color: "var(--base-light)",
+            fontWeight: 800
+          }}
+        >
           JS Debugger
         </h1>
         <span
           aria-label="Premium"
           style={{
-            fontSize: 13.4,
-            color: "#b3b55f",
-            background: "rgba(255,168,64,0.11)",
-            borderRadius: 12,
-            padding: "3.5px 11px",
+            fontSize: 14,
+            color: "#daa84b",
+            background: "rgba(255,168,64,0.09)",
+            borderRadius: 13,
+            padding: "3.5px 12px",
             marginLeft: 13,
             fontWeight: 700,
-            boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.035)",
-            border: "1.1px solid rgba(255,184,72,0.09)"
-          }}>
+            boxShadow: "0 1.5px 7px 0 rgba(0,0,0,0.04)",
+            border: "1.2px solid rgba(255,184,72,0.13)"
+          }}
+        >
           PREMIUM
         </span>
         <span style={{ flex: 1 }} />
-        <button
-          className="btn"
-          style={{
-            background: "linear-gradient(97deg,#41b572 60%,#a7ffed)",
-            color: "#191b22",
-            fontWeight: 700,
-            fontSize: 15,
-            borderRadius: 7,
-            marginRight: 7
-          }}
-          onClick={() => setShowModal(true)}
-          aria-label="Show help for extraction rules"
-        >
-          ℹ️ Help
-        </button>
       </header>
-      {/* Paste/Upload Area */}
-      <form
-        aria-label="Paste or upload JS/HTML"
-        onSubmit={e => e.preventDefault()}
+
+      {/* Input Panel: Paste/drag/upload */}
+      <div
+        aria-label="Paste/Upload Zone"
+        tabIndex={0}
+        role="region"
         onDrop={handleDrop}
-        onDragOver={handleDragOver}
+        onDragOver={e => { e.preventDefault(); setDragActive(true); }}
+        onDragLeave={e => { e.preventDefault(); setDragActive(false); }}
+        onPaste={handlePaste}
         style={{
-          background: "var(--secondary)",
-          borderRadius: 13,
-          padding: "22px 29px",
-          maxWidth: 710,
-          marginBottom: 26,
-          boxShadow: "0 6px 24px -8px rgba(0,0,0,0.13)",
-          position: "relative"
+          minHeight: 140,
+          padding: "32px 27px",
+          background: dragActive
+            ? "linear-gradient(90deg,#ff980077,#ffd27c13)"
+            : "var(--secondary)",
+          border: dragActive
+            ? "2.7px dashed #ffad42"
+            : "2.3px dashed var(--border-color)",
+          borderRadius: 11,
+          marginBottom: 24,
+          boxShadow: "0 2.5px 18px -8px rgba(0,0,0,0.11)",
+          position: "relative",
+          transition: "background 0.17s, border-color 0.2s"
         }}
       >
-        <label
-          htmlFor="jsdebugger-input"
-          style={{
-            fontWeight: 700,
-            color: "#ffad42",
-            letterSpacing: ".01em",
-            fontSize: 16.2,
-            display: "block",
-            marginBottom: 7
-          }}>
-          Paste or Drag a JS/HTML source file
-          <span aria-hidden="true" style={{ marginLeft: 8, fontSize: 17 }}>📋</span>
-        </label>
-        <textarea
-          ref={textareaRef}
-          id="jsdebugger-input"
-          name="debugtxt"
-          value={input}
-          spellCheck={false}
-          aria-required="true"
-          aria-describedby="jsdebugger-desc"
-          rows={6}
-          placeholder="Paste or drag/drop your JavaScript or HTML code here for secret/token/endpoint extraction."
-          onChange={handleInputChange}
-          onPaste={handlePasteEvent}
-          tabIndex={0}
-          style={{
-            width: "100%",
-            padding: "14px 12px",
-            borderRadius: 8,
-            fontSize: 15.3,
-            fontFamily: "var(--font-code)",
-            border: "1.5px solid var(--border-color)",
-            background: "var(--base-dark)",
-            marginBottom: 7,
-            color: "var(--text-color)",
-            resize: "vertical",
-            boxShadow: "0 2.5px 9px -7px rgba(0,0,0,0.13)",
-            fontWeight: 500,
-            minHeight: 96,
-            letterSpacing: ".01em"
-          }}
-        />
-        <small
-          id="jsdebugger-desc"
-          style={{
-            color: "var(--text-tertiary)",
-            fontSize: 13.5,
-            display: "block",
-            marginBottom: 8,
-            letterSpacing: ".01em"
-          }}
-        >
-          Supports paste, drag-and-drop, or file upload. {fileName && <b>File: <code>{fileName}</code></b>}
-        </small>
-        <div style={{
-          display: "flex",
-          gap: 15,
-          marginTop: 1,
-          marginBottom: 10,
-          alignItems: "center",
-          flexWrap: "wrap"
-        }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+          <b style={{ fontSize: 16.5, color: "var(--base-accent)" }}>
+            Paste or Upload JS / HTML
+          </b>
+          <span aria-hidden="true" style={{ fontSize: 19, marginLeft: 10 }}>
+            📋
+          </span>
+          <span style={{ flex: 1 }} />
+          <button
+            className="btn"
+            aria-label="Upload file"
+            type="button"
+            style={{
+              background: "linear-gradient(90deg,#41b57f,#90ffa9)",
+              color: "#191b22",
+              fontWeight: 700,
+              fontSize: 15,
+              borderRadius: 7
+            }}
+            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+          >
+            📤 Upload File
+          </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".js,.jsx,.html,.htm,.txt"
-            style={{ display: "none" }}
-            onChange={handleFileUpload}
+            accept=".js,.html,text/javascript,text/html,text/plain"
+            onChange={handleFileChange}
             aria-label="Upload JS or HTML file"
+            style={{ display: "none" }}
+            tabIndex={-1}
           />
           <button
-            type="button"
             className="btn"
-            style={{
-              fontWeight: 700,
-              background: "linear-gradient(90deg,#ff9800,#ffad42)",
-              color: "#23272e",
-              borderRadius: 7,
-              fontSize: 15.2
-            }}
-            aria-label="Upload a file"
-            onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          >📤 Upload File</button>
-          <button
+            aria-label="Paste from Clipboard"
             type="button"
-            className="btn"
             style={{
+              marginLeft: 10,
               fontWeight: 600,
-              background: "linear-gradient(90deg,#51b57f,#90ffa9)",
-              color: "#191b22",
-              borderRadius: 7,
-              fontSize: 15.2
-            }}
-            aria-label="Clear input"
-            onClick={() => { setInput(""); setFileName(""); setResults([]); textareaRef.current && textareaRef.current.focus(); }}
-          >🧹 Clear</button>
-          <span style={{ flex: 1 }} />
-          <button
-            type="button"
-            className="btn"
-            style={{
+              fontSize: 14,
               background: "linear-gradient(90deg,#6ce9ff,#8d76ff)",
-              color: "#191b22",
-              fontWeight: 700,
-              borderRadius: 7,
-              fontSize: 14.7
+              color: "#191b22"
             }}
-            aria-label="Export as CSV"
-            onClick={exportCSV}
-          >📤 Export CSV</button>
+            onClick={async () => {
+              try {
+                const txt = await navigator.clipboard.readText();
+                if (txt) setInput(sanitizeInput(txt));
+              } catch {
+                setError("Clipboard read failed - try ctrl+v or browser permissions.");
+              }
+            }}
+          >
+            📋 Paste
+          </button>
           <button
-            type="button"
             className="btn"
+            aria-label="Reset input"
             style={{
-              background: "linear-gradient(90deg,#f0f97f,#4ecfff)",
-              color: "#413222",
-              fontWeight: 700,
-              borderRadius: 7,
-              fontSize: 14.7
+              marginLeft: 7,
+              fontSize: 13,
+              fontWeight: 600
             }}
-            aria-label="Export as JSON"
-            onClick={exportJSON}
-          >🗎 Export JSON</button>
+            onClick={() => { setInput(""); setFindings([]); }}
+            type="button"
+          >
+            🧹 Clear
+          </button>
+          <button
+            className="btn"
+            aria-label="Download Example"
+            style={{
+              marginLeft: 7,
+              fontSize: 13,
+              fontWeight: 600,
+              background: "linear-gradient(90deg,#ff9800,#ffad42)",
+              color: "#23272e"
+            }}
+            type="button"
+            onClick={() => {
+              const blob = new Blob([SAMPLE_JS], { type: "text/javascript" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "sample.js";
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }, 250);
+            }}
+          >⬇️ Example</button>
         </div>
-      </form>
-      {/* Result Table */}
-      <section
-        aria-label="Extraction Results"
-        style={{
-          background: "var(--secondary)",
-          borderRadius: 13,
-          padding: "17px 19px",
-          marginBottom: 17,
-          boxShadow: "0 3px 19px 0 rgba(0,0,0,0.10)"
-        }}
-      >
-        <div style={{
-          fontWeight: 700,
-          color: "#ffad42",
-          fontSize: 17.5,
-          marginBottom: 8
-        }}>Extraction Results</div>
-        {results.length === 0 && (
-          <div style={{
-            minHeight: 98,
-            textAlign: "center",
-            color: "#948672",
-            opacity: 0.75,
-            padding: "42px 0 18px 0",
+        <textarea
+          value={input}
+          spellCheck={false}
+          rows={Math.min(22, Math.max(7, (input.match(/\n/g) || []).length + 3))}
+          onChange={e => setInput(sanitizeInput(e.target.value))}
+          onPaste={handlePaste}
+          aria-label="Paste JS or HTML content here"
+          style={{
+            width: "100%",
+            minHeight: 88,
+            maxHeight: 430,
+            fontSize: 15.7,
+            borderRadius: 8,
+            fontFamily: "var(--font-code)",
+            color: "var(--text-color)",
+            border: "1.1px solid var(--border-color)",
+            background: "var(--base-dark)",
+            marginBottom: 3,
             fontWeight: 500,
-            letterSpacing: ".04em",
-            fontSize: 18
-          }}>
-            <span aria-hidden="true" style={{ fontSize: 24 }}>🧐</span>
-            <br />
-            No matches found.
+            padding: "13px 11px",
+            resize: "vertical"
+          }}
+          placeholder={
+            "Paste (ctrl+v/cmd+v), drag & drop, or upload JS/HTML here.\n" +
+            "Secrets/tokens/endpoints will be extracted in real-time."
+          }
+        ></textarea>
+        {error && (
+          <div
+            style={{
+              color: "#ff5964",
+              fontWeight: 700,
+              marginTop: 8,
+              fontSize: 13.7
+            }}
+            role="alert"
+            aria-live="polite"
+          >
+            ❌ {error}
           </div>
         )}
+        <div
+          style={{
+            fontSize: 12.5,
+            marginTop: 6,
+            color: "var(--text-tertiary)"
+          }}
+        >
+          <b>Tip:</b> Drag and drop a file, or ctrl+v to capture clipboard!
+        </div>
+        {dragActive && (
+          <div
+            aria-live="polite"
+            style={{
+              position: "absolute",
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(255,168,32,0.10)",
+              borderRadius: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffad42",
+              fontWeight: 800,
+              fontSize: 23,
+              pointerEvents: "none"
+            }}
+          >
+            Drop file to extract secrets/tokens from JS or HTML!
+          </div>
+        )}
+      </div>
+
+      {/* Live Results Table */}
+      <div
+        aria-label="Extracted Secrets/Endpoints"
+        style={{
+          minHeight: 250,
+          marginBottom: 33,
+          background: "var(--secondary)",
+          borderRadius: 14,
+          boxShadow: "0 2.5px 20px -9px rgba(0,0,0,0.13)",
+          padding: 22
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+          <span aria-hidden="true" style={{ fontSize: 19, marginRight: 7 }}>🔎</span>
+          <h2 style={{
+            margin: 0,
+            fontSize: 18.5,
+            fontWeight: 800,
+            color: "var(--base-light)",
+            letterSpacing: 0.012
+          }}>
+            Extracted Findings
+          </h2>
+          <span style={{ flex: 1 }} />
+          <span style={{
+            color: "#bbaa77",
+            fontWeight: 700,
+            fontSize: 15.2
+          }}>
+            {findings.length ? `${findings.length} found` : "No results"}
+          </span>
+        </div>
         <TableDisplay
-          data={results}
-          columns={TABLE_COLS}
-          initialSortField="type"
+          data={findings}
+          columns={columns}
           filterable={true}
-          size="lg"
-          quickFields={[
-            {
-              field: "type",
-              label: "Type",
-              options: ["keyword", "secret", "endpoint"]
-            }
-          ]}
-          style={{ marginTop: 3, marginBottom: 3 }}
+          size="md"
+          quickFields={quickFields}
+          style={{ marginTop: 7, marginBottom: 14 }}
+          onRowClick={row => openFindingDetail(row)}
         />
-      </section>
-      {/* Premium footer */}
-      <footer style={{
-        padding: "11px 0 0 0",
-        fontSize: 12.5,
-        color: "var(--text-tertiary)",
-        display: "flex",
-        alignItems: "center",
-        gap: 9
-      }}>
-        <span aria-hidden="true" style={{ fontSize: 14, marginRight: 7 }}>
-          🚦
-        </span>
-        Results are never sent externally. All extraction is local. For advanced static/dynamic analysis, consider standalone tools.
+        <div style={{ fontSize: 12.3, color: "var(--text-tertiary)" }}>
+          Click a row for more context and one-click copy.
+        </div>
+      </div>
+
+      {/* Modal: Finding detail/copy */}
+      <Modal
+        isOpen={showResultModal}
+        title={selectedFinding ? "Finding Details" : ""}
+        onClose={closeModal}
+      >
+        {selectedFinding && (
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 17.2, marginBottom: 7 }}>
+              {REGEXES.find(r => r.field === selectedFinding.type)?.label || selectedFinding.type}
+              <span aria-hidden="true" style={{ marginLeft: 9 }}>
+                {REGEXES.find(r => r.field === selectedFinding.type)?.emoji}
+              </span>
+            </div>
+            <div style={{
+              fontSize: 15.7,
+              fontFamily: "var(--font-code)",
+              background: "#23242c",
+              color: "#ffad42",
+              borderRadius: 7,
+              padding: "13px 10px",
+              marginBottom: 7
+            }}>
+              {selectedFinding.value}
+            </div>
+            <div style={{ marginBottom: 6, fontSize: 14.2, color: "#cbd2ff" }}>
+              <b>Line:</b> {selectedFinding.line}
+            </div>
+            <div style={{
+              marginBottom: 3,
+              fontWeight: 600,
+              color: "#b48c41"
+            }}>
+              Context:
+            </div>
+            <div style={{
+              fontSize: 14.4,
+              background: "#212126",
+              borderRadius: 6,
+              padding: "7px 10px",
+              marginBottom: 7,
+              color: "#d5e4f7"
+            }}>
+              <code>{selectedFinding.context}</code>
+            </div>
+            <button
+              className="btn"
+              style={{
+                marginTop: 7,
+                background: "#284ca7",
+                color: "#f3ecbb",
+                fontWeight: 700,
+                borderRadius: 7,
+                fontSize: 14.2
+              }}
+              onClick={() => {
+                try {
+                  navigator.clipboard.writeText(selectedFinding.value);
+                } catch {}
+              }}
+            >
+              Copy Value to Clipboard
+            </button>
+          </div>
+        )}
+      </Modal>
+
+      {/* Footer */}
+      <footer
+        style={{
+          fontSize: 12.5,
+          color: "var(--text-tertiary)",
+          marginTop: 13,
+          padding: "12px 0 0 0",
+          display: "flex",
+          alignItems: "center",
+          gap: 12
+        }}>
+        <span aria-hidden="true" style={{ fontSize: 16, marginRight: 7 }}>🧬</span>
+        No JS/HTML is sent to any server – all processing is 100% local/offline.
       </footer>
     </section>
   );
