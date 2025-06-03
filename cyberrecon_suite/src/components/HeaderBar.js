@@ -1,162 +1,154 @@
 import React from "react";
-import "../App.css";
 
-// PUBLIC_INTERFACE
 /**
- * HeaderBar: Premium Modern Header for CyberRecon Suite.
- * - Glassy/blurred or sharply minimal look for OLED-true black theme.
- * - Bold brand/title, placeholder for new logo design.
- * - About/Info button for modal/dialog integrations.
+ * Modern, bold HeaderBar: premium glassy style with strong branding, logo area, and visual pop.
+ * - Glass/blur/frosted overlay blends into true-black theme.
+ * - Logo placeholder is left-aligned, bold, and sized to support a future SVG or PNG logo (or integrates brand emoji for now).
+ * - Typography: Ultra-bold, high-contrast orange/gold accent.
+ * - Complements Sidebar and Dashboard (sharp minimal, premium visual hierarchy).
+ * - Responsive for future logo/icon integration.
  *
  * Props:
- *   - onAboutClick: function to open About modal.
+ *   - onAboutClick: function to trigger About modal.
  */
+// PUBLIC_INTERFACE
 function HeaderBar({ onAboutClick }) {
   return (
     <header
       className="headerbar"
       role="banner"
-      aria-label="Application header"
       style={{
-        // The App.css .headerbar class covers most needed styles.
-        // Inline styles only augment for current step (logo slot, height, etc.).
-        minHeight: 58,
-        height: 58,
-        position: "sticky",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        background:
-          "linear-gradient(90deg,rgba(13,14,18,0.97) 44%,rgba(21,22,29,0.83) 100%)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        background: "var(--glass-overlay, linear-gradient(90deg,rgba(13,14,18,0.92) 44%,rgba(21,22,29,0.82) 100%))",
         borderBottom: "2.3px solid var(--border-color)",
-        padding: "0 max(18px,2vw)",
-        zIndex: 15,
-        display: "flex",
-        alignItems: "center",
-        gap: 0,
-        userSelect: "none",
         boxShadow:
           "0 9px 39px -19px #000d, 0 2px 16px -2px #ff980032, 0 1.5px 9px 0 #26263e30",
-        backdropFilter: "blur(18px)"
+        minHeight: 54,
+        position: "sticky",
+        top: 0,
+        zIndex: 15,
+        userSelect: "none",
+        display: "flex",
+        alignItems: "center",
+        padding: "0 max(18px,2vw)",
+        gap: 0,
+        width: "100%",
+        fontFamily: "var(--font-main)",
       }}
     >
-      {/* Logo area: SVG or placeholder for future logo */}
-      <div
+      {/* Logo spot (app icon or SVG to be added in next step) */}
+      <span
         className="headerbar-logo"
+        aria-label="CyberRecon Suite Logo"
+        tabIndex={-1}
         style={{
           display: "flex",
           alignItems: "center",
-          flexShrink: 0,
+          justifyContent: "center",
+          width: 46,
           height: 46,
           minWidth: 46,
-          width: 54,
-          justifyContent: "center",
-          borderRadius: "14px",
-          marginRight: 21,
-          background: "linear-gradient(92deg,#181d1c 60%,#1b1e27 100%)",
-          border: "1.2px solid var(--border-color)",
-          boxShadow:
-            "0 2.3px 18px #1f293744, 0 1.2px 7px #ffad4255",
-          transition: "background .19s"
+          minHeight: 46,
+          marginRight: 17,
+          borderRadius: 13,
+          background: "linear-gradient(90deg,#23232e 60%,#191a1d 100%)",
+          boxShadow: "0 5px 24px -9px #221c2999",
+          border: "1.8px solid var(--border-color)",
+          fontWeight: 900,
+          fontSize: 32,
+          color: "var(--base-light)",
+          textShadow: "0 4px 17px #ffad4286, 0 1.7px 8px #1b2557cc",
+          transition: "background .16s",
+          overflow: "hidden",
         }}
-        aria-label="App logo"
-        tabIndex={-1}
       >
-        {/* TODO: Replace with final SVG logo asset */}
+        {/* Place for app logo SVG; fallback to emoji */}
         <span
-          aria-hidden="true"
+          aria-label="Logo"
           style={{
-            fontSize: 29,
-            color: "var(--base-light)",
-            filter: "drop-shadow(0 0 12px #ffad4293)",
-            fontWeight: 900,
-            textShadow: "0 3.2px 19px #e87a4199"
+            fontSize: 34,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "90%",
+            height: "90%",
+            filter: "drop-shadow(0 0 7px #ffad4296)",
           }}
         >
           🛰️
         </span>
-      </div>
-
-      {/* App Title and Tagline (strong contrast, premium) */}
-      <div
+      </span>
+      {/* App Title */}
+      <span
         className="headerbar-title"
+        aria-label="CyberRecon Suite"
         style={{
-          fontSize: 21,
+          fontSize: 24,
           fontWeight: 900,
-          letterSpacing: ".018em",
+          letterSpacing: ".035em",
           color: "var(--base-light)",
           lineHeight: 1,
-          marginRight: 14,
-          textShadow:
-            "0 2.5px 28px #ffad429a, 0 1.2px 8px #131324cc"
+          textShadow: "0 2.5px 22px #ffad429f, 0 1.2px 8px #1b2557",
+          marginRight: 9,
         }}
       >
         CyberRecon Suite
-      </div>
-      <div
-        style={{
-          fontSize: 15.5,
-          color: "var(--text-secondary)",
-          letterSpacing: ".011em",
-          fontWeight: 600,
-          marginTop: 2,
-          opacity: 0.90,
-          marginRight: 10,
-          textShadow: "0 1.5px 7px #23285975"
-        }}
-        aria-label="Brand tagline"
-      >
-        Modular Recon • Scanning • Exploitation
-      </div>
-      {/* Premium badge */}
+      </span>
+      {/* Modern Beta/Premium badge, optional */}
       <span
         style={{
-          fontSize: 13.3,
-          marginLeft: 7,
-          color: "#ffb976",
           background:
-            "linear-gradient(92deg,#21170f 25%,#ffad4233 95%)",
-          borderRadius: 16,
-          padding: "4px 17px",
-          fontWeight: 870,
-          opacity: 0.93,
-          letterSpacing: ".1em",
-          boxShadow: "0 3.5px 16px -2px #ffad4232",
-          border: "1.2px solid #ffbe4280"
+            "linear-gradient(90deg,#251a09 40%,#ffad4250 100%)",
+          color: "#ffbe55",
+          fontWeight: 850,
+          letterSpacing: ".07em",
+          fontSize: 13.5,
+          borderRadius: 12,
+          padding: "6px 17px",
+          marginLeft: 2,
+          marginRight: 10,
+          opacity: 0.88,
+          border: "1.5px solid #ffbe4290",
+          boxShadow: "0 1.5px 9px -5px #ffae420a",
+          display: "inline-flex",
+          alignItems: "center",
+          textShadow: "0 1.2px 8px #ffad4290",
         }}
-        aria-label="Premium version"
+        aria-label="Premium UI"
       >
         PREMIUM
       </span>
       {/* Spacer */}
       <span style={{ flex: 1 }} />
-
-      {/* About/Info Button */}
       <button
-        className="headerbar-about-btn"
         type="button"
+        className="headerbar-about-btn"
         aria-label="About"
         tabIndex={0}
+        onClick={onAboutClick}
         style={{
-          marginLeft: 8,
           background: "rgba(255,152,0,0.15)",
           color: "var(--base-accent)",
           fontWeight: 800,
           fontSize: 17,
-          borderRadius: 7.5,
+          borderRadius: 8,
           border: "none",
-          padding: "8px 25px",
+          padding: "10px 27px",
+          marginLeft: 9,
+          marginRight: -4,
           boxShadow: "0 2px 11px -2px #361c0251",
           cursor: "pointer",
           outline: "none",
           letterSpacing: ".01em",
-          transition: "background .13s, color .12s"
+          transition: "background .13s, color .12s",
+          whiteSpace: "nowrap"
         }}
-        onClick={onAboutClick}
+        onMouseOver={e => (e.target.style.background = "var(--base-accent)")}
+        onFocus={e => (e.target.style.background = "var(--base-accent)")}
+        onMouseOut={e => (e.target.style.background = "rgba(255,152,0,0.15)")}
+        onBlur={e => (e.target.style.background = "rgba(255,152,0,0.15)")}
       >
-        <span aria-hidden="true" style={{ marginRight: 6, fontSize: 22, verticalAlign: "middle" }}>
-          ℹ️
-        </span>
         About
       </button>
     </header>
