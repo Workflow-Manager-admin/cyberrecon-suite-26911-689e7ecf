@@ -1,22 +1,48 @@
 :root {
+  /* Primary Theme Colors */
+  --base-dark: #191b22;
+  --secondary: #22242c;
+  --sidebar-dark: #16171f;
   --base-light: #ff9800;
-  --base-dark: #1a1a1a;
-  --secondary: #23272e;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.13);
+  --base-accent: #ffad42;
+  --success: #51b57f;
+  --danger: #ff5964;
+  --focus-ring: #ffb85c;
+
+  /* Typography */
+  --font-main: 'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif;
+  --font-code: 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', monospace;
+
+  /* Text colors */
+  --text-color: #fafbfc;
+  --text-secondary: #c7cbce;
+  --text-tertiary: #89939b;
+
+  /* Border & Shadow */
+  --border-color: rgba(255,255,255,0.09);
+  --focus-visible-ring: var(--focus-ring);
+  --box-shadow-elevate: 0 4px 32px -8px rgba(0,0,0,0.55);
+
+  /* UI Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
 }
 
-/* Global resets and theme */
 body {
   margin: 0;
-  font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-  background-color: var(--base-dark);
+  font-family: var(--font-main);
+  font-size: 16px;
+  background: var(--base-dark);
   color: var(--text-color);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.01em;
 }
 
+/* App layout */
 .app-root {
   min-height: 100vh;
   display: flex;
@@ -25,21 +51,23 @@ body {
 
 /* Sidebar */
 .sidebar {
-  background: var(--secondary);
-  border-right: 1px solid var(--border-color);
+  background: var(--sidebar-dark);
+  border-right: 1.5px solid var(--border-color);
   color: var(--text-secondary);
-  min-width: 70px;
-  width: 70px;
+  min-width: 72px;
+  width: 72px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding-top: var(--spacing-xl);
+  box-shadow: 2px 0 12px -8px rgba(22,22,28,0.11);
 }
 .sidebar-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 0 4px 0;
+  padding: var(--spacing-sm) 0 var(--spacing-xs) 0;
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -47,21 +75,23 @@ body {
   font-size: 12px;
   cursor: pointer;
   width: 100%;
-  border-radius: 6px;
+  border-radius: 7px;
   outline: none;
-  transition: background 0.13s;
+  margin: 10px 0;
+  transition: background 0.13s, color 0.11s;
+  position: relative;
 }
 .sidebar-btn.active,
 .sidebar-btn:focus-visible {
   background: var(--base-dark);
   color: var(--base-light);
-  border-right: 3px solid var(--base-light);
-  outline: 2px solid var(--base-light);
+  border-right: 3.2px solid var(--base-light);
+  outline: 2.5px solid var(--focus-visible-ring);
   outline-offset: -2px;
 }
 .sidebar-btn:hover {
   color: var(--base-light);
-  background: rgba(255,152,0,0.05);
+  background: rgba(255,152,0,0.08);
 }
 
 /* Tabbed Workspace */
@@ -74,49 +104,78 @@ body {
 .tab-list {
   display: flex;
   background: var(--secondary);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1.5px solid var(--border-color);
   min-height: 38px;
 }
 .tab {
-  padding: 8px 20px;
+  padding: 8px 24px;
   margin-right: 2px;
   background: none;
   border: none;
   color: var(--text-color);
-  font-size: 15px;
+  font-size: 15.1px;
+  line-height: 20px;
+  letter-spacing: 0.03em;
   cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
-  transition: background 0.17s;
+  height: 38px;
+  transition: background 0.17s, color 0.11s;
+  position: relative;
+}
+.tab:focus-visible {
+  outline: 2.5px solid var(--focus-visible-ring);
+  z-index: 3;
 }
 .tab:hover {
-  background: rgba(255,152,0,0.07);
+  background: rgba(255,152,0,0.09);
 }
 .tab.active,
 .tab[aria-selected="true"] {
   background: var(--base-dark);
   color: var(--base-light);
   border-top: 2.5px solid var(--base-light);
+  font-weight: 600;
+  z-index: 2;
 }
 .tab-content {
-  padding: 32px;
+  padding: var(--spacing-xl);
   outline: none;
   flex: 1;
+  font-size: 1.05em;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
   background: var(--base-dark);
+  color: var(--text-color);
 }
 
 /* Modal */
 .modal-backdrop {
+  position: fixed !important;
   z-index: 9999;
+  inset: 0;
+  background: rgba(21,21,26,0.80) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .modal-content {
-  animation: modalIn 0.24s cubic-bezier(.17,.67,.24,.99);
+  background: var(--secondary);
+  color: var(--text-color);
+  border-radius: 12px;
+  padding: var(--spacing-xl);
+  min-width: 320px;
+  max-width: 98vw;
+  box-shadow: var(--box-shadow-elevate);
+  outline: none;
+  animation: modalIn 0.22s cubic-bezier(.17,.67,.24,.99);
 }
+
 @keyframes modalIn {
   0% {
     opacity: 0;
-    transform: translateY(40px) scale(0.97);
+    transform: translateY(40px) scale(0.95);
   }
   100% {
     opacity: 1;
@@ -124,44 +183,87 @@ body {
   }
 }
 
-/* Accessibility: focus/ARIA */
-:focus-visible,
-.btn:focus-visible {
-  outline: 2px solid var(--base-light);
+/* Accessibility: visible focus, ARIA contrast, readable text */
+:focus-visible, .btn:focus-visible {
+  outline: 2.5px solid var(--focus-visible-ring);
   outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(255,152,0,0.10);
+}
+
+/* Visually hidden utility (for ARIA live regions etc.) */
+.visually-hidden, [aria-hidden="true"]:not(:focus):not(:active) {
+  border: 0 !important;
+  clip: rect(1px,1px,1px,1px) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 1px !important;
+  white-space: nowrap !important;
 }
 
 /* Button styles */
 .btn {
   background-color: var(--base-light);
-  color: white;
+  color: #101318;
   border: none;
-  border-radius: 4px;
-  padding: 10px 20px;
+  border-radius: 6px;
+  padding: 10px 22px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  margin-left: 6px;
+  margin-bottom: 3px;
+  transition: background-color 0.15s, color 0.10s;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1.5px 7px 0 rgba(0,0,0,0.04);
 }
 .btn:hover,
 .btn:focus-visible {
-  background-color: #ffac33;
-  outline: 2px solid var(--base-light);
+  background-color: var(--base-accent);
+  color: #16171f;
+  outline: 2px solid var(--base-accent);
 }
 .btn-large {
-  padding: 12px 24px;
-  font-size: 1.1rem;
+  padding: 14px 30px;
+  font-size: 1.10rem;
 }
 
-/* Miscellaneous and legacy styles for initial landing/hero for smooth template upgrade */
+/* Miscellaneous styles: logo, spacing, helpers */
 .logo {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.26rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: var(--base-light);
+  letter-spacing: 0.03em;
 }
-
 .logo-symbol {
   color: var(--base-light);
+}
+
+/* Responsive: make tab-content scrollable on small screens */
+@media (max-width:700px) {
+  .tab-content {
+    padding: var(--spacing-sm);
+    font-size: .98em;
+  }
+  .sidebar {
+    min-width: 55px;
+    width: 55px;
+    padding-top: var(--spacing-md);
+  }
+  .logo {
+    font-size: 1.07rem;
+  }
+}
+
+/* Remove webkit autofill yellow in modals/inputs (dark bg) */
+input:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px var(--secondary) inset !important;
+  -webkit-text-fill-color: var(--text-color) !important;
 }
