@@ -20,6 +20,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getReconHistory: () => ipcRenderer.invoke('recon:getHistory'),
   addReconHistory: (rows) => ipcRenderer.invoke('recon:addHistory', rows),
 
+  // Settings storage
+  /** 
+   * PUBLIC_INTERFACE
+   * Get application settings
+   */
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  /** 
+   * PUBLIC_INTERFACE
+   * Save application settings
+   */
+  saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),
+
   // Export (CSV/JSON)
   exportReconResults: (format = 'csv') => ipcRenderer.invoke('recon:export', { format }),
 
