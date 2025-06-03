@@ -1,28 +1,40 @@
 const theme = {
   colors: {
-    // Base true-black theme
-    baseDark: "#101114",          // True black/darkest
-    baseDarker: "#0b0c0f",        // Even deeper blacks for backgrounds/sidebars
-    baseDeep: "#16171a",          // Subtle elevation
-    sidebarDark: "#15161b",       // Sidebar, nav
-    secondary: "#191a1f",         // Card/surface backgrounds
-    elevated: "#23242a",          // Alternate panel surfaces
-    contrast: "#22242c",          // For borders/shadows
-    baseLight: "#ff9800",         // Primary accent (orange/gold)
-    baseAccent: "#ffad42",        // Lighter accent (hover, focus, graph)
-    accentBlue: "#6ce9ff",        // Accent: blue (graph, tag, feedback)
-    accentPurple: "#8d76ff",      // Accent: purple (graph, highlight)
-    accentGreen: "#51b57f",       // Success, graph
-    accentRed: "#ff5964",         // Danger, error
-    accentYellow: "#ffc25c",      // Warning, contrast
-    text: "#fafbfc",              // Default text (off-white)
-    textSecondary: "#beb9b2",     // Subtle text
-    textTertiary: "#76767a",      // Unfocused, muted text
-    border: "rgba(255,255,255,0.06)", // Very low contrast for premium look
+    // True Black/OLED-Optimized Foundation
+    baseBlack: "#000000",             // Absolute black for backgrounds
+    baseDark: "#101114",              // Main dark bg (slightly lifted for content)
+    baseDarker: "#0b0c0f",            // Even deeper blacks for modal/outer bg
+    baseDeep: "#16171a",              // Subtle elevation bg (cards/surfaces)
+    sidebarDark: "#111215",           // Sidebar/nav exclusive - distinct from content dark
+    secondary: "#16171b",             // Secondary/differentiated content regions
+    elevated: "#22242a",              // Popup, modal, card
+    contrast: "#23242c",              // Border, lines, hover overlays
+
+    // Premium Accents
+    accentPrimary: "#ff9800",           // Main accent - gold/orange
+    accentPrimaryFg: "#191a1f",         // Text on accent background
+    accentLight: "#ffad42",             // Active/hover accent
+    accentBlue: "#53d0f9",              // Digital blue accent (feedback, highlight)
+    accentPurple: "#b590ff",            // Premium purple (graph, figure, selection)
+    accentGreen: "#56ef9b",             // Success/positive
+    accentRed: "#ff6c7c",               // Errors/danger
+    accentYellow: "#ffe88c",            // Warning/attention
+
+    // Typography
+    text: "#fafbfc",                  // Pure off-white for max contrast
+    textSecondary: "#bbbbd3",         // Less prominent UI text
+    textTertiary: "#60606b",          // Further-muted, placeholders, disabled
+    textOnAccent: "#191a1f",          // Very dark text on orange/yellow bg
+
+    // Border & Shadows
+    border: "rgba(255,255,255,0.07)",
+    shadowElevate: "0 7px 32px -13px rgba(0,0,0,0.82)",
+    shadowCard: "0 2px 18px -7px rgba(0,0,0,0.24)",
     focusRing: "#ffb85c",
-    shadowElevate: "0 7px 42px -11px rgba(0,0,0,0.68)",
-    shadowCard: "0 2px 24px -5px rgba(0,0,0,0.29)",
-    overlay: "rgba(9,10,14,0.94)"
+
+    // Overlay and Effects
+    glassOverlay: "linear-gradient(90deg,rgba(13,14,18,0.92) 44%,rgba(21,22,29,0.82) 100%)",
+    boxShadowMain: "0 8px 38px -10px #000a",
   },
   font: {
     main: "'Inter', 'Roboto', 'Helvetica Neue', 'Segoe UI', Arial, sans-serif",
@@ -39,15 +51,14 @@ const theme = {
   borderRadius: {
     base: "10px",
     card: "14px",
-    modal: "16px",
+    modal: "18px",
     button: "7px"
   },
-  // Extra for future design
   gradients: {
     orange: "linear-gradient(90deg,#ff9800,#ffad42)",
-    green: "linear-gradient(90deg,#51b57f,#90ffa9)",
-    blue: "linear-gradient(90deg,#6ce9ff,#8d76ff)",
-    glass: "linear-gradient(90deg,rgba(28,29,39,0.94) 45%,rgba(28,29,44,0.82) 100%)"
+    blue: "linear-gradient(90deg,#53d0f9,#b590ff)",
+    green: "linear-gradient(90deg,#56ef9b,#99ffee)",
+    glass: "linear-gradient(90deg,rgba(17,19,22,0.91) 41%,rgba(18,20,24,0.81) 100%)"
   }
 };
 
