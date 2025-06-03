@@ -1,20 +1,28 @@
 {
-  "name": "react-kavia",
-  "version": "0.1.0",
+  "name": "cyberrecon-suite",
+  "version": "1.0.0",
+  "description": "Premium Recon and Scan suite (Electron+React) inspired by Burp Suite. Modular dark UI with Amass, Masscan, Nuclei, Bug Bounty Aggregator.",
+  "author": "Cyberhash",
+  "main": "src/electron/main.js",
+  "homepage": ".",
   "private": true,
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1"
-  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "eslintConfig": {
-    "extends": "react-app"
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.1",
+    "electron": "^28.1.0",
+    "better-sqlite3": "^9.0.0",
+    "sqlite3": "^5.1.6",
+    "chart.js": "^4.3.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   },
   "browserslist": {
     "production": [
@@ -27,9 +35,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3",
-    "electron": "^36.3.2"
   }
 }
