@@ -1,4 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
+import TableDisplay from "../components/TableDisplay";
+import GraphDisplay from "../components/GraphDisplay";
 
 /**
  * ReconDashboard: Fully functional recon interface for CyberRecon Suite.
