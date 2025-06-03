@@ -28,9 +28,15 @@ const MODULES = [
     icon: "🛰️"
   },
   {
+    id: "scanpage",
+    label: "Scan",
+    short: "Scan",
+    icon: "🔎"
+  },
+  {
     id: "scanner",
     label: "Vulnerability Scanner",
-    short: "Scan",
+    short: "Vuln",
     icon: "🕵️"
   },
   {
@@ -76,6 +82,7 @@ const MODULES = [
  */
 const MODULE_COMPONENTS = {
   recon: ReconDashboard,
+  scanpage: ScanPage,
   scanner: VulnerabilityScanner,
   exploitation: ExploitationToolkit,
   jsdebugger: JSDebugger,
