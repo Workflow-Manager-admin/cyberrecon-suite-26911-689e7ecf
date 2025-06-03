@@ -128,6 +128,7 @@ async function runViaApi(tool, target, onData, onError, onDone) {
  * ReconDashboard module: Premium UI with Electron/IPC scan, live UI, browser fallback.
  */
 function ReconDashboard() {
+  // Existing State for scans/results
   const [domainsInput, setDomainsInput] = useState("");
   const [domains, setDomains] = useState([]);
   const [error, setError] = useState("");
@@ -138,6 +139,13 @@ function ReconDashboard() {
   const [history, setHistory] = useState([]);
   const [exporting, setExporting] = useState(false);
   const [cancelScan, setCancelScan] = useState(null);
+
+  // State for scheduling
+  const [jobs, setJobs] = useState([]);
+  const [showSchedulePanel, setShowSchedulePanel] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
+  const [scheduleError, setScheduleError] = useState("");
+  const [jobPending, setJobPending] = useState(false);
 
   const textareaRef = useRef();
   const [ariaMsg, setAriaMsg] = useState("");
