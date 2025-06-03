@@ -141,16 +141,16 @@ function Sidebar({
         aria-label="CyberRecon Suite"
         tabIndex={-1}
         style={{
-          width: 59,
-          height: 59,
-          marginBottom: 26,
+          width: 71,
+          height: 71,
+          marginBottom: 34,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderRadius: "15px",
-          background: "rgba(38,38,56,0.87)",
-          border: "1.5px solid var(--border-color,#24222e)",
-          boxShadow: "0 5px 26px -7px #ffad4212",
+          borderRadius: "19px",
+          background: "rgba(38,38,56,0.93)",
+          border: "2px solid var(--border-color,#24222e)",
+          boxShadow: "0 7px 34px -7px #ffad4211",
           opacity: isOpen ? 1 : 0,
           transition: "opacity .13s"
         }}
@@ -158,12 +158,12 @@ function Sidebar({
         <img
           src={logo}
           alt="CyberRecon Suite Logo"
-          width="46"
-          height="46"
+          width="56"
+          height="56"
           style={{
             display: "block",
-            maxHeight: 46,
-            maxWidth: 46,
+            maxHeight: 56,
+            maxWidth: 56,
             filter: "drop-shadow(0 2.8px 17px #ffad42a0)"
           }}
           draggable={false}
