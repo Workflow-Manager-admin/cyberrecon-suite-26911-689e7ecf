@@ -934,7 +934,7 @@ function ReconDashboard() {
   // UI COMPONENT
   return (
     <div style={{ position: "relative", minHeight: 900 }}>
-      {/* HelpSidebar - togglable guide for current page, premium style */}
+      {/* HelpSidebar - togglable guide for current page, premium style (now overlay/fab) */}
       <HelpSidebar
         summary="Recon Dashboard – Multi-Tool Discovery"
         usage={
@@ -962,7 +962,8 @@ function ReconDashboard() {
           </>
         }
         placement="fixed"
-        style={{ top: 24, right: 24, boxShadow: "0 6px 39px 2px #070b0f90", borderRadius: 17 }}
+        style={{ top: 28, right: 30, boxShadow: "0 8px 39px 2px #0e0e1094", borderRadius: 19 }}
+        buttonAriaLabel="Open help for Recon Dashboard"
       />
       <section
         aria-label="Recon Dashboard"
