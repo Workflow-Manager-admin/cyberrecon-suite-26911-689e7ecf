@@ -56,6 +56,29 @@ ensureDbSchema();
  * Persistent job storage, schedule, trigger background scans, and IPC
  */
 
+/** SETTINGS: Secure IPC storage (for API keys, proxies, etc.) **/
+const SETTINGS_PATH = path.join(app.getPath('userData'), 'user_settings.json');
+
+ipcMain.handle('settings:get', () => {
+  try {
+    if (fs.existsSync(SETTINGS_PATH)) {
+      const settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf-8'));
+      return (typeof settings === 'object' && settings) ? settings : {};
+    }
+    return {};
+  } catch (e) {
+    return {};
+  }
+});
+ipcMain.handle('settings:save', (e, settings) => {
+  try {
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings || {}, null, 2), 'utf-8');
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
 // --- Nuclei: CLI IPC integration for VulnerabilityScanner ---
 // (1) Handler: 'vulnscan:runScanCommand'
 // (2) Handler: 'vulnscan:cancelScanCommand'

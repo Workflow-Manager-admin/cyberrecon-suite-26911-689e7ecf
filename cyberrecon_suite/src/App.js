@@ -9,6 +9,7 @@ import VulnerabilityScanner from "./modules/VulnerabilityScanner";
 import WordlistGenerator from "./modules/WordlistGenerator";
 import ReportGenerator from "./modules/ReportGenerator";
 import BugBountyAggregator from "./modules/BugBountyAggregator";
+import SettingsModule from "./modules/SettingsModule";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -75,7 +76,7 @@ const MODULE_COMPONENTS = {
   wordlist: WordlistGenerator,
   report: ReportGenerator,
   bounty: BugBountyAggregator,
-  settings: DummyModule
+  settings: SettingsModule
 };
 
 function App() {
