@@ -1,188 +1,182 @@
 :root {
-  --kavia-orange: #E87A41;
+  --kavia-orange: #e87a41;
   --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.68);
-  --text-tertiary: #b1b1c1;
-  --border-color: rgba(255, 255, 255, 0.11);
+  --sidebar-dark: #191b22;
+  --base-dark: #181920;
+  --base-light: #ffd580;
   --base-accent: #ff9800;
-  --base-light: #ffad42;
-  --base-black: #17181c;
-  --sidebar-dark: #23232e;
-  --base-dark: #161a1e;
-  --glass-overlay: linear-gradient(98deg,rgba(34,33,30,0.92),rgba(30,30,39,0.99) 92%);
-  --elevated: linear-gradient(97deg, #191a23 80%, #211c29 100%);
-  --secondary: #23272e;
   --focus-visible-ring: #ffb85c;
-  --font-main: 'Inter', 'Roboto', Arial, sans-serif;
-  --font-code: 'Menlo', 'Fira Mono', 'Consolas', 'monospace';
+  --text-color: #fafbfc;
+  --text-secondary: rgba(255, 255, 255, 0.73);
+  --text-tertiary: rgba(255,255,255,0.47);
+  --border-color: rgba(255, 255, 255, 0.13);
+  --glass-overlay: rgba(27,28,34,0.65);
 }
 
-/* ----- Sidebar: compact + premium ----- */
+/* Sidebar – Compact Premium */
 .sidebar {
-  background: linear-gradient(98deg,#181921 86%,#191c22 100%);
+  background: linear-gradient(102deg,#181a21 92%,#181b22 100%);
+  border-right: 2.5px solid var(--border-color,#29262a);
   color: var(--text-secondary);
-  min-width: 76px !important;
-  max-width: 76px !important;
-  width: 76px !important;
-  border-right: 2.3px solid var(--border-color);
-  box-shadow: 0 10px 38px -17px #000a, 2px 0 23px 2px #18181c44;
+  width: 92px;
+  min-width: 92px;
+  max-width: 92px;
+  box-shadow: 4px 0 39px -12px #000c, 0 0 16px 0 #1e180333, 2px 0 14px #ff98001a;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 21px;
-  z-index: 16;
-}
-
-.sidebar-logo {
-  width: 49px;
-  height: 49px;
-  margin-bottom: 23px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 15px;
-  background: rgba(37,37,49,0.77);
-  border: 1.5px solid var(--border-color);
-  box-shadow: 0 5px 22px -7px #ffad4216;
+  min-height: 100vh;
+  z-index: 30;
+  will-change: transform,opacity;
+  transition: transform .35s cubic-bezier(.62,1.52,.33,1), opacity 0.23s cubic-bezier(.64,1.18,.52,1);
 }
 
 .sidebar-btn {
+  border: none;
+  background: rgba(25,25,34,0.83);
+  color: var(--text-secondary);
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 5px;
+  margin-top: 0;
+  box-shadow: 0 3.5px 15px -9px #191c2233;
+  transition: 
+    background .19s, 
+    box-shadow .22s, 
+    border-color .15s, 
+    outline .13s;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 62px;
-  margin: 0 0 0 0;
-  padding: 0;
-  border-radius: 13px;
-  background: rgba(28,28,37,0.68);
-  border: 2px solid transparent;
-  color: var(--text-secondary);
-  box-shadow: 0 4px 9px -7px #191c2230;
-  cursor: pointer;
-  margin-bottom: 8px;
-  font-weight: 750;
+  width: 72px;
+  height: 70px;
+  border-radius: 18px;
+  font-weight: 758;
   font-size: 15px;
-  letter-spacing: .05em;
-  transition: background .13s,box-shadow .18s, border-color .13s, outline .13s;
-  outline: none;
-}
-.sidebar-btn.active {
-  background: linear-gradient(98deg,#1c1b23 55%,#181a23 99%);
-  color: var(--base-accent);
-  border: 2.7px solid var(--base-accent);
-  outline: 2.5px solid #ffbb4eb0;
-  box-shadow: 0 2.5px 18px -4px #ff980045, 0 1.5px 10px #ffad4233;
-}
-.sidebar-btn:focus-visible, .sidebar-btn:focus {
-  background: linear-gradient(97deg,#201c29 65%,#1e1938 100%);
-}
-.sidebar-btn span[aria-hidden="true"] {
-  pointer-events: none;
+  letter-spacing: .04em;
 }
 
-/* Sidebar close (collapse) button style */
-.sidebar .sidebar-slide-close,
-.sidebar .sidebar-close-btn {
-  position: absolute;
-  top: 12px;
-  right: 7px;
-  background: rgba(40,38,22,0.91);
-  color: #ffad42;
-  border: none;
-  border-radius: 9px;
-  width: 29px;
-  height: 29px;
-  font-size: 18px;
-  font-weight: 800;
-  box-shadow: 0 0px 5px #ff980055;
-  cursor: pointer;
-  z-index: 28;
+.sidebar-btn:focus-visible,
+.sidebar-btn:focus {
+  outline: 3px solid var(--focus-visible-ring,#ffb85c);
+  outline-offset: 0.5px;
+  z-index: 5;
+  background: linear-gradient(96deg,#262434 64%,#262034 100%);
+}
+.sidebar-btn.active,
+.sidebar-btn[aria-current="page"] {
+  background: linear-gradient(98deg,#262532 55%,#1c1c27 99%);
+  color: var(--base-accent,#ff9800);
+  border: 2.9px solid var(--base-accent,#ff9800);
+  box-shadow: 0 2.5px 12px -2px #ff980045, 0 1.5px 8px #ffad4266;
+  outline: 2.5px solid #ffb959b0;
+}
+.sidebar-btn.active span,
+.sidebar-btn[aria-current="page"] span {
+  color: var(--base-accent,#ff9800);
+  text-shadow: 0 2px 12px #ff980042, 0 1.5px 7px #ffad426c;
+}
+
+.sidebar-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  outline: none;
-  transition: background .13s,color .13s;
-}
-.sidebar .sidebar-slide-close:focus-visible, .sidebar .sidebar-close-btn:focus-visible {
-  border: 1.2px solid #ffad42 !important;
-  background: #29242c !important;
+  width: 53px;
+  height: 53px;
+  margin-bottom: 31px;
+  border-radius: 15px;
+  background: rgba(38,38,56,0.87);
+  border: 1.5px solid var(--border-color,#24222e);
+  box-shadow: 0 5px 26px -7px #ffad4212;
+  transition: opacity .13s;
 }
 
-/* Tabbed workspace and main area styles */
-.tabbed-workspace .tab-list {
-  margin-left: 0;
-  margin-right: 0;
+/* A11y: visually hide but allow navigation if aria-hidden=false */
+.sidebar[aria-hidden="true"] {
+  pointer-events: none !important;
+  opacity: 0 !important;
 }
-.tabbed-workspace .tab-content {
-  padding-left: 56px !important;
-  padding-right: 56px !important;
-  min-width: 0;
-  max-width: 100vw;
-  border-radius: 19px;
-  background: linear-gradient(91deg,#101114 96%,#16171b 100%);
-  box-shadow: 0 13px 52px -18px #000c, 0 6px 26px -7px #221e29cc;
-  border: 2.4px solid var(--border-color);
+
+/* Smooth sidebar close/open responsively */
+@media (max-width: 770px) {
+  .sidebar {
+    min-height: 100vh;
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+  }
 }
-/* Wider headerbar for premium look */
+
+/* Compact header offset for compact sidebar */
 .headerbar {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  box-shadow: 0 13px 36px -10px #23223d90,
-    0 2px 11px -2px #ff980031,
-    0 2px 8px #22242a28;
-  padding-left: 34px;
-  padding-right: 34px;
-}
-/* Sidebar show button style for wider nav */
-.sidebar-show-btn,
-.sidebar-slide-close {
-  min-width: 40px;
-  min-height: 40px;
-  font-size: 28px;
-  border-radius: 12px;
+  background: var(--glass-overlay,#1a1a1a44);
+  border-bottom: 2px solid var(--border-color,#1118);
 }
 
-/* General style updates for wider premium dashboard */
-body {
-  font-family: var(--font-main), Arial, sans-serif;
+/* Hide scrollbars for sidebar in all browsers */
+.sidebar, .sidebar *::-webkit-scrollbar {
+  width: 0px !important;
+  background: transparent !important;
+}
+.sidebar, .sidebar * {
+  scrollbar-width: none;
+}
+.sidebar::-webkit-scrollbar,
+.sidebar *::-webkit-scrollbar {
+  display: none;
 }
 
-@media (max-width: 1200px) {
-  .tabbed-workspace .tab-content {
-    padding-left: 13px !important;
-    padding-right: 13px !important;
-  }
-  .sidebar {
-    min-width: 0 !important;
-    width: 0 !important;
-  }
-}
-@media (max-width: 700px) {
-  .tabbed-workspace .tab-content {
-    padding-left: 7px !important;
-    padding-right: 7px !important;
-  }
-  .sidebar {
-    width: 0 !important;
-    min-width: 0 !important;
-    padding: 0 !important;
-  }
+/* Hover/focus/active nav affordances */
+.sidebar-btn:hover:not(:disabled),
+.sidebar-btn:active:not(:disabled) {
+  background: linear-gradient(98deg,#2a273e 81%,#23223b 100%);
+  color: var(--base-accent,#ff9800);
+  outline: 2.5px solid #ffb95991;
 }
 
-/* Smart footer - premium minimal footer look */
-.smart-footer {
-  font-family: var(--font-main, Arial, sans-serif);
-  border-radius: 0 0 9px 9px;
+/* Sidebar transition, fallback for a11y */
+.sidebar, .sidebar-btn, .sidebar-logo {
+  transition:
+    background .19s,
+    box-shadow .18s,
+    color .15s,
+    border-color .15s,
+    outline .13s;
 }
 
-::-webkit-scrollbar {
-  width: 10px;
+/* Extra for a11y/visible-focus: add highlight */
+.sidebar .sidebar-btn:focus-visible {
+  border-color: #fff;
+  box-shadow: 0 0 7px 2px #ffad42dd;
+}
+
+/* Compact app-root adjustment */
+.app-root {
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
   background: var(--base-dark);
 }
-::-webkit-scrollbar-thumb {
-  background: #23232e;
-  border-radius: 6px;
+
+/* Optional: visually hide elements (for ARIA live regions, etc) */
+.visually-hidden {
+  position:absolute!important;
+  height:1px; width:1px;
+  overflow:hidden;
+  clip:rect(1px 1px 1px 1px); /* IE6, IE7 */
+  clip:rect(1px, 1px, 1px, 1px);
+  white-space:nowrap;
+}
+
+/* Dark base for main/overall background */
+body {
+  background: var(--base-dark,#181920);
+  color: var(--text-color,#fafbfc);
+  font-family: var(--font-main,'Inter','Roboto',Arial,sans-serif);
+}
+
+/* Modern premium tab and main area tweaks */
+.tabbed-workspace {
+  background: transparent;
 }
