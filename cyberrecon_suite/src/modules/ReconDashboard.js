@@ -916,149 +916,17 @@ function ReconDashboard() {
 
       {/* Scheduling Panel */}
       {showSchedulePanel && (
-        <section
-          aria-label="Schedule Recurring Scans"
-          style={{
-            background: "var(--secondary)",
-            borderRadius: 13,
-            boxShadow: "0 8px 32px -8px rgba(41,64,41,0.14)",
-            padding: "25px 29px",
-            marginBottom: 36,
-            marginTop: -9,
-          }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            marginBottom: 10
-          }}>
-            <span aria-hidden="true" style={{ fontSize: 23, marginRight: 6 }}>⏰</span>
-            <strong style={{
-              fontSize: 17,
-              color: "#41b572",
-              letterSpacing: ".04em",
-              fontWeight: 800,
-              marginRight: 5
-            }}>
-              Scheduled/Recurring Scans
-            </strong>
-            <span style={{
-              background: "#23332b",
-              color: "#6bf89f",
-              borderRadius: 8,
-              padding: "2.2px 8px",
-              fontSize: 12,
-              fontWeight: 650,
-              marginLeft: 8,
-              letterSpacing: ".05em"
-            }}>{jobs.length} active</span>
-            <span style={{ flex: 1 }} />
-            <button
-              type="button"
-              aria-label="Close schedule panel"
-              className="btn"
-              style={{
-                background: "#29312b",
-                color: "#51b57f",
-                fontSize: 13.8,
-                fontWeight: 600,
-                borderRadius: 6
-              }}
-              onClick={() => setShowSchedulePanel(false)}
-            >Close</button>
-          </div>
-          <p style={{
-            color: "var(--text-secondary)",
-            fontSize: 13.5,
-            margin: "5px 0 10px 0"
-          }}>
-            Schedule one-off or recurring scans for domains using Amass or Masscan. Jobs will run in the background and appear in history/results here.
-          </p>
-          {/* Add new schedule form */}
-          <ScheduleForm
-            onJobAdded={(job) => { setEditingJob(null); setJobPending(b => !b); }}
-            errorState={[scheduleError, setScheduleError]}
-            editingJob={editingJob}
-          />
-
-          {/* Job list table */}
-          <TableDisplay
-            data={jobs || []}
-            columns={[
-              {
-                label: "Domain(s)",
-                field: "targets",
-                emoji: "🌐",
-                sortable: true,
-                filter: true,
-                bold: true,
-                render: v => Array.isArray(v) ? v.join(", ") : v
-              },
-              {
-                label: "Tool",
-                field: "tool",
-                emojiMap: {Amass: "🛰️", Masscan: "🖥️"},
-                sortable: true,
-                filter: true,
-                colored: true,
-                colorMap: { Amass: "#ffa343", Masscan: "#3ec784" }
-              },
-              {
-                label: "Schedule",
-                field: "schedule",
-                sortable: false,
-                filter: false,
-                render: v => formatScheduleDescription(v)
-              },
-              {
-                label: "Next Run",
-                field: "nextRun",
-                sortable: true,
-                render: (ts, row) =>
-                  ts ? new Date(ts).toLocaleString() : (row.nextRun ? new Date(row.nextRun).toLocaleString() : "—")
-              },
-              {
-                label: "Last Run",
-                field: "lastRun",
-                sortable: true,
-                render: (ts, row) =>
-                  ts ? new Date(ts).toLocaleString() : (row.lastRun ? new Date(row.lastRun).toLocaleString() : "—")
-              },
-              {
-                label: "Enabled",
-                field: "enabled",
-                filter: true,
-                sortable: true,
-                render: value => value ? "✅" : "❌"
-              }
-            ]}
-            initialSortField="nextRun"
-            filterable={true}
-            size="sm"
-            style={{marginTop: 12, marginBottom: 12}}
-          />
-          <div style={{display: "flex", gap: 8, marginTop: 6, flexWrap: "wrap"}}>
-            <button
-              type="button"
-              className="btn"
-              aria-label="Refresh schedule list"
-              style={{background: "#222c18", color:"#9feaf8", fontWeight:700}}
-              onClick={() => setJobPending(b=>!b)}
-            >🔄 Refresh</button>
-            {jobs.length > 0 && (
-            <button
-              type="button"
-              className="btn"
-              aria-label="Clear all jobs"
-              style={{background: "#2c2122", color:"#ff5964", fontWeight:700}}
-              onClick={async ()=> {
-                for (const j of jobs) await removeJob(j.id);
-                setJobPending(b=>!b);
-              }}
-            >🗑️ Clear All</button>
-            )}
-          </div>
-        </section>
+        <PremiumSchedulePanel
+          jobs={jobs}
+          setJobs={setJobs}
+          onJobCreated={() => setJobForceRefresh(f => !f)}
+          onJobUpdated={() => setJobForceRefresh(f => !f)}
+          onJobRemoved={() => setJobForceRefresh(f => !f)}
+          errorState={[scheduleError, setScheduleError]}
+          editingJob={editingJob}
+          setEditingJob={setEditingJob}
+          forceRefresh={() => setJobForceRefresh(f => !f)}
+        />
       )}
 
       {/* Input Panel */}
