@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar";
 import TabbedWorkspace from "./components/TabbedWorkspace";
 import Modal from "./components/Modal";
 import DummyModule from "./modules/DummyModule";
+import ReconDashboard from "./modules/ReconDashboard";
 
 /**
  * Module metadata, for sidebar navigation; expand as needed.
@@ -59,9 +60,11 @@ const MODULES = [
   }
 ];
 
-// Dummy: map module id to a component - expand with real modules!
+/**
+ * Module registry: map module id to a component. Real modules replace DummyModule.
+ */
 const MODULE_COMPONENTS = {
-  recon: DummyModule,
+  recon: ReconDashboard,
   scanner: DummyModule,
   exploitation: DummyModule,
   jsdebugger: DummyModule,
