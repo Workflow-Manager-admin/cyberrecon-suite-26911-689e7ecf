@@ -91,8 +91,9 @@ function ReconDashboard() {
   const [domains, setDomains] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState("");
-  const [results, setResults] = useState([]); // Array of {domain, tool, result, time}
-  const [resultBuf, setResultBuf] = useState([]); // For streaming lines
+  const [results, setResults] = useState([]); // Results to display in table
+  const [resultBuf, setResultBuf] = useState([]); // For streaming lines (current scan)
+  const [showResults, setShowResults] = useState(false); // For controlling "fade in" animation on result display
   const [history, setHistory] = useState([]);
   const [exporting, setExporting] = useState(false);
 
@@ -103,19 +104,32 @@ function ReconDashboard() {
   // Accessibility: announcements
   const [ariaMsg, setAriaMsg] = useState("");
 
+  // Animation: used to make result area fade in on new result display
+  useEffect(() => {
+    if (results && results.length) {
+      setShowResults(true);
+    } else {
+      setShowResults(false);
+    }
+  }, [results]);
+
   // Load offline recon history on mount
   useEffect(() => {
+    let ignore = false;
     async function fetchHistory() {
       try {
         const hist = await fetchReconHistory();
-        setHistory(Array.isArray(hist) ? hist : []);
+        if (!ignore) setHistory(Array.isArray(hist) ? hist : []);
       } catch (e) {
-        setHistory([]);
-        setError("⚠️ Failed to load recon history.");
-        setAriaMsg("History loading failed.");
+        if (!ignore) {
+          setHistory([]);
+          setError("⚠️ Failed to load recon history.");
+          setAriaMsg("History loading failed.");
+        }
       }
     }
     fetchHistory();
+    return () => { ignore = true; };
   }, []);
 
   // Save scan results to history with status
