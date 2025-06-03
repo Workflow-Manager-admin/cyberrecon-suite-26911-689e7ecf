@@ -571,7 +571,7 @@ async function runViaApi(tool, target, onData, onError, onDone) {
 }
 
 // PUBLIC_INTERFACE
-/** ReconDashboard module: Premium UI with Electron/IPC scan, live UI, browser fallback. */
+/** ReconDashboard module: Premium UI with schedule picker, recurring scheduler, and job management. */
 function ReconDashboard() {
   // Scans/results state
   const [domainsInput, setDomainsInput] = useState("");
@@ -585,12 +585,12 @@ function ReconDashboard() {
   const [exporting, setExporting] = useState(false);
   const [cancelScan, setCancelScan] = useState(null);
 
-  // Scheduling
+  // Scheduling state
   const [jobs, setJobs] = useState([]);
   const [showSchedulePanel, setShowSchedulePanel] = useState(false);
-  const [editingJob, setEditingJob] = useState(null);
+  const [editingJob, setEditingJob] = useState(null); // Model for editing
   const [scheduleError, setScheduleError] = useState("");
-  const [jobPending, setJobPending] = useState(false);
+  const [jobForceRefresh, setJobForceRefresh] = useState(false); // force re-fetch
 
   const textareaRef = useRef();
   const [ariaMsg, setAriaMsg] = useState("");
@@ -619,7 +619,7 @@ function ReconDashboard() {
     return () => { ignore = true; };
   }, []);
 
-  // Load scheduled jobs on mount and on demand
+  // Load scheduled jobs on mount & when panel shown or re-fetch forced
   useEffect(() => {
     let ignore = false;
     async function fetchJobs() {
@@ -631,9 +631,9 @@ function ReconDashboard() {
       }
     }
     fetchJobs();
-    // Don't need dependency on jobs itself; only reloads if schedule panel is toggled or jobs change
+    // Only reloads if schedule UI toggled or explicit jobForceRefresh triggered
     return () => { ignore = true; };
-  }, [showSchedulePanel, jobPending]);
+  }, [showSchedulePanel, jobForceRefresh]);
 
   // Helper: Format schedule info for UI.
   function formatScheduleDescription(schedule) {
