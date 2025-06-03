@@ -1611,8 +1611,8 @@ function ReconDashboard() {
         <span aria-hidden="true" style={{ fontSize: 17, marginRight: 7 }}>🔑</span>
         Results are cached locally. For privacy, data is <b>never sent to remote servers</b>.
       </footer>
+      {/* FINAL closing tag for outermost <section> for ReconDashboard */}
     </section>
-    {/* The above closes the main ReconDashboard section. */}
   );
 }
 
