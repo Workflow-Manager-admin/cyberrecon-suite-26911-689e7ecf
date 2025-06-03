@@ -933,8 +933,136 @@ function ReconDashboard() {
         }}
         onSubmit={e => { e.preventDefault(); handleSubmitScan("Amass"); }}
       >
-        {/* Scheduling Form Subcomponent */}
-        {/* Used in Schedule Panel above, but needs to be inside functional component scope */}
+        {/* Form content below; removed ScheduleForm from here for correct JSX nesting */}
+        <label htmlFor="domain-input"
+          style={{
+            fontWeight: 700,
+            color: "var(--base-accent)",
+            letterSpacing: ".01em",
+            fontSize: 17.5,
+            display: "block",
+            marginBottom: 8
+          }}>
+          Domains or Targets <span aria-hidden="true" style={{ fontSize: 20, marginLeft: 8 }}>🔍</span>
+        </label>
+        <textarea
+          ref={textareaRef}
+          id="domain-input"
+          name="domains"
+          value={domainsInput}
+          spellCheck={false}
+          required
+          aria-required="true"
+          aria-describedby="domain-desc"
+          rows={3}
+          onChange={e => setDomainsInput(e.target.value)}
+          onKeyDown={handleTextareaKey}
+          tabIndex={0}
+          style={{
+            width: "100%",
+            padding: "14px 12px",
+            borderRadius: 9,
+            fontSize: 15.7,
+            fontFamily: "var(--font-code)",
+            color: "var(--text-color)",
+            border: "1.4px solid var(--border-color)",
+            background: "var(--base-dark)",
+            marginBottom: 6,
+            boxShadow: "0 2.5px 9px -6px rgba(0,0,0,0.13)",
+            fontWeight: 500,
+            letterSpacing: ".01em"
+          }}
+          placeholder="e.g. example.com\nor: domain1.com, domain2.com"
+        />
+        <small
+          id="domain-desc"
+          style={{
+            color: "var(--text-tertiary)",
+            fontSize: 13,
+            display: "block",
+            marginBottom: 8,
+            letterSpacing: ".01em"
+          }}
+        >
+          Enter one or more domains separated by comma, space, or new lines.
+        </small>
+        {error && (
+          <div role="alert"
+            style={{
+              background: "rgba(255,59,64,0.065)",
+              color: "var(--danger)",
+              borderRadius: 6,
+              padding: "8px 14px",
+              fontWeight: 600,
+              marginBottom: 14,
+              fontSize: 14.5
+            }}
+          >
+            <span aria-hidden="true" style={{ marginRight: 5 }}>❌</span>{error}
+          </div>
+        )}
+        {/* Action Buttons */}
+        <div style={{
+          marginTop: 7,
+          display: "flex",
+          gap: 14,
+          flexWrap: "wrap",
+          alignItems: "center"
+        }}>
+          <button
+            type="submit"
+            className="btn btn-large"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              fontSize: 17.5,
+              fontWeight: 700,
+              background: "var(--base-light)",
+              color: "#272a31",
+              gap: 9,
+              border: "none"
+            }}
+            aria-label="Run Amass Recon"
+            disabled={!!loading}
+          >🚀 Start Amass</button>
+          <button
+            type="button"
+            className="btn btn-large"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "linear-gradient(90deg,#51b57f,#90ffa9)",
+              color: "#181b1e",
+              fontWeight: 700,
+              fontSize: 17.5
+            }}
+            aria-label="Run Masscan Network Scan"
+            disabled={!!loading}
+            onClick={() => handleSubmitScan("Masscan")}
+          >🖥️ Run Masscan</button>
+          <button
+            type="button"
+            className="btn"
+            style={{
+              marginLeft: 14,
+              fontSize: 16,
+              fontWeight: 600
+            }}
+            aria-label="Clear domains input"
+            disabled={!!loading}
+            onClick={() => { setDomainsInput(""); setDomains([]); setResults([]); setShowResults(false); setError(""); }}
+          >🧹 Clear</button>
+        </div>
+        <div
+          style={{
+            marginTop: 7,
+            fontSize: 13.1,
+            color: "var(--text-secondary)"
+          }}
+        >
+          Ctrl+Enter (or Cmd+Enter) to trigger Amass scan.
+        </div>
       </form>
       {/* ScheduleForm Component */}
       {/* The ScheduleForm function definition should not appear here! It must be top-level, outside of ReconDashboard. */}
