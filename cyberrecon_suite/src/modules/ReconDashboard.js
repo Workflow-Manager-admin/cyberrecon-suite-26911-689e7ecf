@@ -633,7 +633,6 @@ async function runViaApi(tool, target, onData, onError, onDone) {
   }
 }
 
-// PUBLIC_INTERFACE
 /** ReconDashboard module: Premium UI with schedule picker, recurring scheduler, and job management. */
 function ReconDashboard() {
   // Scans/results state
@@ -655,6 +654,10 @@ function ReconDashboard() {
   const [scheduleError, setScheduleError] = useState("");
   const [jobForceRefresh, setJobForceRefresh] = useState(false); // force re-fetch
 
+  // Status/feedback for schedule/job actions
+  const [notif, setNotif] = useState({ show: false, msg: "", type: "info" });
+  // Job run ARIA msg (for accessibility)
+  const [jobRunAria, setJobRunAria] = useState("");
   const textareaRef = useRef();
   const [ariaMsg, setAriaMsg] = useState("");
 
@@ -697,6 +700,23 @@ function ReconDashboard() {
     // Only reloads if schedule UI toggled or explicit jobForceRefresh triggered
     return () => { ignore = true; };
   }, [showSchedulePanel, jobForceRefresh]);
+
+  // Listen to job runs (browser-only fallback) and notify user
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.setCyberreconJobRunHandler) {
+      // Set callback for job run events (browser fallback - called by storage.js)
+      window.setCyberreconJobRunHandler((job) => {
+        setNotif({
+          show: true,
+          msg: `Scheduled job <b>${job.tool}</b> for <b>${(job.targets || []).join(", ")}</b> ran at ${new Date(Date.now()).toLocaleTimeString()}.`,
+          type: "success"
+        });
+        setJobRunAria(`Job ${job.tool} for ${job.targets && job.targets.join(", ")} ran.`);
+        setTimeout(() => setNotif({ show: false, msg: "", type: "info" }), 4300);
+        setTimeout(() => setJobRunAria(""), 3200);
+      });
+    }
+  }, []);
 
   // Helper: Format schedule info for UI.
   function formatScheduleDescription(schedule) {
